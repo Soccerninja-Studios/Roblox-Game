@@ -4,7 +4,6 @@
 
 local GameConfig = {
 	-- Economy
-	CLIPPINGS_PER_BLADE = 1,
 	CRIT_BASE_CHANCE = 0.01, -- 1% base "Golden Blade" chance
 	CRIT_BASE_MULTIPLIER = 10,
 
@@ -30,16 +29,18 @@ local GameConfig = {
 	--   health    = total damage needed to clear one tile
 	--   armor     = flat damage subtracted from every swing (models toughness / defense)
 	--   height    = how tall a fresh tile of this type stands (studs)
-	--   value     = clipping value multiplier for this type
+	--   clipReward= total Clippings awarded when a tile of this type is FULLY cut down
+	--               (before upgrade/gamepass multipliers). This is the guaranteed minimum,
+	--               independent of how many swings clearing it actually took.
 	--   color     = {r,g,b}
 	-- A tool can only cut a type once its cut power exceeds that type's armor, so tougher
 	-- grass literally requires better tools + power upgrades.
 	GRASS_TYPES = {
-		Meadow = { displayName = "Meadow Grass", health = 3, armor = 0, height = 2.6, value = 1.0, color = { 120, 196, 92 } },
-		Wild = { displayName = "Wild Grass", health = 6, armor = 0, height = 4.8, value = 1.2, color = { 86, 158, 66 } },
-		Thick = { displayName = "Thicket", health = 16, armor = 2, height = 5.6, value = 1.8, color = { 58, 120, 52 } },
-		Moss = { displayName = "Creeping Moss", health = 12, armor = 1, height = 2.2, value = 1.5, color = { 74, 132, 86 } },
-		Ironweed = { displayName = "Ironweed", health = 40, armor = 5, height = 5.0, value = 3.0, color = { 44, 92, 74 } },
+		Meadow = { displayName = "Meadow Grass", health = 3, armor = 0, height = 2.6, clipReward = 3, color = { 120, 196, 92 } },
+		Wild = { displayName = "Wild Grass", health = 6, armor = 0, height = 4.8, clipReward = 6, color = { 86, 158, 66 } },
+		Thick = { displayName = "Thicket", health = 16, armor = 2, height = 5.6, clipReward = 25, color = { 58, 120, 52 } },
+		Moss = { displayName = "Creeping Moss", health = 12, armor = 1, height = 2.2, clipReward = 15, color = { 74, 132, 86 } },
+		Ironweed = { displayName = "Ironweed", health = 40, armor = 5, height = 5.0, clipReward = 80, color = { 44, 92, 74 } },
 	},
 
 	-- Tool tiers.
