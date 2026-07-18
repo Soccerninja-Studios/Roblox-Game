@@ -97,6 +97,33 @@ local function shadow(target: GuiObject, spread: number)
 	return s
 end
 
+local function addCloseX(button: GuiObject, color: Color3?): Frame
+	local icon = Instance.new("Frame")
+	icon.Name = "XIcon"
+	icon.AnchorPoint = Vector2.new(0.5, 0.5)
+	icon.Position = UDim2.fromScale(0.5, 0.5)
+	icon.Size = UDim2.fromScale(0.44, 0.44)
+	icon.BackgroundTransparency = 1
+	icon.ZIndex = button.ZIndex + 1
+	icon.Parent = button
+	for _, rot in { 45, -45 } do
+		local bar = Instance.new("Frame")
+		bar.Name = "Bar"
+		bar.AnchorPoint = Vector2.new(0.5, 0.5)
+		bar.Position = UDim2.fromScale(0.5, 0.5)
+		bar.Size = UDim2.new(1, 0, 0, 4)
+		bar.BackgroundColor3 = color or Color3.fromRGB(255, 255, 255)
+		bar.BorderSizePixel = 0
+		bar.Rotation = rot
+		bar.ZIndex = icon.ZIndex
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = bar
+		bar.Parent = icon
+	end
+	return icon
+end
+
 local function formatNumber(n: number): string
 	local s = tostring(math.floor(n))
 	local formatted = s
@@ -365,12 +392,13 @@ local function buildShopModal(gui: ScreenGui)
 	close.Size = UDim2.fromOffset(40, 40)
 	close.BackgroundColor3 = Color3.fromRGB(220, 88, 78)
 	close.Font = Enum.Font.FredokaOne
-	close.Text = "\u{2715}"
+	close.Text = ""
 	close.TextColor3 = Color3.fromRGB(255, 255, 255)
 	close.TextSize = 22
 	close.ZIndex = 13
 	corner(close, 20)
 	stroke(close, 2, Color3.fromRGB(255, 255, 255), 0.4)
+	addCloseX(close)
 	close.Parent = header
 	close.Activated:Connect(function()
 		UIController.CloseShop()
