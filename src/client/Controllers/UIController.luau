@@ -122,7 +122,6 @@ local function buildCurrency(gui: ScreenGui)
 	corner(pill, 26)
 	gradient(pill, Color3.fromRGB(104, 194, 98), GREEN_DARK, 90)
 	stroke(pill, 3, Color3.fromRGB(255, 255, 255), 0.35)
-	shadow(pill, 10)
 	pill.Parent = gui
 
 	local icon = Instance.new("TextLabel")
@@ -153,7 +152,6 @@ local function buildCurrency(gui: ScreenGui)
 	lp.PaddingBottom = UDim.new(0, 12)
 	lp.PaddingRight = UDim.new(0, 14)
 	lp.Parent = clippingsLabel
-	stroke(clippingsLabel, 2, GREEN_DARK)
 	clippingsLabel.Parent = pill
 end
 
@@ -191,7 +189,6 @@ local function buildActionButton(gui: ScreenGui, emoji: string, onClick: () -> (
 	corner(btn, 33)
 	gradient(btn, Color3.fromRGB(104, 194, 98), GREEN_DARK, 90)
 	stroke(btn, 3, Color3.fromRGB(255, 255, 255), 0.3)
-	shadow(btn, 10)
 	btn.Parent = holder
 
 	btn.MouseEnter:Connect(function()
@@ -360,7 +357,6 @@ local function buildShopModal(gui: ScreenGui)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextSize = 28
 	title.ZIndex = 12
-	stroke(title, 2, GREEN_DARK)
 	title.Parent = header
 
 	local close = Instance.new("TextButton")
