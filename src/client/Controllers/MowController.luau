@@ -23,7 +23,7 @@ local lastSwing = 0
 local swingCooldown = GameConfig.BASE_SWING_COOLDOWN
 
 local function tryCut()
-	-- Mowing now requires the physical shears to be equipped.
+	-- Mowing requires the physical shears to be equipped.
 	if not ToolController or not ToolController.IsEquipped() then
 		return
 	end
@@ -32,13 +32,13 @@ local function tryCut()
 	if not target or target.Name ~= "GrassTile" then
 		return
 	end
-	if (target:GetAttribute("BladesRemaining") :: number? or 0) <= 0 then
+	if (target:GetAttribute("Health") :: number? or 0) <= 0 then
 		return
 	end
 
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if not root or (root.Position - target.Position).Magnitude > GameConfig.CUT_RANGE then
+	if not root or (root.Position - target.Position).Magnitude > GameConfig.CUT_RANGE + target.Size.Y then
 		return
 	end
 

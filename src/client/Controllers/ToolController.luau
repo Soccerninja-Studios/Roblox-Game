@@ -1,7 +1,9 @@
 --!strict
--- ToolController: owns the held shears tool on the client. It reports whether the
--- shears are currently equipped (so mowing requires holding the tool) and plays the
--- snipping animation on every swing by tweening the tool's Motor6D joint.
+-- ToolController: owns the held cutting tool on the client. It reports whether the
+-- tool is currently equipped (mowing requires holding it) and animates every swing
+-- by tweening the tool's Motor6D joints:
+--   "Pivot" -> the swing arc (all tools)
+--   "Snip"  -> the blade closing (shears only)
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -10,7 +12,7 @@ local ToolController = {}
 
 local player = Players.LocalPlayer
 
--- Returns the equipped shears tool, or nil if not currently held.
+-- Returns the equipped tool, or nil if not currently held.
 function ToolController.GetEquippedTool(): Tool?
 	local character = player.Character
 	if not character then
@@ -27,38 +29,49 @@ function ToolController.IsEquipped(): boolean
 	return ToolController.GetEquippedTool() ~= nil
 end
 
--- Plays a quick close-then-open "snip" on the shears.
+local function findMotor(tool: Tool, name: string): Motor6D?
+	for _, d in tool:GetDescendants() do
+		if d:IsA("Motor6D") and d.Name == name then
+			return d
+		end
+	end
+	return nil
+end
+
+-- Tween a motor's C0 to `to`, then back to `from`.
+local function swingMotor(motor: Motor6D, from: CFrame, to: CFrame, downTime: number, upTime: number)
+	local down = TweenService:Create(motor, TweenInfo.new(downTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = to })
+	local up = TweenService:Create(motor, TweenInfo.new(upTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = from })
+	down.Completed:Connect(function()
+		up:Play()
+	end)
+	down:Play()
+end
+
+-- Plays a swing on whatever motors the current tool has.
 function ToolController.PlaySwing()
 	local tool = ToolController.GetEquippedTool()
 	if not tool then
 		return
 	end
-	local handle = tool:FindFirstChild("Handle")
-	local snip = handle and handle:FindFirstChild("Snip")
-	if not snip or not snip:IsA("Motor6D") then
-		return
+
+	local pivot = findMotor(tool, "Pivot")
+	if pivot then
+		local rest = pivot:GetAttribute("RestC0")
+		local swung = pivot:GetAttribute("SwungC0")
+		if typeof(rest) == "CFrame" and typeof(swung) == "CFrame" then
+			swingMotor(pivot, rest, swung, 0.09, 0.16)
+		end
 	end
 
-	local openC0 = snip:GetAttribute("OpenC0")
-	local closedC0 = snip:GetAttribute("ClosedC0")
-	if typeof(openC0) ~= "CFrame" or typeof(closedC0) ~= "CFrame" then
-		return
+	local snip = findMotor(tool, "Snip")
+	if snip then
+		local openC0 = snip:GetAttribute("OpenC0")
+		local closedC0 = snip:GetAttribute("ClosedC0")
+		if typeof(openC0) == "CFrame" and typeof(closedC0) == "CFrame" then
+			swingMotor(snip, openC0, closedC0, 0.07, 0.11)
+		end
 	end
-
-	local closeTween = TweenService:Create(
-		snip,
-		TweenInfo.new(0.07, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ C0 = closedC0 }
-	)
-	local openTween = TweenService:Create(
-		snip,
-		TweenInfo.new(0.11, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ C0 = openC0 }
-	)
-	closeTween.Completed:Connect(function()
-		openTween:Play()
-	end)
-	closeTween:Play()
 end
 
 function ToolController.Init() end
