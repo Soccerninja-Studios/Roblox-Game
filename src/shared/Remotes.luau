@@ -10,7 +10,9 @@ local REMOTE_NAMES = {
 	"PurchaseUpgrade", -- client -> server: buy a tool tier or skill level
 	"RequestState", -- client -> server: ask for a fresh state snapshot
 	"StateChanged", -- server -> client: full state snapshot (clippings, upgrades)
-	"TileCut", -- server -> client: a cut happened (for effects)
+	"TileCut", -- server -> client: a cut landed (grass burst effect)
+	"ClippingCollected", -- server -> client: a dropped clipping was picked up (+N popup)
+	"GrassTooTough", -- server -> client: swing bounced off grass too tough for the tool
 }
 
 local Remotes = {}
