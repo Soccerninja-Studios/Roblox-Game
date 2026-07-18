@@ -64,13 +64,19 @@ Each grass type has its own **defense** (armor + health). A swing only cuts if t
 cut power beats the grass's armor, so tougher grass literally needs better tools + the
 **Sharp Blades** power upgrade. Rough guide with default tools:
 
-| Grass type | Toughness  | Cut by                                   |
-|------------|-----------|-------------------------------------------|
-| Meadow     | very soft | anything                                  |
-| Wild       | soft      | anything                                  |
-| Moss       | medium    | Sickle+ (or Rusty Shears with Sharp Blades) |
-| Thick      | tough     | Sickle+ / more power                       |
-| Ironweed   | very tough| Scythe + power upgrades                    |
+| Grass type | Toughness  | Cut by                                       | Clips when cleared |
+|------------|-----------|-----------------------------------------------|--------------------|
+| Meadow     | very soft | anything                                      | 3                  |
+| Wild       | soft      | anything                                      | 6                  |
+| Moss       | medium    | Sickle+ (or Rusty Shears with Sharp Blades)   | 15                 |
+| Thick      | tough     | Sickle+ / more power                          | 25                 |
+| Ironweed   | very tough| Scythe + power upgrades                        | 80                 |
+
+Clippings are paid out **only when a tile is fully cut down**, and each grass type grants a
+**set amount** (above) no matter how many swings it took — so a stronger tool that clears a
+tile in fewer hits still yields the full reward, and Wild grass always gives at least 6. That
+amount is the guaranteed minimum; the **Greener Thumb** upgrade and any gamepass / global boost
+(via a player's `ClipMultiplier` attribute) raise it, and a rare Golden Blade crit multiplies it.
 
 All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
 
