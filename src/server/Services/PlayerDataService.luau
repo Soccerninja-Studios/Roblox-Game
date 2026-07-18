@@ -71,12 +71,21 @@ function PlayerDataService.Spend(player: Player, amount: number): boolean
 	return true
 end
 
-function PlayerDataService.Init()
-	Players.PlayerAdded:Connect(function(player: Player)
-		-- TODO(M2): load from DataStore with session locking
+local function onPlayerAdded(player: Player)
+	-- TODO(M2): load from DataStore with session locking
+	if not profiles[player] then
 		profiles[player] = defaultProfile()
 		print(`[PlayerDataService] Profile ready for {player.Name}`)
-	end)
+	end
+end
+
+function PlayerDataService.Init()
+	-- Handle any players who joined before this connected (e.g. Studio playtest)
+	for _, player in Players:GetPlayers() do
+		onPlayerAdded(player)
+	end
+
+	Players.PlayerAdded:Connect(onPlayerAdded)
 
 	Players.PlayerRemoving:Connect(function(player: Player)
 		-- TODO(M2): save to DataStore

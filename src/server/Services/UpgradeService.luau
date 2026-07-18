@@ -12,6 +12,7 @@ local SKILLS: { [string]: any } = GameConfig.SKILLS
 local UpgradeService = {}
 
 local PlayerDataService: any
+local ToolService: any
 
 local function onPurchase(player: Player, kind: unknown, id: unknown)
 	local profile = PlayerDataService.Get(player)
@@ -27,6 +28,10 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 		end
 		if PlayerDataService.Spend(player, toolDef.cost) then
 			profile.toolTier = nextTier
+			-- Swap the held shears to the new tier's look
+			if ToolService then
+				ToolService.GiveTool(player)
+			end
 		end
 	elseif kind == "skill" and type(id) == "string" then
 		local skillDef = SKILLS[id]
@@ -48,6 +53,7 @@ end
 
 function UpgradeService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
+	ToolService = services.ToolService
 	Remotes.Get("PurchaseUpgrade").OnServerEvent:Connect(onPurchase)
 end
 
