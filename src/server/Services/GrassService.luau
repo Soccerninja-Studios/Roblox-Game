@@ -166,30 +166,36 @@ local function onRequestCut(player: Player, tile: Instance?)
 	local applied = math.min(health, damage)
 	local newHealth = health - applied
 	tile:SetAttribute("Health", newHealth)
-
-	-- Clipping value for this swing (dropped on the ground, not auto-banked).
-	local isCrit = math.random() < GameConfig.CRIT_BASE_CHANCE
-	local critMul = isCrit and GameConfig.CRIT_BASE_MULTIPLIER or 1
-	local valueMul = StatCalculator.GetClippingMultiplier(profile.skills)
-	local earned =
-		math.max(1, math.floor(applied * GameConfig.CLIPPINGS_PER_BLADE * def.value * valueMul * critMul + 0.5))
-
 	profile.totalBladesCut = (profile.totalBladesCut or 0) + applied
 
 	refreshTileHeight(tile)
 	Remotes.Get("TileCut"):FireClient(player, tile.Position, typeName)
 
-	-- Drop the clippings physically near the top of the tile.
-	local dropFrom = tile.Position + Vector3.new(0, tile.Size.Y / 2 + 1, 0)
-	if ClippingsService then
-		ClippingsService.Drop(player, dropFrom, earned, isCrit)
+	if newHealth > 0 then
+		-- Still standing: no clippings are awarded until the tile is fully cleared.
+		return
 	end
 
-	if newHealth <= 0 then
-		-- Fully cut: reveal whatever is underneath.
-		tile.CanQuery = false
-		Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
+	-- Fully cut down. Each grass type pays out a SET number of clippings
+	-- (def.clipReward) regardless of how many swings clearing it actually took, so a
+	-- strong tool that fells it in one hit still yields the full reward. That base is
+	-- the guaranteed minimum; upgrades (Greener Thumb) and gamepasses multiply it up.
+	local baseReward = def.clipReward or 1
+	local valueMul = StatCalculator.GetClippingMultiplier(profile.skills) -- Greener Thumb
+	local gamepassMul = player:GetAttribute("ClipMultiplier") or 1 -- hook for gamepasses / global boosts
+	local isCrit = math.random() < GameConfig.CRIT_BASE_CHANCE
+	local critMul = isCrit and GameConfig.CRIT_BASE_MULTIPLIER or 1
+	-- max() guarantees the payout never drops below this type's base amount.
+	local reward = math.max(baseReward, math.floor(baseReward * valueMul * gamepassMul + 0.5)) * critMul
+
+	local dropFrom = tile.Position + Vector3.new(0, tile.Size.Y / 2 + 1, 0)
+	if ClippingsService then
+		ClippingsService.Drop(player, dropFrom, reward, isCrit)
 	end
+
+	-- Reveal whatever is underneath.
+	tile.CanQuery = false
+	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
 end
 
 -- Demo: only runs if the builder hasn't tagged anything yet, so there's always
