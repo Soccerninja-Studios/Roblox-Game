@@ -23,7 +23,7 @@ An incremental Roblox game: mow an entire overgrown medieval kingdom, one blade 
 5. Code now syncs live from VS Code into Studio. Press **Play** (F5) in Studio to test.
 
 ### Verifying it works
-After connecting and pressing Play, open the Output window in Studio (**View → Output**). You should see:
+After connecting and pressing Play, open the Output window in Studio (**View → Output**). You should see lines like:
 
 ```
 [Server] Initialized PlayerDataService
@@ -31,12 +31,55 @@ After connecting and pressing Play, open the Output window in Studio (**View →
 [Client] Mow the Kingdom client loaded!
 ```
 
+If you haven't tagged any grass surfaces yet, you'll also see `No GrassSurface tags found - building demo map.` and a demo field + mossy hut will appear so you can test right away.
+
+## Placing grass on YOUR map (for builders)
+
+You build the kingdom (walls, roofs, ground) by hand. To cover any part in grass that the
+player can cut down, **tag** that part:
+
+1. In Studio, open **View → Tag Editor**.
+2. Create a tag named exactly **`GrassSurface`** (once).
+3. Select any Part you want covered (a floor, a roof, a wall pad) and click the tag to apply it.
+
+When the game runs, the server grows a grid of grass tiles out of that part's **top face**
+(its local +Y), matching the part's rotation. So:
+
+- **Ground / floors** → tag the flat part; grass stands straight up.
+- **Roofs** → tag the (tilted) roof part; grass tilts to match it.
+- **Walls** → lay a thin part flat against the wall, rotate it so its **top points outward**, then tag it; grass grows out of the wall.
+
+When the player cuts all the grass off a part, the tiles disappear and reveal the building/ground underneath.
+
+### Optional per-part attributes (in the Properties window → Attributes)
+
+| Attribute      | Type   | What it does                                                        |
+|----------------|--------|--------------------------------------------------------------------|
+| `GrassType`    | String | Which grass type to grow (`Meadow`, `Wild`, `Thick`, `Moss`, `Ironweed`). Default `Wild`. |
+| `GrassHeight`  | Number | Override how tall the grass stands, in studs.                       |
+
+### Grass types & tool gating
+
+Each grass type has its own **defense** (armor + health). A swing only cuts if the tool's
+cut power beats the grass's armor, so tougher grass literally needs better tools + the
+**Sharp Blades** power upgrade. Rough guide with default tools:
+
+| Grass type | Toughness  | Cut by                                   |
+|------------|-----------|-------------------------------------------|
+| Meadow     | very soft | anything                                  |
+| Wild       | soft      | anything                                  |
+| Moss       | medium    | Sickle+ (or Rusty Shears with Sharp Blades) |
+| Thick      | tough     | Sickle+ / more power                       |
+| Ironweed   | very tough| Scythe + power upgrades                    |
+
+All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
+
 ## Playing the current build
 
-- You spawn holding a pair of **Shears** (a real, held tool). Mowing requires the tool to be equipped — if you ever unequip it (press its slot in the hotbar or `1`), equip it again to keep mowing.
-- **Hold left-click** (or hold on touch) while pointing at grass near you to mow. The grass now starts **tall** and **shrinks vertically a little on every snip**, disappearing after a few cuts. Stronger tools/upgrades (more "clipping power") shrink it faster.
-- The **🗒️ Shop** button on the **right side** of the screen opens the upgrade menu at any time. You can also just **walk into the shop stall** near spawn and the menu opens automatically (and closes when you walk away).
-- All upgrades (tool tiers + Kingdom Skills) live inside that shop menu.
+- You spawn holding a **cutting tool** (a real, held item). Mowing requires it equipped — if you unequip it (hotbar / `1`), equip it again.
+- **Hold left-click** (or hold on touch) while pointing at grass near you to mow. Grass starts **tall** and **shrinks on every swing**, disappearing after a few cuts. Stronger tools + Sharp Blades cut faster and get through tougher grass.
+- Cut grass **drops clippings on the ground**. Walk near them to vacuum them up — the **Clipping Magnet** upgrade widens that pickup range.
+- The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). All upgrades (tools + Kingdom Skills) live in that menu.
 
 ## Project layout
 
@@ -46,19 +89,20 @@ src/
     init.server.luau
     Services/
       PlayerDataService.luau   # profiles + state replication (M1 in-memory)
-      GrassService.luau        # tall grass, shrink-on-cut, awards Clippings
+      GrassService.luau        # coats tagged surfaces; handles cutting + grass types
+      ClippingsService.luau    # dropped clipping pickups + walk-near collection
       UpgradeService.luau      # tool tiers + Kingdom Skills purchases
-      ToolService.luau         # builds/gives the held shears tool per tier
-      ShopService.luau         # builds the walk-in shop stall + zone
+      ToolService.luau         # builds/gives the held cutting tool per tier
+      ShopService.luau         # builds the walk-in market stall + zone
   client/
     init.client.luau
     Controllers/
-      MowController.luau        # input; requires shears equipped
-      ToolController.luau       # equip state + snip animation
+      MowController.luau        # input; requires a tool equipped
+      ToolController.luau       # equip state + swing/snip animation
       UIController.luau         # HUD, right-side buttons, shop modal
-      EffectsController.luau    # floating +N popups
+      EffectsController.luau    # grass bursts, +N popups, too-tough feedback
   shared/
-    GameConfig.luau            # all tunable numbers
+    GameConfig.luau            # all tunable numbers (grass types, tools, skills)
     StatCalculator.luau        # profile -> gameplay stats
     Remotes.luau               # client<->server events
 ```
