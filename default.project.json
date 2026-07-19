@@ -5,6 +5,15 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Assets": {
+        "$className": "Folder",
+        "Shop": {
+          "$path": "assets/Shop.rbxmx"
+        },
+        "Shears": {
+          "$path": "assets/Shears.rbxmx"
+        }
       }
     },
     "ServerScriptService": {
