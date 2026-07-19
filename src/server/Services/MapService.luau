@@ -44,11 +44,16 @@ local function newPart(name: string, size: Vector3, position: Vector3, color: Co
 end
 
 -- A floating label on a short post, marking a zone entrance.
-local function makeSign(title: string, subtitle: string, position: Vector3)
+local SIGN_POST_HEIGHT = 8
+
+local function makeSign(title: string, subtitle: string, groundPos: Vector3)
+	-- Stand the post on the ground (its center is half its height up), tall enough --
+	-- with the label lifted well above it -- that the sign clears the border fences
+	-- (fence tops sit at GROUND_THICKNESS + 4) instead of being clipped by them.
 	local post = newPart(
 		"SignPost",
-		Vector3.new(0.6, 7, 0.6),
-		position,
+		Vector3.new(0.6, SIGN_POST_HEIGHT, 0.6),
+		groundPos + Vector3.new(0, SIGN_POST_HEIGHT / 2, 0),
 		color3(GameConfig.WORLD.SIGN_POST_COLOR),
 		Enum.Material.Wood
 	)
@@ -56,7 +61,7 @@ local function makeSign(title: string, subtitle: string, position: Vector3)
 	local board = Instance.new("BillboardGui")
 	board.Name = "ZoneSign"
 	board.Size = UDim2.fromOffset(220, 86)
-	board.StudsOffset = Vector3.new(0, 4.4, 0)
+	board.StudsOffset = Vector3.new(0, 4.6, 0)
 	board.MaxDistance = 240
 	board.Adornee = post
 	board.Parent = post
@@ -156,7 +161,7 @@ local function buildWorld()
 		makeSign(
 			zone.displayName,
 			`{grassName} {BULLET} needs {zone.requiredTool} {BULLET} {reward}c`,
-			Vector3.new(cursorX + 3, topY + 3.5, -depth / 2 + 3)
+			Vector3.new(cursorX + 3, topY, -depth / 2 + 7)
 		)
 
 		cursorX += length

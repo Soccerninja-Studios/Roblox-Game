@@ -46,7 +46,8 @@ local SAVE_RETRIES = 4
 local SAVE_RETRY_DELAY = 3
 local STALE_LOCK_SECONDS = 1200 -- a lock older than this is treated as abandoned
 
-local store = DataStoreService:GetDataStore(STORE_NAME)
+local store: DataStore? = nil
+local dataStoreReady = false
 local jobId = game.JobId ~= "" and game.JobId or "studio"
 
 local profiles: { [Player]: Profile } = {}
@@ -84,10 +85,14 @@ end
 -- Read the stored profile and take the session lock in one atomic UpdateAsync.
 -- Returns (ok, profile?, lockedByOther).
 local function tryAcquire(player: Player): (boolean, Profile?, boolean)
+	local ds = store
+	if not ds then
+		return false, nil, false
+	end
 	local lockedByOther = false
 	local stored: StoredData? = nil
 	local ok, err = pcall(function()
-		store:UpdateAsync(keyFor(player), function(raw: StoredData?): StoredData?
+		ds:UpdateAsync(keyFor(player), function(raw: StoredData?): StoredData?
 			local current: StoredData = raw or {}
 			local now = os.time()
 			-- Another live session holds a fresh lock -> leave it alone.
@@ -120,6 +125,9 @@ end
 -- Returns (profile, loadedCleanly). When loadedCleanly is false we must NOT save,
 -- so a temporary fallback profile can never clobber the player's real data.
 local function loadProfile(player: Player): (Profile, boolean)
+	if not dataStoreReady then
+		return defaultProfile(), false
+	end
 	for attempt = 1, LOAD_RETRIES do
 		local ok, profile, lockedByOther = tryAcquire(player)
 		if ok then
@@ -147,13 +155,14 @@ end
 -- Writes the cached profile back. If releaseLock is true, also frees the session
 -- lock (used on leave / shutdown). Returns true on success.
 local function saveProfile(player: Player, releaseLock: boolean): boolean
+	local ds = store
 	local profile = profiles[player]
-	if not profile or canSave[player] == false then
+	if not profile or canSave[player] == false or not ds then
 		return false
 	end
 	for attempt = 1, SAVE_RETRIES do
 		local ok, err = pcall(function()
-			store:UpdateAsync(keyFor(player), function(raw: StoredData?): StoredData?
+			ds:UpdateAsync(keyFor(player), function(raw: StoredData?): StoredData?
 				local current: StoredData = raw or {}
 				-- If another server has taken over this player, don't overwrite.
 				if current.lockJobId and current.lockJobId ~= jobId then
@@ -257,6 +266,22 @@ local function onPlayerAdded(player: Player)
 end
 
 function PlayerDataService.Init()
+	-- Acquire the DataStore safely. In an unpublished place (or with Studio API
+	-- access turned off) GetDataStore THROWS, which previously crashed this whole
+	-- module and took every service that depends on it down with it. Guard it so the
+	-- game still runs; progress just won't persist until the place is published and
+	-- Studio Access to API Services is enabled.
+	local ok, result = pcall(function()
+		return DataStoreService:GetDataStore(STORE_NAME)
+	end)
+	if ok then
+		store = result
+		dataStoreReady = true
+	else
+		warn(`[PlayerDataService] DataStore unavailable - progress will NOT save this session.`)
+		warn(`[PlayerDataService] Publish the place and enable Studio Access to API Services to turn saving on. ({result})`)
+	end
+
 	-- Handle any players who joined before this connected (e.g. Studio playtest).
 	for _, player in Players:GetPlayers() do
 		task.spawn(onPlayerAdded, player)
