@@ -233,8 +233,10 @@ end
 
 -- Tier 1 uses the hand-authored Shears model (synced via Rojo at
 -- ReplicatedStorage.Assets.Shears). We clone it, tag it like our own tools, and
--- set up its "Pivot" hinge so ToolController can animate the scissor snip. If the
--- asset is missing we fall back to the procedural shears below.
+-- rebuild its hinge so BOTH scissor halves swing inward together when snipping.
+-- If the asset is missing we fall back to the procedural shears below.
+local SNIP_HALF_ANGLE = math.rad(14) -- each half turns this much (~28 deg total closure)
+
 local function buildCustomShears(def: any, tier: number): Tool?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local template = assets and assets:FindFirstChild("Shears")
@@ -252,22 +254,79 @@ local function buildCustomShears(def: any, tier: number): Tool?
 
 	for _, d in tool:GetDescendants() do
 		if d:IsA("BasePart") then
+			d.Anchored = false -- parts must be free so the Motor6Ds can move them
 			d.CanQuery = false -- never block the mouse ray to the grass
 			d.CanTouch = false
 			d.Massless = true
 		end
 	end
 
-	-- The model's "Pivot" Motor6D hinges the moving scissor half. Give it the
-	-- open/closed poses our animator tweens between (rotation about the hinge's
-	-- local Z). Flip the sign of the angle if the snip opens the wrong way.
+	-- The model ships with a single "Pivot" Motor6D joining the two scissor halves
+	-- (Part0 = the grip half, Part1 = the other half). With that setup only Part1
+	-- can move, because Part0 is the held Handle -- hence only one side moved. To
+	-- make BOTH halves swing inward, we drop in a hidden central hinge part, make
+	-- it the Tool's Handle, and hang each half off it with its own Motor6D that
+	-- rotates in the opposite direction.
+	local pivot: Motor6D? = nil
 	for _, d in tool:GetDescendants() do
 		if d:IsA("Motor6D") and d.Name == "Pivot" then
-			local restC0 = d.C0
-			d:SetAttribute("RestC0", restC0)
-			d:SetAttribute("SwungC0", restC0 * CFrame.Angles(0, 0, math.rad(28)))
+			pivot = d
 			break
 		end
+	end
+
+	if pivot and pivot.Part0 and pivot.Part1 then
+		local rightHalf = pivot.Part0 :: BasePart
+		local leftHalf = pivot.Part1 :: BasePart
+		local c0 = pivot.C0
+		local c1 = pivot.C1
+		-- The joint (hinge) frame lives at Part0.CFrame * C0.
+		local hingeCF = rightHalf.CFrame * c0
+
+		-- Hidden hinge part sits exactly at the hinge and becomes the Tool.Handle.
+		local hinge = Instance.new("Part")
+		hinge.Name = "Handle"
+		hinge.Size = Vector3.new(0.2, 0.2, 0.2)
+		hinge.Transparency = 1
+		hinge.Anchored = false
+		hinge.CanCollide = false
+		hinge.CanQuery = false
+		hinge.CanTouch = false
+		hinge.Massless = true
+		hinge.CFrame = hingeCF
+		hinge.Parent = tool
+
+		-- Keep the tool sitting in the hand exactly as authored: the grip must now
+		-- target the hinge instead of the old Handle mesh (offset by C0).
+		tool.Grip = tool.Grip * c0
+
+		-- The old grip mesh is no longer the Handle; rename it so Tool.Handle
+		-- resolves to our hinge part.
+		rightHalf.Name = "ShearRight"
+
+		pivot:Destroy()
+
+		-- Right half hangs off the hinge; rest pose leaves it exactly where it is.
+		local motorRight = Instance.new("Motor6D")
+		motorRight.Name = "ScissorRight"
+		motorRight.Part0 = hinge
+		motorRight.Part1 = rightHalf
+		motorRight.C1 = CFrame.new()
+		motorRight.C0 = c0:Inverse()
+		motorRight:SetAttribute("RestC0", motorRight.C0)
+		motorRight:SetAttribute("SwungC0", CFrame.Angles(0, 0, -SNIP_HALF_ANGLE) * motorRight.C0)
+		motorRight.Parent = hinge
+
+		-- Left half hangs off the hinge and swings the opposite way.
+		local motorLeft = Instance.new("Motor6D")
+		motorLeft.Name = "ScissorLeft"
+		motorLeft.Part0 = hinge
+		motorLeft.Part1 = leftHalf
+		motorLeft.C1 = CFrame.new()
+		motorLeft.C0 = c1:Inverse()
+		motorLeft:SetAttribute("RestC0", motorLeft.C0)
+		motorLeft:SetAttribute("SwungC0", CFrame.Angles(0, 0, SNIP_HALF_ANGLE) * motorLeft.C0)
+		motorLeft.Parent = hinge
 	end
 
 	return tool
