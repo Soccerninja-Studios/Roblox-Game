@@ -101,12 +101,44 @@ local GameConfig = {
 	PICKUP_LIFETIME = 45, -- seconds a dropped clipping lasts before vanishing
 	PICKUP_MAGNET_TIME = 0.16, -- seconds for a clipping to fly into the player
 
-	-- Demo map (only generated if the builder hasn't tagged any GrassSurface parts yet)
-	DEMO_ENABLED = true,
+	-- World map layout. MapService builds a stone spawn plaza followed by a
+	-- contiguous strip of grass zones (below), laid out along +X. All map geometry
+	-- is generated from these numbers, so tweaking them reshapes the world.
+	WORLD = {
+		GROUND_THICKNESS = 2, -- how thick each ground pad is (studs); walkable top = this value
+		STRIP_DEPTH = 64, -- Z depth of the plaza and every zone (keeps the strip aligned)
+		PLAZA_SIZE = 48, -- X length of the stone spawn plaza (holds the spawn point + shop)
+		PLAZA_COLOR = { 150, 146, 138 },
+		BORDER_COLOR = { 96, 90, 82 },
+		SIGN_POST_COLOR = { 92, 64, 40 },
+	},
+
+	-- Grass zones, in progression order (easiest first). Each becomes one ground pad
+	-- laid end-to-end after the plaza, tagged so GrassService grows its grass type.
+	-- ADD A ZONE by adding a line here -- no code changes needed anywhere.
+	--   key          = unique id (also the workspace part name, Zone_<key>)
+	--   displayName  = shown on the entrance sign
+	--   grassType    = which GRASS_TYPES entry to grow (drives reward + toughness)
+	--   length       = X length of the pad in studs (depth is WORLD.STRIP_DEPTH)
+	--   groundColor  = {r,g,b} of the dirt beneath the grass
+	--   requiredTool = tool named on the sign as the one strong enough to harvest it
+	ZONES = {
+		{ key = "Meadow", displayName = "Meadow", grassType = "Meadow", length = 64, groundColor = { 120, 92, 60 }, requiredTool = "Rusty Shears" },
+		{ key = "Wild", displayName = "Wildfields", grassType = "Wild", length = 64, groundColor = { 98, 74, 52 }, requiredTool = "Rusty Shears" },
+		{ key = "Moss", displayName = "Mossy Hollow", grassType = "Moss", length = 64, groundColor = { 78, 74, 58 }, requiredTool = "Sickle" },
+		{ key = "Thick", displayName = "The Thicket", grassType = "Thick", length = 64, groundColor = { 74, 62, 46 }, requiredTool = "Sickle" },
+		{ key = "Ironweed", displayName = "Ironweed Expanse", grassType = "Ironweed", length = 72, groundColor = { 60, 56, 50 }, requiredTool = "Scythe" },
+	},
+
+	-- Demo map: legacy single-field sandbox, now superseded by the real map above and
+	-- kept OFF. If you ever want the old sandbox back, set DEMO_ENABLED = true; it only
+	-- builds when nothing (including MapService) has tagged a GrassSurface part.
+	DEMO_ENABLED = false,
 	DEMO_CENTER = Vector3.new(64, 0, 64),
 
-	-- Shop (walk-in zone + always-on button both open the same menu)
-	SHOP_POSITION = Vector3.new(-14, 0, -18),
+	-- Shop (walk-in zone + always-on button both open the same menu). Y sits on the
+	-- plaza surface (= WORLD.GROUND_THICKNESS) so the stall rests on the ground.
+	SHOP_POSITION = Vector3.new(-6, 2, -6),
 	SHOP_ZONE_RADIUS = 16,
 }
 
