@@ -87,6 +87,24 @@ All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
 - Cut grass **drops clippings on the ground**. Walk near them to vacuum them up — the **Clipping Magnet** upgrade widens that pickup range.
 - The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). A **glowing green circle** on the ground marks the exact area where the shop opens. If your model includes a **ProximityPrompt**, holding the interact key opens the shop too. All upgrades (tools + Kingdom Skills) live in that menu.
 
+## The world map (zones)
+
+The map is **built automatically in code** from `GameConfig.ZONES` — you don't have to place anything in Studio. On server start, `MapService` builds a stone **spawn plaza** (which holds the spawn point and the shop) followed by a contiguous strip of **grass zones** laid out in progression order:
+
+| Zone | Grass | Harvest with |
+| --- | --- | --- |
+| Meadow | Meadow Grass | Rusty Shears (starter) |
+| Wildfields | Wild Grass | Rusty Shears |
+| Mossy Hollow | Creeping Moss | Sickle |
+| The Thicket | Thicket | Sickle |
+| Ironweed Expanse | Ironweed | Scythe |
+
+Each zone is one ground pad, tagged so `GrassService` grows the right grass on it. Tougher grass has more armor, so you literally can't harvest a zone until you've bought a tool that out-powers it — **that's the world progression** (mow Meadow/Wildfields with the starter shears → afford the Sickle → clear Moss/Thicket → afford the Scythe → tackle Ironweed).
+
+**To add or change a zone,** edit `GameConfig.ZONES` (one line per zone: name, grass type, length, ground color, required tool). To reshape the whole strip (plaza size, depth, ground thickness, colors), edit `GameConfig.WORLD`. No code changes needed for either.
+
+You can still hand-build in Studio too: any part you tag with **`GrassSurface`** (with a `GrassType` attribute) grows grass the same way, so you can replace or extend the generated map whenever you like. The old demo sandbox is now off (`DEMO_ENABLED = false`).
+
 ## Saving & progress (persistence)
 
 Player progress (clippings, tool tier, Kingdom Skills, stats) is saved to Roblox **DataStores** and reloaded when a player rejoins. You don't have to do anything in-game — it saves automatically:
@@ -122,6 +140,7 @@ src/
       UpgradeService.luau      # tool tiers + Kingdom Skills purchases
       ToolService.luau         # builds/gives the held cutting tool per tier
       ShopService.luau         # spawns the Shop model; makes ShopZone a visible circle
+      MapService.luau          # builds the spawn plaza + grass zones from GameConfig.ZONES
   client/
     init.client.luau
     Controllers/
