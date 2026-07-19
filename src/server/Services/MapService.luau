@@ -20,6 +20,11 @@ local MapService = {}
 
 local mapRoot: Model
 
+-- Precompute the bullet separator. NOTE: never put a \u{...} escape directly inside
+-- a backtick interpolated string -- the braces collide with interpolation syntax and
+-- break compilation. Build it here and interpolate this variable instead.
+local BULLET = utf8.char(0x2022)
+
 local function color3(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
 end
@@ -150,7 +155,7 @@ local function buildWorld()
 		local reward = (def and def.clipReward) or 0
 		makeSign(
 			zone.displayName,
-			`{grassName} \u{2022} needs {zone.requiredTool} \u{2022} {reward}c`,
+			`{grassName} {BULLET} needs {zone.requiredTool} {BULLET} {reward}c`,
 			Vector3.new(cursorX + 3, topY + 3.5, -depth / 2 + 3)
 		)
 
