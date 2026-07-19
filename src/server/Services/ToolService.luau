@@ -280,10 +280,12 @@ local function buildCustomShears(def: any, tier: number): Tool?
 		local leftHalf = pivot.Part1 :: BasePart
 		local c0 = pivot.C0
 		local c1 = pivot.C1
-		-- The joint (hinge) frame lives at Part0.CFrame * C0.
-		local hingeCF = rightHalf.CFrame * c0
 
-		-- Hidden hinge part sits exactly at the hinge and becomes the Tool.Handle.
+		-- Hidden hinge part becomes the Tool.Handle. We place it EXACTLY where the
+		-- original grip mesh sat and leave Tool.Grip untouched, so the shears sit in
+		-- the hand exactly as authored (fixing the earlier orientation problem). The
+		-- real scissor pivot is offset from this frame by C0, so each half rotates
+		-- about that pivot instead of about the hinge origin.
 		local hinge = Instance.new("Part")
 		hinge.Name = "Handle"
 		hinge.Size = Vector3.new(0.2, 0.2, 0.2)
@@ -293,39 +295,37 @@ local function buildCustomShears(def: any, tier: number): Tool?
 		hinge.CanQuery = false
 		hinge.CanTouch = false
 		hinge.Massless = true
-		hinge.CFrame = hingeCF
+		hinge.CFrame = rightHalf.CFrame
 		hinge.Parent = tool
 
-		-- Keep the tool sitting in the hand exactly as authored: the grip must now
-		-- target the hinge instead of the old Handle mesh (offset by C0).
-		tool.Grip = tool.Grip * c0
-
 		-- The old grip mesh is no longer the Handle; rename it so Tool.Handle
-		-- resolves to our hinge part.
+		-- resolves to our hinge part. Tool.Grip stays exactly as authored.
 		rightHalf.Name = "ShearRight"
 
 		pivot:Destroy()
 
-		-- Right half hangs off the hinge; rest pose leaves it exactly where it is.
+		-- Right half: rests exactly in place, swings about the real pivot frame
+		-- (offset C0 from the hinge). The C0 * rot * C0:Inverse() sandwich rotates
+		-- about that pivot rather than about the hinge origin.
 		local motorRight = Instance.new("Motor6D")
 		motorRight.Name = "ScissorRight"
 		motorRight.Part0 = hinge
 		motorRight.Part1 = rightHalf
 		motorRight.C1 = CFrame.new()
-		motorRight.C0 = c0:Inverse()
+		motorRight.C0 = CFrame.new()
 		motorRight:SetAttribute("RestC0", motorRight.C0)
-		motorRight:SetAttribute("SwungC0", CFrame.Angles(0, 0, -SNIP_HALF_ANGLE) * motorRight.C0)
+		motorRight:SetAttribute("SwungC0", c0 * CFrame.Angles(0, 0, -SNIP_HALF_ANGLE) * c0:Inverse())
 		motorRight.Parent = hinge
 
-		-- Left half hangs off the hinge and swings the opposite way.
+		-- Left half: rests in place, swings the opposite way about the same pivot.
 		local motorLeft = Instance.new("Motor6D")
 		motorLeft.Name = "ScissorLeft"
 		motorLeft.Part0 = hinge
 		motorLeft.Part1 = leftHalf
 		motorLeft.C1 = CFrame.new()
-		motorLeft.C0 = c1:Inverse()
+		motorLeft.C0 = c0 * c1:Inverse()
 		motorLeft:SetAttribute("RestC0", motorLeft.C0)
-		motorLeft:SetAttribute("SwungC0", CFrame.Angles(0, 0, SNIP_HALF_ANGLE) * motorLeft.C0)
+		motorLeft:SetAttribute("SwungC0", c0 * CFrame.Angles(0, 0, SNIP_HALF_ANGLE) * c1:Inverse())
 		motorLeft.Parent = hinge
 	end
 
