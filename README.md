@@ -87,6 +87,19 @@ All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
 - Cut grass **drops clippings on the ground**. Walk near them to vacuum them up — the **Clipping Magnet** upgrade widens that pickup range.
 - The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). A **glowing green circle** on the ground marks the exact area where the shop opens. If your model includes a **ProximityPrompt**, holding the interact key opens the shop too. All upgrades (tools + Kingdom Skills) live in that menu.
 
+## Saving & progress (persistence)
+
+Player progress (clippings, tool tier, Kingdom Skills, stats) is saved to Roblox **DataStores** and reloaded when a player rejoins. You don't have to do anything in-game — it saves automatically:
+
+- **On leave** and **on server shutdown** (a final save runs for everyone still in-game).
+- **Every 2 minutes** in the background while playing.
+- A **session lock** stops two servers from editing the same player at once (this is what prevents progress rollbacks and item duplication).
+- If a load ever fails, that player gets a **temporary profile that is never saved**, so a glitch can't wipe real progress.
+
+**Important — to test saving in Studio:** DataStores only work if API access is enabled. Go to **Game Settings → Security → Enable Studio Access to API Services** (turn it on). You must also have **published** the place to Roblox at least once (**File → Save to Roblox As...**). Without this you'll see load/save warnings in the Output and progress won't persist in Studio — it will still work in the live game once published.
+
+If you ever need to wipe everyone's data during development, change `STORE_NAME` in `PlayerDataService.luau` (e.g. `"PlayerData_v2"`).
+
 ## Custom models (shop, tools, buildings)
 
 Hand-built models live in the `assets/` folder as `.rbxmx` files and are synced into `ReplicatedStorage.Assets` by Rojo. The game clones them at runtime.
@@ -103,7 +116,7 @@ src/
   server/
     init.server.luau
     Services/
-      PlayerDataService.luau   # profiles + state replication (M1 in-memory)
+      PlayerDataService.luau   # profiles + state replication (M2 DataStore: autosave, session lock)
       GrassService.luau        # coats tagged surfaces; handles cutting + grass types
       ClippingsService.luau    # dropped clipping pickups + walk-near collection
       UpgradeService.luau      # tool tiers + Kingdom Skills purchases
