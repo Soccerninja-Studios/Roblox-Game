@@ -85,7 +85,16 @@ All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
 - You spawn holding a **cutting tool** (a real, held item). Mowing requires it equipped — if you unequip it (hotbar / `1`), equip it again.
 - **Hold left-click** (or hold on touch) while pointing at grass near you to mow. Grass starts **tall** and **shrinks on every swing**, disappearing after a few cuts. Stronger tools + Sharp Blades cut faster and get through tougher grass.
 - Cut grass **drops clippings on the ground**. Walk near them to vacuum them up — the **Clipping Magnet** upgrade widens that pickup range.
-- The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). All upgrades (tools + Kingdom Skills) live in that menu.
+- The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). A **glowing green circle** on the ground marks the exact area where the shop opens. If your model includes a **ProximityPrompt**, holding the interact key opens the shop too. All upgrades (tools + Kingdom Skills) live in that menu.
+
+## Custom models (shop, tools, buildings)
+
+Hand-built models live in the `assets/` folder as `.rbxmx` files and are synced into `ReplicatedStorage.Assets` by Rojo. The game clones them at runtime.
+
+- **`assets/Shop.rbxmx`** → `ReplicatedStorage.Assets.Shop`. Spawned by `ShopService` at `SHOP_POSITION` (resting on the ground). It must contain a part named **`ShopZone`** — the code reshapes that into the visible circular area (radius = `SHOP_ZONE_RADIUS`). Any `Sign`, NPC, or `ProximityPrompt` inside the model is kept.
+- **`assets/Shears.rbxmx`** → `ReplicatedStorage.Assets.Shears`. Cloned by `ToolService` for the tier-1 tool. It must be a `Tool` with a `Handle` part; a `Motor6D` named **`Pivot`** joining the two scissor halves is animated as the snip.
+
+To add or replace a model: right-click it in Studio → **Save to File** as `.rbxmx`, drop it in `assets/`, and (for a brand-new asset) add an entry under `ReplicatedStorage.Assets` in `default.project.json`.
 
 ## Project layout
 
@@ -99,7 +108,7 @@ src/
       ClippingsService.luau    # dropped clipping pickups + walk-near collection
       UpgradeService.luau      # tool tiers + Kingdom Skills purchases
       ToolService.luau         # builds/gives the held cutting tool per tier
-      ShopService.luau         # builds the walk-in market stall + zone
+      ShopService.luau         # spawns the Shop model; makes ShopZone a visible circle
   client/
     init.client.luau
     Controllers/
