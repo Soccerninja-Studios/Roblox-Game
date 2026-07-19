@@ -231,6 +231,48 @@ local function buildScythe(def: any, tier: number): Tool
 	return tool
 end
 
+-- Tier 1 uses the hand-authored Shears model (synced via Rojo at
+-- ReplicatedStorage.Assets.Shears). We clone it, tag it like our own tools, and
+-- set up its "Pivot" hinge so ToolController can animate the scissor snip. If the
+-- asset is missing we fall back to the procedural shears below.
+local function buildCustomShears(def: any, tier: number): Tool?
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local template = assets and assets:FindFirstChild("Shears")
+	if not template or not template:IsA("Tool") then
+		return nil
+	end
+
+	local tool = template:Clone() :: Tool
+	tool.Name = "Shears"
+	tool.RequiresHandle = true
+	tool.CanBeDropped = false
+	tool.ToolTip = def.name
+	tool:SetAttribute("Shears", true)
+	tool:SetAttribute("ToolTier", tier)
+
+	for _, d in tool:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.CanQuery = false -- never block the mouse ray to the grass
+			d.CanTouch = false
+			d.Massless = true
+		end
+	end
+
+	-- The model's "Pivot" Motor6D hinges the moving scissor half. Give it the
+	-- open/closed poses our animator tweens between (rotation about the hinge's
+	-- local Z). Flip the sign of the angle if the snip opens the wrong way.
+	for _, d in tool:GetDescendants() do
+		if d:IsA("Motor6D") and d.Name == "Pivot" then
+			local restC0 = d.C0
+			d:SetAttribute("RestC0", restC0)
+			d:SetAttribute("SwungC0", restC0 * CFrame.Angles(0, 0, math.rad(28)))
+			break
+		end
+	end
+
+	return tool
+end
+
 local STYLE_BUILDERS: { [string]: (any, number) -> Tool } = {
 	shears = buildShears,
 	sickle = buildSickle,
@@ -239,6 +281,12 @@ local STYLE_BUILDERS: { [string]: (any, number) -> Tool } = {
 
 local function buildTool(tier: number): Tool
 	local def = GameConfig.TOOL_TIERS[tier] or GameConfig.TOOL_TIERS[1]
+	if def.style == "shears" then
+		local custom = buildCustomShears(def, tier)
+		if custom then
+			return custom
+		end
+	end
 	local builder = STYLE_BUILDERS[def.style] or buildShears
 	return builder(def, tier)
 end
