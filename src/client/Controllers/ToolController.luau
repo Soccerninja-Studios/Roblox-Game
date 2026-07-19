@@ -29,15 +29,6 @@ function ToolController.IsEquipped(): boolean
 	return ToolController.GetEquippedTool() ~= nil
 end
 
-local function findMotor(tool: Tool, name: string): Motor6D?
-	for _, d in tool:GetDescendants() do
-		if d:IsA("Motor6D") and d.Name == name then
-			return d
-		end
-	end
-	return nil
-end
-
 -- Tween a motor's C0 to `to`, then back to `from`.
 local function swingMotor(motor: Motor6D, from: CFrame, to: CFrame, downTime: number, upTime: number)
 	local down = TweenService:Create(motor, TweenInfo.new(downTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = to })
@@ -48,29 +39,40 @@ local function swingMotor(motor: Motor6D, from: CFrame, to: CFrame, downTime: nu
 	down:Play()
 end
 
--- Plays a swing on whatever motors the current tool has.
+-- Every Motor6D carrying the given pair of CFrame pose attributes.
+local function motorsWithPose(tool: Tool, fromAttr: string, toAttr: string): { Motor6D }
+	local motors: { Motor6D } = {}
+	for _, d in tool:GetDescendants() do
+		if d:IsA("Motor6D") then
+			local from = d:GetAttribute(fromAttr)
+			local to = d:GetAttribute(toAttr)
+			if typeof(from) == "CFrame" and typeof(to) == "CFrame" then
+				table.insert(motors, d)
+			end
+		end
+	end
+	return motors
+end
+
+-- Plays a swing on whatever motors the current tool has. Both scissor halves of
+-- the model shears carry Rest/Swung poses, so they animate together symmetrically.
 function ToolController.PlaySwing()
 	local tool = ToolController.GetEquippedTool()
 	if not tool then
 		return
 	end
 
-	local pivot = findMotor(tool, "Pivot")
-	if pivot then
-		local rest = pivot:GetAttribute("RestC0")
-		local swung = pivot:GetAttribute("SwungC0")
-		if typeof(rest) == "CFrame" and typeof(swung) == "CFrame" then
-			swingMotor(pivot, rest, swung, 0.09, 0.16)
-		end
+	for _, motor in motorsWithPose(tool, "RestC0", "SwungC0") do
+		local rest = motor:GetAttribute("RestC0") :: CFrame
+		local swung = motor:GetAttribute("SwungC0") :: CFrame
+		swingMotor(motor, rest, swung, 0.09, 0.16)
 	end
 
-	local snip = findMotor(tool, "Snip")
-	if snip then
-		local openC0 = snip:GetAttribute("OpenC0")
-		local closedC0 = snip:GetAttribute("ClosedC0")
-		if typeof(openC0) == "CFrame" and typeof(closedC0) == "CFrame" then
-			swingMotor(snip, openC0, closedC0, 0.07, 0.11)
-		end
+	-- Procedural fallback shears use a separate blade-close joint.
+	for _, motor in motorsWithPose(tool, "OpenC0", "ClosedC0") do
+		local openC0 = motor:GetAttribute("OpenC0") :: CFrame
+		local closedC0 = motor:GetAttribute("ClosedC0") :: CFrame
+		swingMotor(motor, openC0, closedC0, 0.07, 0.11)
 	end
 end
 
