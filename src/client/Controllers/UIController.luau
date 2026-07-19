@@ -592,10 +592,29 @@ function UIController.Init()
 	end)
 end
 
+-- If the shop model ships with a ProximityPrompt, let "hold to interact" open the
+-- menu too (the walk-in zone already opens it automatically).
+local function hookShopPrompt()
+	task.spawn(function()
+		for _ = 1, 60 do
+			local shop = Workspace:FindFirstChild("Shop")
+			local prompt = shop and shop:FindFirstChildWhichIsA("ProximityPrompt", true)
+			if prompt then
+				prompt.Triggered:Connect(function()
+					UIController.OpenShop(false)
+				end)
+				return
+			end
+			task.wait(0.5)
+		end
+	end)
+end
+
 function UIController.Start()
 	Remotes.Get("StateChanged").OnClientEvent:Connect(updateUI)
 	Remotes.Get("RequestState"):FireServer()
 	startZoneWatch()
+	hookShopPrompt()
 end
 
 return UIController
