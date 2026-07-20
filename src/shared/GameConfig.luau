@@ -136,9 +136,10 @@ local GameConfig = {
 	DEMO_ENABLED = false,
 	DEMO_CENTER = Vector3.new(64, 0, 64),
 
-	-- Shop (walk-in zone + always-on button both open the same menu). Y sits on the
-	-- plaza surface (= WORLD.GROUND_THICKNESS) so the stall rests on the ground.
-	SHOP_POSITION = Vector3.new(-6, 2, -6),
+	-- Shop (walk-in zone + always-on button both open the same menu). It sits in the
+	-- Village 1 square, mirroring the Gardener's Hut across the well. Y = 0 is the
+	-- village ground top, so ShopService rests the stall on the ground.
+	SHOP_POSITION = Vector3.new(-20, 0, 18),
 	SHOP_ZONE_RADIUS = 16,
 }
 
