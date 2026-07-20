@@ -1,0 +1,12 @@
+# Roblox place/model binaries (never commit these; Rojo builds them)
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Rojo
+sourcemap.json
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -87,23 +87,32 @@ All balance numbers live in `src/shared/GameConfig.luau` — tweak them there.
 - Cut grass **drops clippings on the ground**. Walk near them to vacuum them up — the **Clipping Magnet** upgrade widens that pickup range.
 - The **🛒 Shop** button on the **right side** opens the upgrade menu anytime; you can also just **walk into the market stall** near spawn and it opens automatically (and closes when you leave). A **glowing green circle** on the ground marks the exact area where the shop opens. If your model includes a **ProximityPrompt**, holding the interact key opens the shop too. All upgrades (tools + Kingdom Skills) live in that menu.
 
-## The world map (zones)
+## The world map (villages & castle)
 
-The map is **built automatically in code** from `GameConfig.ZONES` — you don't have to place anything in Studio. On server start, `MapService` builds a stone **spawn plaza** (which holds the spawn point and the shop) followed by a contiguous strip of **grass zones** laid out in progression order:
+The world is a **kingdom of 5 villages ringed around a central castle**. Each village is a **zone** (Village 1–5, the Castle is zone 6). You start in **Village 1** and only unlock the next village once you've fully cleared the one before it. Every village has its own **gardener** (where you deposit clippings) and its own **shop**, plus roads linking it to its two neighbouring villages and one road up to a castle gate. The look is inspired by the villages of *Medieval Dynasty* — timber-framed houses, thatch and slate roofs, a well in the square, market stalls, barns, and fields.
 
-| Zone | Grass | Harvest with |
-| --- | --- | --- |
-| Meadow | Meadow Grass | Rusty Shears (starter) |
-| Wildfields | Wild Grass | Rusty Shears |
-| Mossy Hollow | Creeping Moss | Sickle |
-| The Thicket | Thicket | Sickle |
-| Ironweed Expanse | Ironweed | Scythe |
+`MapService` builds the whole thing **automatically in code** on server start — you don't place anything in Studio.
 
-Each zone is one ground pad, tagged so `GrassService` grows the right grass on it. Tougher grass has more armor, so you literally can't harvest a zone until you've bought a tool that out-powers it — **that's the world progression** (mow Meadow/Wildfields with the starter shears → afford the Sickle → clear Moss/Thicket → afford the Scythe → tackle Ironweed).
+### Village 1 — "Greenhollow" (built now)
 
-**To add or change a zone,** edit `GameConfig.ZONES` (one line per zone: name, grass type, length, ground color, required tool). To reshape the whole strip (plaza size, depth, ground thickness, colors), edit `GameConfig.WORLD`. No code changes needed for either.
+The starting village, laid out around a packed-dirt **square** with a central **well**, market stalls, and villagers. Two main roads cross through four **gates** (one toward the Castle, one the village entrance, and one each toward Villages 2 and 5 — the latter three signed **Locked** until you unlock them). A **palisade** wall rings the village.
 
-You can still hand-build in Studio too: any part you tag with **`GrassSurface`** (with a `GrassType` attribute) grows grass the same way, so you can replace or extend the generated map whenever you like. The old demo sandbox is now off (`DEMO_ENABLED = false`).
+Buildings each have a real purpose, including:
+
+- **Gardener's Hut** (deposit clippings here) and the **Shop**, side by side on the square
+- **Tavern** ("The Rusty Tankard"), **Blacksmith** (working forge), **Chapel** with a steeple
+- **Family houses**, **cottages**, a **bakery**, **storehouses**, a **barn** + animal pen, a **farmer's shed**
+- **Windmill**, two **watchtowers**, **market stalls**, carts, hay bales, barrels, and crates
+
+Around the village is **open world detail**: a forest of scattered trees, rocks and bushes, rolling **hills**, a **pond** with a dock, farm plots with scarecrows, and flower clusters.
+
+The cuttable **overgrown grass** the player mows is spread in patches across the village (all tagged `ZoneKey = Village1`), mostly gentle **Meadow/Wild** grass with a few tougher **Moss/Thicket** patches near the castle road. Some roofs are grassed over too. Clearing all of Village 1's grass is what will unlock Village 2.
+
+### Villages 2–5 and the Castle (coming next)
+
+These aren't built yet. Village 1's gates already point where the roads to Villages 2 & 5 and the Castle will connect, and each future village will get its own gardener, shop, and unique layout. Zone-unlock gating (clear a village → unlock the next) is planned to hook into the `GardenerSpot`/`ZoneKey` tags already placed.
+
+You can still hand-build in Studio too: any part you tag with **`GrassSurface`** (with a `GrassType` attribute) grows grass the same way, so you can extend the generated map whenever you like. The old demo sandbox is off (`DEMO_ENABLED = false`), and the previous zone-strip layout (`GameConfig.ZONES`/`WORLD`) is superseded by the village map though left in config for reference.
 
 ## Saving & progress (persistence)
 
