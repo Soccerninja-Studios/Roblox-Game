@@ -95,18 +95,28 @@ The world is a **kingdom of 5 villages ringed around a central castle**. Each vi
 
 ### Village 1 — "Greenhollow" (built now)
 
-The starting village, laid out around a packed-dirt **square** with a central **well**, market stalls, and villagers. Two main roads cross through four **gates** (one toward the Castle, one the village entrance, and one each toward Villages 2 and 5 — the latter three signed **Locked** until you unlock them). A **palisade** wall rings the village.
+The starting village is built on a **large continuous ground** (no more floating baseplate island — the default Baseplate is removed and replaced with a 300×300 village floor surrounded by open countryside stretching ~800 studs in every direction). A **palisade** wall rings the village with four **gates**: the entrance, one toward the Castle, and one each toward Villages 2 and 5 (the latter three signed **Locked** until you unlock them).
 
-Buildings each have a real purpose, including:
+The village is split into **four districts**, each covered in grass that you mow to uncover it:
 
-- **Gardener's Hut** (deposit clippings here) and the **Shop**, side by side on the square
-- **Tavern** ("The Rusty Tankard"), **Blacksmith** (working forge), **Chapel** with a steeple
-- **Family houses**, **cottages**, a **bakery**, **storehouses**, a **barn** + animal pen, a **farmer's shed**
-- **Windmill**, two **watchtowers**, **market stalls**, carts, hay bales, barrels, and crates
+- **The Village Square** — central well, **Gardener's Hut** (deposit clippings) beside the **Shop**, market stalls, the **Town Hall**, torches, and villagers.
+- **Residential Row** — two rows of **family houses** and **cottages** facing a lane, each with a small garden and a shared well.
+- **The Craftsmen's Quarter** — **Blacksmith** (working forge with fire + anvil), **Tavern** ("The Rusty Tankard"), **Storehouse**, a **Windmill** with turning blades, and a market stall.
+- **The Farmstead** — a big **Barn**, farmhouse, sheds, storehouse, **plowed fields** with scarecrows, hay bales, and a fenced pasture.
 
-Around the village is **open world detail**: a forest of scattered trees, rocks and bushes, rolling **hills**, a **pond** with a dock, farm plots with scarecrows, and flower clusters.
+**Fixed from the first pass:** buildings no longer look hollow or collapsed — every house now has **closed, tapered gable ends** (the triangular wall under each roof is filled in), lower and less steep roofs with only a small overhang, solid **doors**, glass **windows**, and timber **corner beams**. Buildings are spaced out across the districts so they no longer overlap or clip.
 
-The cuttable **overgrown grass** the player mows is spread in patches across the village (all tagged `ZoneKey = Village1`), mostly gentle **Meadow/Wild** grass with a few tougher **Moss/Thicket** patches near the castle road. Some roofs are grassed over too. Clearing all of Village 1's grass is what will unlock Village 2.
+Around the village is **open world detail**: a forest of scattered trees, rocks and bushes, rolling **hills**, and a **lake** to the southwest.
+
+### Overgrowth & bringing the village to life
+
+The whole village starts **buried under grass** — every district's **ground is carpeted** in cuttable grass, and the **rooftops are overgrown** too (roof grass is cosmetic; you don't need to reach it). Mowing uncovers the village bit by bit.
+
+When you **fully mow a district's ground**, that district comes to life: its hidden **villagers and animals appear** (the Farmstead brings out cows, sheep, pigs, and chickens; the other districts bring out townsfolk), and a banner announces *"<District> restored — its people return!"* Clear all four districts and Greenhollow is declared **fully restored** — which is what will unlock Village 2.
+
+- The villagers and animals are **non-interactable** (decorative life) for now, built hidden in `ServerStorage.DistrictLife` and moved into the world the moment their district is clear.
+- District grass is gentle **Meadow** (in the Square, so brand-new players can always clear it with the starter Rusty Shears) and **Wild** grass elsewhere — nothing that would soft-lock a player without upgrades.
+- Detection is automatic: `MapService` tags each district's ground with a `District` attribute, `GrassService` passes that tag onto every grass tile, and `DistrictService` counts them down and fires the reveal.
 
 ### Villages 2–5 and the Castle (coming next)
 
