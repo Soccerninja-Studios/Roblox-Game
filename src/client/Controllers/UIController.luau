@@ -610,8 +610,70 @@ local function hookShopPrompt()
 	end)
 end
 
+-- District reveal banner ------------------------------------------------------
+-- Fired by DistrictService when a district (or the whole village) is cleared.
+-- Slides a celebratory banner down from the top, holds, then slides away.
+local function showBanner(title: string, subtitle: string?)
+	local playerGui = player:FindFirstChild("PlayerGui")
+	local gui = playerGui and playerGui:FindFirstChild("HUD")
+	if not gui then
+		return
+	end
+
+	local banner = Instance.new("Frame")
+	banner.Name = "DistrictBanner"
+	banner.AnchorPoint = Vector2.new(0.5, 0)
+	banner.Position = UDim2.new(0.5, 0, 0, -100)
+	banner.Size = UDim2.fromOffset(460, 84)
+	banner.BackgroundColor3 = GREEN_DARK
+	banner.ZIndex = 20
+	corner(banner, 16)
+	gradient(banner, GREEN, GREEN_DARK, 90)
+	stroke(banner, 3, Color3.fromRGB(255, 255, 255), 0.25)
+	shadow(banner, 20)
+	banner.Parent = gui
+
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Position = UDim2.fromOffset(18, 12)
+	titleLabel.Size = UDim2.new(1, -36, 0, 36)
+	titleLabel.Font = Enum.Font.FredokaOne
+	titleLabel.Text = title
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.TextScaled = true
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+	titleLabel.ZIndex = 21
+	titleLabel.Parent = banner
+
+	local subLabel = Instance.new("TextLabel")
+	subLabel.BackgroundTransparency = 1
+	subLabel.Position = UDim2.fromOffset(18, 50)
+	subLabel.Size = UDim2.new(1, -36, 0, 22)
+	subLabel.Font = Enum.Font.GothamMedium
+	subLabel.Text = subtitle or ""
+	subLabel.TextColor3 = Color3.fromRGB(236, 248, 232)
+	subLabel.TextScaled = true
+	subLabel.TextXAlignment = Enum.TextXAlignment.Center
+	subLabel.ZIndex = 21
+	subLabel.Parent = banner
+
+	TweenService:Create(banner, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0, 92),
+	}):Play()
+	task.delay(3.6, function()
+		local out = TweenService:Create(banner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.new(0.5, 0, 0, -100),
+		})
+		out.Completed:Connect(function()
+			banner:Destroy()
+		end)
+		out:Play()
+	end)
+end
+
 function UIController.Start()
 	Remotes.Get("StateChanged").OnClientEvent:Connect(updateUI)
+	Remotes.Get("DistrictCleared").OnClientEvent:Connect(showBanner)
 	Remotes.Get("RequestState"):FireServer()
 	startZoneWatch()
 	hookShopPrompt()
