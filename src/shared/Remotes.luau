@@ -13,6 +13,7 @@ local REMOTE_NAMES = {
 	"TileCut", -- server -> client: a cut landed (grass burst effect)
 	"ClippingCollected", -- server -> client: a dropped clipping was picked up (+N popup)
 	"GrassTooTough", -- server -> client: swing bounced off grass too tough for the tool
+	"DistrictCleared", -- server -> client: a district was fully mowed (reveal banner)
 }
 
 local Remotes = {}
