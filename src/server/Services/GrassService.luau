@@ -81,6 +81,10 @@ local function coatSurface(surface: BasePart)
 		def.height = surface:GetAttribute("GrassHeight")
 	end
 
+	-- Which district this surface belongs to (set by MapService). Every tile grown
+	-- from it inherits the tag so DistrictService can tell when a district is clear.
+	local district = surface:GetAttribute("District")
+
 	local size = surface.Size
 	local cf = surface.CFrame
 	local step = GameConfig.TILE_SIZE_STUDS
@@ -105,7 +109,10 @@ local function coatSurface(surface: BasePart)
 	for i = 0, nx - 1 do
 		for j = 0, nz - 1 do
 			local baseCF = cf * CFrame.new(startX + i * step, topY, startZ + j * step)
-			makeTile(baseCF, typeName, def, folder)
+			local tile = makeTile(baseCF, typeName, def, folder)
+			if district then
+				tile:SetAttribute("District", district)
+			end
 		end
 	end
 end
