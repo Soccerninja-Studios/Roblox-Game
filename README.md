@@ -95,16 +95,24 @@ The world is a **kingdom of 5 villages ringed around a central castle**. Each vi
 
 ### Village 1 — "Greenhollow" (built now)
 
-The starting village is built on a **large continuous ground** (no more floating baseplate island — the default Baseplate is removed and replaced with a 300×300 village floor surrounded by open countryside stretching ~800 studs in every direction). A **palisade** wall rings the village with four **gates**: the entrance, one toward the Castle, and one each toward Villages 2 and 5 (the latter three signed **Locked** until you unlock them).
+The starting village is now shaped like a real **Medieval Dynasty** settlement: an **oval palisade wall** rings the whole village, and the **buildings line the inside of the wall facing inward** onto an **open central common**. It's built on a **large continuous ground** (no floating baseplate — the default Baseplate is removed and replaced with a 380×380 village floor surrounded by open countryside stretching ~800 studs in every direction).
 
-The village is split into **four districts**, each covered in grass that you mow to uncover it:
+The wall has four **gates**, one at each end of the oval, each facing the center:
 
-- **The Village Square** — central well, **Gardener's Hut** (deposit clippings) beside the **Shop**, market stalls, the **Town Hall**, torches, and villagers.
-- **Residential Row** — two rows of **family houses** and **cottages** facing a lane, each with a small garden and a shared well.
-- **The Craftsmen's Quarter** — **Blacksmith** (working forge with fire + anvil), **Tavern** ("The Rusty Tankard"), **Storehouse**, a **Windmill** with turning blades, and a market stall.
-- **The Farmstead** — a big **Barn**, farmhouse, sheds, storehouse, **plowed fields** with scarecrows, hay bales, and a fenced pasture.
+- **South gate — the entrance.** You now spawn on a small **arrival plaza just *outside* the south gate** (the bottom of the reference picture), facing north straight into the village, with a **"Greenhollow"** welcome sign.
+- **North gate — a new road that runs out the top toward the Castle.**
+- **East & west gates — roads out to the adjacent villages** (Village 2 to the east, Village 5 to the west).
 
-**Fixed from the first pass:** buildings no longer look hollow or collapsed — every house now has **closed, tapered gable ends** (the triangular wall under each roof is filled in), lower and less steep roofs with only a small overhang, solid **doors**, glass **windows**, and timber **corner beams**. Buildings are spaced out across the districts so they no longer overlap or clip.
+The three non-entrance gates are signed **Locked** until you unlock them. Inside, a **worn ring path** loops around the common linking the districts.
+
+The village is split into **four districts** arranged around the oval (matching the reference photo), each covered in grass that you mow to uncover it:
+
+- **The Village Square** (the open common in the middle) — a **bonfire in the northwest corner**, a **herd of cows grazing** in the middle, a well, the **Gardener's Hut** (deposit clippings) near the **Shop**, market stalls, the **Town Hall** on the north side, big shade trees, a cart, and villagers.
+- **Residential Row** (north arc, top of the picture) — **thatched longhouses**, **family houses** and a **cottage** lining the wall, plus a shared well.
+- **The Craftsmen's Quarter** (east arc) — **Blacksmith** (working forge with fire + anvil), **Tavern** ("The Rusty Tankard"), **Storehouse**, a **Windmill** with turning blades, and a market stall.
+- **The Farmstead** (south + west arcs, bottom-left) — a big **Barn**, farmhouse, sheds, storehouse, **plowed fields** with scarecrows, hay bales, and a fenced pasture.
+
+**Building look:** to match the picture, houses now wear **thatched (straw) roofs** on timber-framed walls, with the big **longhouses** stretched out along the top. Every building still has **closed, tapered gable ends**, solid **doors**, glass **windows**, and timber **corner beams**, and they're spaced around the ring so they face the common and don't overlap.
 
 Around the village is **open world detail**: a forest of scattered trees, rocks and bushes, rolling **hills**, and a **lake** to the southwest.
 
@@ -112,7 +120,7 @@ Around the village is **open world detail**: a forest of scattered trees, rocks 
 
 The whole village starts **buried under grass** — every district's **ground is carpeted** in cuttable grass, and the **rooftops are overgrown** too (roof grass is cosmetic; you don't need to reach it). Mowing uncovers the village bit by bit.
 
-When you **fully mow a district's ground**, that district comes to life: its hidden **villagers and animals appear** (the Farmstead brings out cows, sheep, pigs, and chickens; the other districts bring out townsfolk), and a banner announces *"<District> restored — its people return!"* Clear all four districts and Greenhollow is declared **fully restored** — which is what will unlock Village 2.
+When you **fully mow a district's ground**, that district comes to life: its hidden **villagers and animals appear** (the Square brings out the herd of **cows** grazing on the common plus townsfolk; the Farmstead brings out cows, sheep, pigs, and chickens; the other districts bring out townsfolk), and a banner announces *"<District> restored — its people return!"* Clear all four districts and Greenhollow is declared **fully restored** — which is what will unlock Village 2.
 
 - The villagers and animals are **non-interactable** (decorative life) for now, built hidden in `ServerStorage.DistrictLife` and moved into the world the moment their district is clear.
 - District grass is gentle **Meadow** (in the Square, so brand-new players can always clear it with the starter Rusty Shears) and **Wild** grass elsewhere — nothing that would soft-lock a player without upgrades.
@@ -120,7 +128,7 @@ When you **fully mow a district's ground**, that district comes to life: its hid
 
 ### Villages 2–5 and the Castle (coming next)
 
-These aren't built yet. Village 1's gates already point where the roads to Villages 2 & 5 and the Castle will connect, and each future village will get its own gardener, shop, and unique layout. Zone-unlock gating (clear a village → unlock the next) is planned to hook into the `GardenerSpot`/`ZoneKey` tags already placed.
+These aren't built yet. Village 1's gates and roads already point where the connections will go — the **east/west roads run out to Villages 2 & 5** and the **north road runs out toward the Castle** — and each future village will get its own gardener, shop, and unique layout. Zone-unlock gating (clear a village → unlock the next) is planned to hook into the `GardenerSpot`/`ZoneKey` tags already placed.
 
 You can still hand-build in Studio too: any part you tag with **`GrassSurface`** (with a `GrassType` attribute) grows grass the same way, so you can extend the generated map whenever you like. The old demo sandbox is off (`DEMO_ENABLED = false`), and the previous zone-strip layout (`GameConfig.ZONES`/`WORLD`) is superseded by the village map though left in config for reference.
 
