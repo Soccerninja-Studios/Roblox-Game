@@ -3,6 +3,12 @@
 -- Never hardcode balance values inside game logic; reference this module instead.
 
 local GameConfig = {
+	-- Intro cutscene: when true, the server plays the teddy-bear intro and, at the
+	-- end, swaps the neighborhood out for the plains map (built centered on the
+	-- house). When false, the plains map is built at the origin on server start so
+	-- you can walk it directly -- handy for testing the map on its own.
+	INTRO_CUTSCENE = false,
+
 	-- Economy
 	CRIT_BASE_CHANCE = 0.01, -- 1% base "Golden Blade" chance
 	CRIT_BASE_MULTIPLIER = 10,

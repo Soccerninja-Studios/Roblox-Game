@@ -14,6 +14,11 @@ local REMOTE_NAMES = {
 	"ClippingCollected", -- server -> client: a dropped clipping was picked up (+N popup)
 	"GrassTooTough", -- server -> client: swing bounced off grass too tough for the tool
 	"DistrictCleared", -- server -> client: a district was fully mowed (reveal banner)
+	-- Intro cutscene (client<->server).
+	"CutsceneReady", -- client -> server: my camera/UI is ready, start the intro
+	"CutsceneSkip", -- client -> server: player pressed Skip
+	"CutsceneCamera", -- server -> client: cut the camera to a named shot
+	"CutsceneFade", -- server -> client: fade the screen ("out"/"in", seconds)
 }
 
 local Remotes = {}
