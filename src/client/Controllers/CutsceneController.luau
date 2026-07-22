@@ -2,8 +2,12 @@
 -- CutsceneController: the client half of the intro cutscene.
 --
 -- The server (CutsceneService) drives the timing; this controller owns the things
--- that can only live on the client -- the camera, a black screen fade, and a Skip
--- button. It does nothing unless GameConfig.INTRO_CUTSCENE is on.
+-- that can only live on the client -- the camera, a black screen fade, a Skip
+-- button, hiding the game UI until the intro ends, and playing the PLAYER's own
+-- animations. (A player's character is client-owned, so animations played from
+-- the server don't reliably show on it -- they must be played here.)
+--
+-- It does nothing unless GameConfig.INTRO_CUTSCENE is on.
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -21,6 +25,140 @@ local camera = Workspace.CurrentCamera
 
 local fadeFrame: Frame? = nil
 local skipButton: TextButton? = nil
+
+-- UI we hid for the duration of the intro, so we can put it back afterwards.
+local hiddenGuis: { ScreenGui } = {}
+local guiWatch: RBXScriptConnection? = nil
+
+-- Player animation state.
+local animTracks: { [number]: AnimationTrack } = {}
+local currentTrack: AnimationTrack? = nil
+local currentConn: RBXScriptConnection? = nil
+local currentPoseId: number? = nil
+
+----------------------------------------------------------------------
+-- Hide / reveal the game UI
+----------------------------------------------------------------------
+
+local function hideGameUi()
+	local pg = player:WaitForChild("PlayerGui")
+	local function hideOne(inst: Instance)
+		if inst:IsA("ScreenGui") and inst.Name ~= "IntroCutscene" and inst.Enabled then
+			inst.Enabled = false
+			table.insert(hiddenGuis, inst)
+		end
+	end
+	for _, child in pg:GetChildren() do
+		hideOne(child)
+	end
+	-- Anything the game builds during the intro (e.g. the HUD) gets hidden too.
+	guiWatch = pg.ChildAdded:Connect(function(child)
+		task.defer(hideOne, child)
+	end)
+end
+
+local function revealGameUi()
+	if guiWatch then
+		guiWatch:Disconnect()
+		guiWatch = nil
+	end
+	for _, gui in hiddenGuis do
+		if gui and gui.Parent then
+			gui.Enabled = true
+		end
+	end
+	table.clear(hiddenGuis)
+end
+
+----------------------------------------------------------------------
+-- Player animations (played on the client, on the local character)
+----------------------------------------------------------------------
+
+local function getLocalAnimator(): Animator?
+	local char = player.Character
+	if not char then
+		return nil
+	end
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		return nil
+	end
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = humanoid
+	end
+	return animator
+end
+
+local function stopCurrentPose()
+	if currentConn then
+		currentConn:Disconnect()
+		currentConn = nil
+	end
+	if currentTrack then
+		pcall(function()
+			(currentTrack :: AnimationTrack):Stop(0.1)
+		end)
+		currentTrack = nil
+	end
+	currentPoseId = nil
+end
+
+local function playPose(poseId: number, animId: number)
+	local doneRemote = Remotes.Get("CutscenePoseDone")
+	local animator = getLocalAnimator()
+	if not animator then
+		doneRemote:FireServer(poseId)
+		return
+	end
+	stopCurrentPose()
+
+	local track = animTracks[animId]
+	if not track then
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://" .. tostring(animId)
+		local ok, loaded = pcall(function()
+			return animator:LoadAnimation(anim)
+		end)
+		if ok and loaded then
+			track = loaded
+			animTracks[animId] = loaded
+		end
+	end
+	if not track then
+		doneRemote:FireServer(poseId)
+		return
+	end
+
+	track.Priority = Enum.AnimationPriority.Action
+	track.Looped = false
+	currentTrack = track
+	currentPoseId = poseId
+
+	local fired = false
+	local function finishOnce()
+		if fired then
+			return
+		end
+		fired = true
+		doneRemote:FireServer(poseId)
+	end
+	currentConn = track.Stopped:Connect(finishOnce)
+	track:Play(0.15)
+
+	-- Safety: if Stopped never fires (e.g. a bad/unowned anim), report done anyway
+	-- so the server's sequence can't hang.
+	task.delay(12, function()
+		if currentPoseId == poseId then
+			finishOnce()
+		end
+	end)
+end
+
+----------------------------------------------------------------------
+-- Camera + fade + Skip button
+----------------------------------------------------------------------
 
 local function ensureGui()
 	local gui = Instance.new("ScreenGui")
@@ -74,6 +212,9 @@ local function setShot(shot: string)
 		if skipButton then
 			skipButton.Visible = false
 		end
+		-- The intro is over: stop any pose and give the UI back.
+		stopCurrentPose()
+		revealGameUi()
 		return
 	end
 	local components = CutsceneData.Shots[shot]
@@ -104,6 +245,7 @@ function CutsceneController.Start()
 
 	camera = Workspace.CurrentCamera
 	ensureGui()
+	hideGameUi()
 
 	Remotes.Get("CutsceneCamera").OnClientEvent:Connect(function(shot)
 		setShot(shot)
@@ -111,6 +253,10 @@ function CutsceneController.Start()
 
 	Remotes.Get("CutsceneFade").OnClientEvent:Connect(function(mode, seconds)
 		doFade(mode, seconds)
+	end)
+
+	Remotes.Get("CutscenePose").OnClientEvent:Connect(function(poseId, animId)
+		playPose(poseId, animId)
 	end)
 
 	-- Let the character + camera settle, then tell the server we're ready to run.
