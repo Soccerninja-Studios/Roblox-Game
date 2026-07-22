@@ -13,6 +13,7 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local CutsceneData = require(ReplicatedStorage.Shared.CutsceneData)
@@ -35,6 +36,21 @@ local animTracks: { [number]: AnimationTrack } = {}
 local currentTrack: AnimationTrack? = nil
 local currentConn: RBXScriptConnection? = nil
 local currentPoseId: number? = nil
+local rigTypeLogged = false
+
+----------------------------------------------------------------------
+-- Black-screen fade (declared first so the Skip button can use it)
+----------------------------------------------------------------------
+
+local function doFade(mode: string, seconds: number?)
+	if not fadeFrame then
+		return
+	end
+	-- "out" fades to black (opaque = transparency 0), "in" fades back to clear (1).
+	local goal = if mode == "out" then 0 else 1
+	local info = TweenInfo.new(seconds or 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	TweenService:Create(fadeFrame, info, { BackgroundTransparency = goal }):Play()
+end
 
 ----------------------------------------------------------------------
 -- Hide / reveal the game UI
@@ -83,6 +99,10 @@ local function getLocalAnimator(): Animator?
 	if not humanoid then
 		return nil
 	end
+	if not rigTypeLogged then
+		rigTypeLogged = true
+		print(`[CutsceneController] Character rig type: {humanoid.RigType.Name} (cutscene animations are authored for R6).`)
+	end
 	local animator = humanoid:FindFirstChildOfClass("Animator")
 	if not animator then
 		animator = Instance.new("Animator")
@@ -105,27 +125,35 @@ local function stopCurrentPose()
 	currentPoseId = nil
 end
 
+local function loadPoseTrack(animator: Animator, animId: number): AnimationTrack?
+	local existing = animTracks[animId]
+	if existing then
+		return existing
+	end
+	local anim = Instance.new("Animation")
+	anim.AnimationId = "rbxassetid://" .. tostring(animId)
+	local ok, loaded = pcall(function()
+		return animator:LoadAnimation(anim)
+	end)
+	if ok and loaded then
+		animTracks[animId] = loaded
+		return loaded
+	end
+	warn(`[CutsceneController] FAILED to load animation {animId}: {tostring(loaded)}. If every pose fails, the animations are almost certainly not owned by the account/group that owns this place.`)
+	return nil
+end
+
 local function playPose(poseId: number, animId: number)
 	local doneRemote = Remotes.Get("CutscenePoseDone")
 	local animator = getLocalAnimator()
 	if not animator then
+		warn("[CutsceneController] No animator on the local character; skipping pose.")
 		doneRemote:FireServer(poseId)
 		return
 	end
 	stopCurrentPose()
 
-	local track = animTracks[animId]
-	if not track then
-		local anim = Instance.new("Animation")
-		anim.AnimationId = "rbxassetid://" .. tostring(animId)
-		local ok, loaded = pcall(function()
-			return animator:LoadAnimation(anim)
-		end)
-		if ok and loaded then
-			track = loaded
-			animTracks[animId] = loaded
-		end
-	end
+	local track = loadPoseTrack(animator, animId)
 	if not track then
 		doneRemote:FireServer(poseId)
 		return
@@ -147,6 +175,19 @@ local function playPose(poseId: number, animId: number)
 	currentConn = track.Stopped:Connect(finishOnce)
 	track:Play(0.15)
 
+	-- Diagnostic: after a couple frames, report whether the track is actually
+	-- animating. A length of 0 / not playing almost always means the animation
+	-- asset failed to stream in -- usually an ownership problem (see notes).
+	task.spawn(function()
+		task.wait(0.15)
+		if currentPoseId == poseId then
+			print(`[CutsceneController] pose {animId}: length={string.format("%.2f", track.Length)}s playing={tostring(track.IsPlaying)}`)
+			if track.Length <= 0 then
+				warn(`[CutsceneController] Animation {animId} has zero length -- it did not load. Confirm this asset is published and owned by the same account/group that owns this place.`)
+			end
+		end
+	end)
+
 	-- Safety: if Stopped never fires (e.g. a bad/unowned anim), report done anyway
 	-- so the server's sequence can't hang.
 	task.delay(12, function()
@@ -157,7 +198,7 @@ local function playPose(poseId: number, animId: number)
 end
 
 ----------------------------------------------------------------------
--- Camera + fade + Skip button
+-- Camera + Skip button
 ----------------------------------------------------------------------
 
 local function ensureGui()
@@ -201,6 +242,9 @@ local function ensureGui()
 
 	btn.Activated:Connect(function()
 		btn.Visible = false
+		-- Fade to black immediately so the world rebuild (models loading in) after a
+		-- skip is never seen; the server reveals it again once everything is placed.
+		doFade("out", 0.35)
 		Remotes.Get("CutsceneSkip"):FireServer()
 	end)
 end
@@ -228,16 +272,6 @@ local function setShot(shot: string)
 	end
 end
 
-local function doFade(mode: string, seconds: number?)
-	if not fadeFrame then
-		return
-	end
-	-- "out" fades to black (opaque), "in" fades back to clear.
-	local goal = if mode == "out" then 0 else 1
-	local info = TweenInfo.new(seconds or 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-	TweenService:Create(fadeFrame, info, { BackgroundTransparency = goal }):Play()
-end
-
 function CutsceneController.Start()
 	if not GameConfig.INTRO_CUTSCENE then
 		return
@@ -246,6 +280,27 @@ function CutsceneController.Start()
 	camera = Workspace.CurrentCamera
 	ensureGui()
 	hideGameUi()
+
+	-- Preload the cutscene animations so they're ready the instant the server asks
+	-- for them -- and so we get a clear per-asset Success/Failure in the output.
+	task.spawn(function()
+		local toPreload: { Instance } = {}
+		for _, animId in CutsceneData.Anims do
+			local a = Instance.new("Animation")
+			a.AnimationId = "rbxassetid://" .. tostring(animId)
+			table.insert(toPreload, a)
+		end
+		local ok = pcall(function()
+			ContentProvider:PreloadAsync(toPreload, function(contentId, status)
+				print(`[CutsceneController] preload {contentId}: {status.Name}`)
+			end)
+		end)
+		if not ok then
+			pcall(function()
+				ContentProvider:PreloadAsync(toPreload)
+			end)
+		end
+	end)
 
 	Remotes.Get("CutsceneCamera").OnClientEvent:Connect(function(shot)
 		setShot(shot)
