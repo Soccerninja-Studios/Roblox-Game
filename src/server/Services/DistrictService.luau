@@ -106,8 +106,10 @@ function DistrictService.Start()
 	-- across a few checks, so we snapshot the FULL overgrowth as our clear target.
 	local lastTotal = -1
 	local stableFor = 0
-	while stableFor < 3 do
+	local waited = 0
+	while stableFor < 3 and waited < 20 do
 		task.wait(0.5)
+		waited += 0.5
 		local _, total = snapshot()
 		if total == lastTotal and total > 0 then
 			stableFor += 1
@@ -115,6 +117,14 @@ function DistrictService.Start()
 			stableFor = 0
 		end
 		lastTotal = total
+	end
+
+	-- The plains map has no districts (that system belonged to the old village).
+	-- If nothing district-tagged ever appears, disable cleanly instead of polling
+	-- the whole grass field forever.
+	if select(2, snapshot()) == 0 then
+		print("[DistrictService] No district-tagged grass; districts disabled for this map.")
+		return
 	end
 
 	remaining = (snapshot())
