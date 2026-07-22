@@ -18,6 +18,11 @@ local GameConfig = {
 	TILE_FILL = 0.94, -- fraction of the cell the tile fills (small gap = individual blades read)
 	GRASS_SHRINK_TWEEN = 0.12, -- seconds for the shrink animation per cut
 	GRASS_MIN_STUB = 0.05, -- tile height at the instant before it is removed
+	-- Every grass block is forced to at least this tall (studs). It's set above the
+	-- player's jump height (JumpPower 50 clears ~7 studs) so the player can't hop over
+	-- uncut grass -- they have to mow a path. While a tile still has health its shrink
+	-- is clamped to this height too, so it stays un-jumpable until it's FULLY cut down.
+	GRASS_MIN_BLOCK_HEIGHT = 10,
 	MIN_CUT_DAMAGE = 1, -- if a swing would deal less than this vs a grass type, it's "too tough"
 
 	-- How the map is coated in grass.
@@ -142,10 +147,12 @@ local GameConfig = {
 	DEMO_ENABLED = false,
 	DEMO_CENTER = Vector3.new(64, 0, 64),
 
-	-- Shop (walk-in zone + always-on button both open the same menu). It sits in the
-	-- Village 1 square, mirroring the Gardener's Hut across the well. Y = 0 is the
-	-- village ground top, so ShopService rests the stall on the ground.
-	SHOP_POSITION = Vector3.new(-20, 0, 18),
+	-- Shop (walk-in zone + always-on button both open the same menu). Placed at the
+	-- front-right of the house on the plains: HouseCenter (-564.75, -1.5, -999) plus
+	-- +40 studs to the right (X) and +95 studs toward the front (Z, the spawn side),
+	-- resting on the ground (Y = -1.5). It sits inside MapService's central clear
+	-- radius so no grass grows over it. ShopService rests the stall on this point.
+	SHOP_POSITION = Vector3.new(-524.75, -1.5, -904.0),
 	SHOP_ZONE_RADIUS = 16,
 }
 
