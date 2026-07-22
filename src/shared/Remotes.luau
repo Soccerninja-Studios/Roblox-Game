@@ -19,6 +19,8 @@ local REMOTE_NAMES = {
 	"CutsceneSkip", -- client -> server: player pressed Skip
 	"CutsceneCamera", -- server -> client: cut the camera to a named shot
 	"CutsceneFade", -- server -> client: fade the screen ("out"/"in", seconds)
+	"CutscenePose", -- server -> client: play an animation on MY character (poseId, animId)
+	"CutscenePoseDone", -- client -> server: that pose finished (poseId)
 }
 
 local Remotes = {}
