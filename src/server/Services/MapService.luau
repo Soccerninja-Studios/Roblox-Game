@@ -9,13 +9,14 @@
 --
 -- Each ring is a true circular BAND (membership is a pure radius test, so the
 -- edges are round, not square) and each ring is wider -- and covers far more
--- ground -- than the one inside it. The rings now stretch across most of the map
--- instead of a small patch in the middle. Outer rings use chunkier grass tiles so
--- a huge field stays a sane number of parts; each pad = 2 x its tile size, so
+-- ground -- than the one inside it. Outer rings use chunkier grass tiles so a
+-- huge field stays a sane number of parts; each pad = 2 x its tile size, so
 -- GrassService always subdivides it cleanly.
 --
--- (Trees, lakes, rocks and decorative grass get scattered on top later, once
--- those models arrive.)
+-- On top of the grass we scatter scenery (trees, rocks, bushes, flowers and
+-- decorative grass) from ReplicatedStorage.Assets.PlainsAssets. Placement uses a
+-- jittered grid whose fill chance is driven by low-frequency noise, so the map
+-- has plentiful pockets and scarce clearings while staying evenly spread overall.
 
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
@@ -64,6 +65,7 @@ local PAL = {
 local mapRoot: Model
 local groundF: Folder
 local grassF: Folder
+local decorF: Folder
 
 ----------------------------------------------------------------------
 -- Primitives
@@ -145,6 +147,154 @@ local function buildSpawn(cx: number, cz: number, gy: number)
 end
 
 ----------------------------------------------------------------------
+-- Scenery scatter (trees, rocks, bushes, flowers, grass tufts)
+----------------------------------------------------------------------
+
+local SCATTER_SEED = 20260722 -- change this to reshuffle the whole layout
+
+-- Assets are grouped so big things (trees, boulders) sit on a coarse grid and
+-- keep their distance, while small things (bushes, flowers, tufts) fill in on a
+-- finer grid. Weights bias which asset gets picked; assets missing from the
+-- shipped folder are simply skipped, so it's safe if names change later.
+local LARGE_WEIGHTS: { [string]: number } = {
+	["Tree 1"] = 3, ["Tree 2"] = 3, ["Tree 3"] = 3, ["Tree 4"] = 2,
+	["Rock 1"] = 1, ["Rock 5"] = 1, ["Grass 6"] = 0.4,
+}
+local SMALL_WEIGHTS: { [string]: number } = {
+	["Bush 1"] = 2, ["Bush 2"] = 2, ["Bush 3"] = 2,
+	["Flower Bush 1"] = 1.5, ["Flower Bush 2"] = 1.5,
+	["Flowers 1"] = 1.5, ["Flowers 2"] = 1.5, ["Flowers 3"] = 1.5, ["Flowers 4"] = 1.5,
+	["Grass 1"] = 2, ["Grass 2"] = 2, ["Grass 3"] = 2, ["Grass 4"] = 2, ["Grass 5"] = 2,
+	["Rock 2"] = 1, ["Rock 3"] = 1, ["Rock 4"] = 1,
+}
+
+-- Grid + density knobs. Raise CELL or lower MID to thin things out (fewer parts,
+-- better performance); lower CELL or raise MID for a denser, lusher map. MID is
+-- the average fill chance; SPAN is how far low-frequency noise pushes it up in
+-- "plentiful" pockets and down in "scarce" ones.
+local LARGE_CELL = 80
+local LARGE_MID = 0.30
+local LARGE_SPAN = 0.55
+local LARGE_FREQ = 0.006
+local SMALL_CELL = 42
+local SMALL_MID = 0.42
+local SMALL_SPAN = 0.62
+local SMALL_FREQ = 0.011
+
+local SCATTER_MAX_R = 1150 -- keep scenery inside the plate
+local SCATTER_MIN_R = CLEAR_RADIUS + 12 -- keep the house yard clear
+
+local function findAssetsFolder(): Instance?
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	if not assets then
+		return nil
+	end
+	local folder = assets:FindFirstChild("PlainsAssets") or assets:FindFirstChild("Plains Assets")
+	if folder and #folder:GetChildren() == 1 then
+		local only = folder:GetChildren()[1]
+		if only:IsA("Folder") then
+			folder = only
+		end
+	end
+	return folder
+end
+
+local function clamp01(n: number): number
+	if n < 0 then
+		return 0
+	elseif n > 1 then
+		return 1
+	end
+	return n
+end
+
+-- Flatten a weight table into a pick list, keeping only assets that shipped.
+local function buildPool(folder: Instance, weights: { [string]: number }): { Instance }
+	local pool: { Instance } = {}
+	for name, weight in weights do
+		local template = folder:FindFirstChild(name)
+		if template then
+			local copies = math.max(1, math.floor(weight * 2 + 0.5))
+			for _ = 1, copies do
+				table.insert(pool, template)
+			end
+		end
+	end
+	return pool
+end
+
+-- Clone `template`, make it static, and seat it so its base rests on the ground
+-- at (x, z) with a random yaw -- works no matter where the model's pivot is.
+local function placeDecor(template: Instance, x: number, z: number, gy: number, yaw: number)
+	local clone = template:Clone()
+	if clone:IsA("BasePart") then
+		clone.Anchored = true
+	end
+	local trash: { Instance } = {}
+	for _, d in clone:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		elseif d:IsA("Script") or d:IsA("LocalScript") or d:IsA("Camera") then
+			table.insert(trash, d)
+		end
+	end
+	for _, d in trash do
+		d:Destroy()
+	end
+	clone.Parent = decorF
+
+	if clone:IsA("Model") then
+		clone:PivotTo(CFrame.new(x, gy, z) * CFrame.Angles(0, yaw, 0))
+		local bcf, size = clone:GetBoundingBox()
+		local bottom = bcf.Position.Y - size.Y / 2
+		clone:PivotTo(clone:GetPivot() + Vector3.new(0, gy - bottom, 0))
+	elseif clone:IsA("BasePart") then
+		clone.CFrame = CFrame.new(x, gy + clone.Size.Y / 2, z) * CFrame.Angles(0, yaw, 0)
+	end
+end
+
+local function scatterPass(cx: number, cz: number, gy: number, folder: Instance, weights: { [string]: number }, cell: number, mid: number, span: number, freq: number, rng: Random, noiseZ: number)
+	local pool = buildPool(folder, weights)
+	if #pool == 0 then
+		return
+	end
+	local steps = math.ceil(SCATTER_MAX_R / cell)
+	local placed = 0
+	for i = -steps, steps do
+		for j = -steps, steps do
+			-- jitter inside the cell so the underlying grid never shows
+			local x = i * cell + rng:NextNumber(-cell * 0.42, cell * 0.42)
+			local z = j * cell + rng:NextNumber(-cell * 0.42, cell * 0.42)
+			local r = math.sqrt(x * x + z * z)
+			if r >= SCATTER_MIN_R and r <= SCATTER_MAX_R then
+				local n = math.noise(x * freq, z * freq, noiseZ) -- ~[-0.5, 0.5]
+				local density = clamp01(mid + span * n)
+				if rng:NextNumber() < density then
+					local template = pool[rng:NextInteger(1, #pool)]
+					placeDecor(template, cx + x, cz + z, gy, rng:NextNumber(0, math.pi * 2))
+					placed += 1
+					if placed % 50 == 0 then
+						task.wait() -- spread the build over frames so it never hard-freezes
+					end
+				end
+			end
+		end
+	end
+end
+
+local function buildScatter(cx: number, cz: number, gy: number)
+	local folder = findAssetsFolder()
+	if not folder then
+		warn("[MapService] PlainsAssets folder not found - skipping scenery scatter.")
+		return
+	end
+	local rng = Random.new(SCATTER_SEED)
+	-- Big features first (their clusters shape the landscape), then fill in details.
+	scatterPass(cx, cz, gy, folder, LARGE_WEIGHTS, LARGE_CELL, LARGE_MID, LARGE_SPAN, LARGE_FREQ, rng, 0.5)
+	scatterPass(cx, cz, gy, folder, SMALL_WEIGHTS, SMALL_CELL, SMALL_MID, SMALL_SPAN, SMALL_FREQ, rng, 12.5)
+end
+
+----------------------------------------------------------------------
 -- Public build
 ----------------------------------------------------------------------
 
@@ -162,11 +312,18 @@ function MapService.BuildPlains(center: Vector3?)
 		grassF = Instance.new("Folder")
 		grassF.Name = "GrassSurfaces"
 		grassF.Parent = mapRoot
+		decorF = Instance.new("Folder")
+		decorF.Name = "Decorations"
+		decorF.Parent = mapRoot
 	end
 	buildBase(c.X, c.Z, c.Y)
 	buildRings(c.X, c.Z, c.Y)
 	buildSpawn(c.X, c.Z, c.Y)
-	print("[MapService] Plains map built (5x5 baseplate, 5 big concentric grass rings).")
+	local ok, err = pcall(buildScatter, c.X, c.Z, c.Y)
+	if not ok then
+		warn("[MapService] scenery scatter failed: " .. tostring(err))
+	end
+	print("[MapService] Plains map built (5x5 baseplate, 5 concentric grass rings, scattered scenery).")
 end
 
 ----------------------------------------------------------------------
