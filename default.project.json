@@ -13,6 +13,18 @@
         },
         "Shears": {
           "$path": "assets/Shears.rbxmx"
+        },
+        "House": {
+          "$path": "assets/House.rbxmx"
+        },
+        "House2": {
+          "$path": "assets/House 2.rbxmx"
+        },
+        "Neighborhood": {
+          "$path": "assets/Neighborhood.rbxmx"
+        },
+        "TeddyBear": {
+          "$path": "assets/Teddy Bear.rbxmx"
         }
       }
     },
