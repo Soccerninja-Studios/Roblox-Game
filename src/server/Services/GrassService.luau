@@ -36,9 +36,9 @@ end
 
 -- Build one grass tile standing on a surface point.
 -- baseCF: a CFrame sitting ON the surface, its up-vector pointing along the surface normal.
-local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Instance)
+local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Instance, tileSize: number?)
 	local height = def.height
-	local footprint = GameConfig.TILE_SIZE_STUDS * GameConfig.TILE_FILL
+	local footprint = (tileSize or GameConfig.TILE_SIZE_STUDS) * GameConfig.TILE_FILL
 
 	local tile = Instance.new("Part")
 	tile.Name = "GrassTile"
@@ -87,7 +87,9 @@ local function coatSurface(surface: BasePart)
 
 	local size = surface.Size
 	local cf = surface.CFrame
-	local step = GameConfig.TILE_SIZE_STUDS
+	-- A surface may override the tile footprint via a "TileSize" attribute (used by
+	-- the big plains rings so a huge grass field stays a sane number of parts).
+	local step = (surface:GetAttribute("TileSize") :: number?) or GameConfig.TILE_SIZE_STUDS
 	local nx = math.max(1, math.floor(size.X / step))
 	local nz = math.max(1, math.floor(size.Z / step))
 
@@ -109,7 +111,7 @@ local function coatSurface(surface: BasePart)
 	for i = 0, nx - 1 do
 		for j = 0, nz - 1 do
 			local baseCF = cf * CFrame.new(startX + i * step, topY, startZ + j * step)
-			local tile = makeTile(baseCF, typeName, def, folder)
+			local tile = makeTile(baseCF, typeName, def, folder, step)
 			if district then
 				tile:SetAttribute("District", district)
 			end
