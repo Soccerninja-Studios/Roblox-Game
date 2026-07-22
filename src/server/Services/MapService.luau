@@ -21,6 +21,7 @@
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local MapService = {}
@@ -184,12 +185,25 @@ local SMALL_FREQ = 0.011
 local SCATTER_MAX_R = 1150 -- keep scenery inside the plate
 local SCATTER_MIN_R = CLEAR_RADIUS + 12 -- keep the house yard clear
 
+-- The scenery folder lives in ReplicatedStorage.Assets ideally, but we also look
+-- in ServerStorage and Workspace so it works if you keep it in Workspace.
 local function findAssetsFolder(): Instance?
-	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	if not assets then
-		return nil
+	local candidates: { Instance? } = {
+		ReplicatedStorage:FindFirstChild("Assets"),
+		ServerStorage:FindFirstChild("Assets"),
+		ServerStorage,
+		ReplicatedStorage,
+		Workspace,
+	}
+	local folder: Instance? = nil
+	for _, c in candidates do
+		if c then
+			folder = c:FindFirstChild("PlainsAssets") or c:FindFirstChild("Plains Assets")
+			if folder then
+				break
+			end
+		end
 	end
-	local folder = assets:FindFirstChild("PlainsAssets") or assets:FindFirstChild("Plains Assets")
 	if folder and #folder:GetChildren() == 1 then
 		local only = folder:GetChildren()[1]
 		if only:IsA("Folder") then
@@ -234,7 +248,9 @@ local function placeDecor(template: Instance, x: number, z: number, gy: number, 
 	for _, d in clone:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
-		elseif d:IsA("Script") or d:IsA("LocalScript") or d:IsA("Camera") then
+		elseif d:IsA("LuaSourceContainer") or d:IsA("Camera") then
+			-- strip packaged Scripts/LocalScripts/ModuleScripts so unowned-asset
+			-- loaders (e.g. a bush's "Constant" module) can't error or run
 			table.insert(trash, d)
 		end
 	end

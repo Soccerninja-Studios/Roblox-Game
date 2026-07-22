@@ -351,6 +351,7 @@ local function buildTool(tier: number): Tool
 end
 
 local PlayerDataService
+local CutsceneService
 
 -- Remove any existing shears the player has, then hand them a freshly built one
 -- for their current tier (auto-equipped).
@@ -382,15 +383,25 @@ end
 
 function ToolService.Init(services)
 	PlayerDataService = services.PlayerDataService
+	CutsceneService = services.CutsceneService
 end
 
 function ToolService.Start()
+	-- During the intro cutscene the player shouldn't have any tools yet;
+	-- CutsceneService hands them out the moment the intro finishes.
+	local function introPending(player: Player): boolean
+		return CutsceneService ~= nil and CutsceneService.IsIntroPending(player)
+	end
+
 	local function hookCharacter(player: Player)
 		player.CharacterAdded:Connect(function()
 			task.wait(0.4) -- let the character + backpack finish loading
+			if introPending(player) then
+				return
+			end
 			ToolService.GiveTool(player)
 		end)
-		if player.Character then
+		if player.Character and not introPending(player) then
 			ToolService.GiveTool(player)
 		end
 	end

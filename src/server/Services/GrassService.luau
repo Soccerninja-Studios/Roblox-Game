@@ -43,7 +43,11 @@ local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Inst
 	local tile = Instance.new("Part")
 	tile.Name = "GrassTile"
 	tile.Anchored = true
-	tile.CanCollide = false
+	-- Solid until cut: the player physically can't walk through standing grass;
+	-- clearing a tile (health 0) turns collision off so they can pass. As a tile
+	-- is cut down it also shrinks (refreshTileHeight), so tall grass gradually
+	-- becomes easier to step over the more it's mowed.
+	tile.CanCollide = true
 	tile.CanQuery = true -- must stay true so the mouse can target it
 	tile.CanTouch = false
 	tile.Material = Enum.Material.Grass
@@ -202,8 +206,9 @@ local function onRequestCut(player: Player, tile: Instance?)
 		ClippingsService.Drop(player, dropFrom, reward, isCrit)
 	end
 
-	-- Reveal whatever is underneath.
+	-- Reveal whatever is underneath and let the player walk through now.
 	tile.CanQuery = false
+	tile.CanCollide = false
 	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
 end
 
