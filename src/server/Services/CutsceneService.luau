@@ -37,6 +37,10 @@ local ToolService: any
 
 local sceneRoot: Model? = nil
 local houseClone: Model? = nil
+-- The house model currently on screen (House, then House 2 after the swap). The
+-- cleanup in finish() keeps THIS and destroys everything else, so it can never
+-- accidentally delete the freshly-built House 2.
+local currentHouse: Model? = nil
 local housePivot: CFrame? = nil
 local houseSpawnCF: CFrame? = nil
 local teddyClone: Model? = nil
@@ -230,6 +234,7 @@ local function placeScene()
 
 	cloneAsset("Neighborhood", root)
 	houseClone = cloneAsset("House", root)
+	currentHouse = houseClone
 	if houseClone then
 		housePivot = houseClone:GetPivot()
 	end
@@ -266,6 +271,8 @@ local function swapHouse()
 		newHouse:PivotTo(housePivot)
 	end
 	if newHouse then
+		-- This is now the house on screen; finish()'s cleanup keeps it.
+		currentHouse = newHouse
 		-- Land the player exactly on the authored "Spawn Point" inside House 2
 		-- (falls back to a computed spot only if none is found).
 		for _, d in newHouse:GetDescendants() do
@@ -324,28 +331,50 @@ local function runSequence(player: Player)
 		return
 	end
 
-	-- The teddy bear falls out the window and freezes where it LANDS.
+	-- The teddy bear falls out the window and freezes exactly where it LANDS.
 	if teddyFalling then
+		local track = teddyFalling :: AnimationTrack
 		pcall(function()
-			(teddyFalling :: AnimationTrack):Play(0.1)
+			track:Play(0.1)
 		end)
+		-- Record each teddy part's world CFrame every frame while the fall plays,
+		-- then -- the instant the (non-looped) track ends -- re-apply that last
+		-- captured pose and anchor every part. This holds the true final (landed)
+		-- frame no matter what AnimationTrack.Length reports, so it never freezes
+		-- mid-air and never snaps back to its rest pose. (Effectively: capture the
+		-- end position, then lock a copy of it in place.)
 		task.spawn(function()
-			local track = teddyFalling :: AnimationTrack
-			-- AnimationTrack.Length reads 0 until the asset streams in; wait for a
-			-- real value so we freeze on the last (landed) frame, not mid-air.
-			local len = track.Length
+			local teddy = teddyClone
+			if not teddy then
+				return
+			end
+			local parts: { BasePart } = {}
+			for _, d in teddy:GetDescendants() do
+				if d:IsA("BasePart") then
+					table.insert(parts, d)
+				end
+			end
+			local lastPose: { [BasePart]: CFrame } = {}
+			-- Wait for the track to actually start.
 			local guard = 0
-			while len <= 0 and guard < 3 do
+			while not track.IsPlaying and guard < 3 do
 				guard += task.wait()
-				len = track.Length
 			end
-			if len <= 0 then
-				len = 2
+			-- Capture the animated world pose every frame while it plays.
+			while track.IsPlaying do
+				for _, p in parts do
+					lastPose[p] = p.CFrame
+				end
+				task.wait()
 			end
-			task.wait(math.max(0, len - 0.03))
-			pcall(function()
-				track:AdjustSpeed(0)
-			end)
+			-- Track ended: lock the final landed frame in place.
+			for _, p in parts do
+				local cf = lastPose[p]
+				if cf then
+					p.CFrame = cf
+				end
+				p.Anchored = true
+			end
 		end)
 	end
 
@@ -409,13 +438,22 @@ local function runSequence(player: Player)
 	fade(player, "in", 0.6)
 end
 
-local function finish(player: Player)
+-- coverFirst: fade to black BEFORE building/swapping, so a skip or an error
+-- never shows the world popping in. On a normal finish the sequence already
+-- faded in on the real world, so we leave it visible.
+local function finish(player: Player, coverFirst: boolean)
+	if coverFirst then
+		fade(player, "out", 0.4)
+		task.wait(0.5)
+	end
+
 	-- Always leave the world real and the player free, even after a skip or error.
 	buildPlains()
-	-- Clear any leftover intro scenery (e.g. the neighborhood after an early skip).
+	-- Clear any leftover intro scenery (neighborhood/teddy), but NEVER the house
+	-- that's currently on screen (House, or House 2 once swapped).
 	if sceneRoot then
 		for _, child in sceneRoot:GetChildren() do
-			if child ~= houseClone then
+			if child ~= currentHouse then
 				child:Destroy()
 			end
 		end
@@ -428,7 +466,7 @@ local function finish(player: Player)
 		releaseActor(character, spawnPoint())
 	end
 	cut(player, "Custom")
-	fade(player, "in", 0.4)
+	fade(player, "in", 0.5)
 	-- Intro's over: mark it done and (finally) hand the player their tools.
 	finishedByPlayer[player] = true
 	if ToolService then
@@ -452,7 +490,10 @@ local function beginFor(player: Player)
 	if not ok then
 		warn(`[CutsceneService] intro errored: {err}`)
 	end
-	finish(player)
+	-- Cover the rebuild if we're finishing early (skip) or recovering from an error;
+	-- a clean run has already faded in on the real world.
+	local coverFirst = (skipByPlayer[player] == true) or (not ok)
+	finish(player, coverFirst)
 end
 
 ----------------------------------------------------------------------

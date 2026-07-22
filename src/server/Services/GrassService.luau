@@ -37,7 +37,9 @@ end
 -- Build one grass tile standing on a surface point.
 -- baseCF: a CFrame sitting ON the surface, its up-vector pointing along the surface normal.
 local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Instance, tileSize: number?)
-	local height = def.height
+	-- Force every block to at least jump-proof height so the player can't hop over
+	-- uncut grass (see GameConfig.GRASS_MIN_BLOCK_HEIGHT).
+	local height = math.max(def.height, GameConfig.GRASS_MIN_BLOCK_HEIGHT)
 	local footprint = (tileSize or GameConfig.TILE_SIZE_STUDS) * GameConfig.TILE_FILL
 
 	local tile = Instance.new("Part")
@@ -132,7 +134,11 @@ local function refreshTileHeight(tile: BasePart)
 	local footprint = tile.Size.X
 
 	local fraction = math.clamp(health / maxHealth, 0, 1)
-	local newHeight = math.max(GameConfig.GRASS_MIN_STUB, fullHeight * fraction)
+	-- While the tile still has health, keep it jump-proof (clamped to
+	-- GRASS_MIN_BLOCK_HEIGHT) so a partly-cut block still can't be jumped over; only
+	-- once it's fully cleared (health 0) does it collapse to the tiny removal stub.
+	local floorHeight = if health > 0 then GameConfig.GRASS_MIN_BLOCK_HEIGHT else GameConfig.GRASS_MIN_STUB
+	local newHeight = math.max(floorHeight, fullHeight * fraction)
 
 	local tween = TweenService:Create(
 		tile,
