@@ -172,24 +172,42 @@ local function playPose(poseId: number, animId: number)
 		fired = true
 		doneRemote:FireServer(poseId)
 	end
-	currentConn = track.Stopped:Connect(finishOnce)
+
 	track:Play(0.15)
 
-	-- Diagnostic: after a couple frames, report whether the track is actually
-	-- animating. A length of 0 / not playing almost always means the animation
-	-- asset failed to stream in -- usually an ownership problem (see notes).
+	-- Play the pose through, then HOLD its final frame instead of letting the track
+	-- stop. A stopped non-looped track snaps the character straight back to its
+	-- default standing pose -- that's the "reset" that was visible at the end of
+	-- Running 2 (Rig 3) and Running 3 (Rig 4) as the screen faded. Freezing the play
+	-- speed at 0 on the last frame holds the ending pose until the next pose starts
+	-- or the cutscene ends (both call stopCurrentPose).
 	task.spawn(function()
-		task.wait(0.15)
-		if currentPoseId == poseId then
-			print(`[CutsceneController] pose {animId}: length={string.format("%.2f", track.Length)}s playing={tostring(track.IsPlaying)}`)
-			if track.Length <= 0 then
-				warn(`[CutsceneController] Animation {animId} has zero length -- it did not load. Confirm this asset is published and owned by the same account/group that owns this place.`)
+		-- Wait for the track to start + stream in.
+		local guard = 0
+		while currentPoseId == poseId and (not track.IsPlaying or track.Length <= 0) and guard < 3 do
+			guard += task.wait()
+		end
+		if currentPoseId ~= poseId then
+			return
+		end
+		print(`[CutsceneController] pose {animId}: length={string.format("%.2f", track.Length)}s playing={tostring(track.IsPlaying)}`)
+		if track.Length <= 0 then
+			warn(`[CutsceneController] Animation {animId} has zero length -- it did not load. Confirm this asset is published and owned by the same account/group that owns this place.`)
+		else
+			-- Let it play to just short of the end, then freeze on that final frame.
+			local length = track.Length
+			while currentPoseId == poseId and track.IsPlaying and track.TimePosition < length - 0.03 do
+				task.wait()
+			end
+			if currentPoseId == poseId and track.IsPlaying then
+				track:AdjustSpeed(0)
 			end
 		end
+		finishOnce()
 	end)
 
-	-- Safety: if Stopped never fires (e.g. a bad/unowned anim), report done anyway
-	-- so the server's sequence can't hang.
+	-- Safety: if the track never streams/plays (e.g. a bad or unowned anim), report
+	-- done anyway so the server's sequence can't hang.
 	task.delay(12, function()
 		if currentPoseId == poseId then
 			finishOnce()
