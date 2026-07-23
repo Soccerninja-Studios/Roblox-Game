@@ -14,6 +14,10 @@ local REMOTE_NAMES = {
 	"ClippingCollected", -- server -> client: a dropped clipping was picked up (+N popup)
 	"GrassTooTough", -- server -> client: swing bounced off grass too tough for the tool
 	"DistrictCleared", -- server -> client: a district was fully mowed (reveal banner)
+	-- Economy
+	"RequestDeposit", -- client -> server: I stepped onto the Gardener pad; bank my bag
+	"Deposited", -- server -> client: deposit summary (clippings, gold, diamonds) for the banner
+	"BagFull", -- server -> client: your carry bag is full; go deposit
 	-- Intro cutscene (client<->server).
 	"CutsceneReady", -- client -> server: my camera/UI is ready, start the intro
 	"CutsceneSkip", -- client -> server: player pressed Skip

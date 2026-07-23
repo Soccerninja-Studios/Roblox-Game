@@ -13,6 +13,25 @@ local GameConfig = {
 	CRIT_BASE_CHANCE = 0.01, -- 1% base "Golden Blade" chance
 	CRIT_BASE_MULTIPLIER = 10,
 
+	-- Currency + bag. The core loop: mow grass -> clippings fill your carry BAG ->
+	-- deposit them at the Gardener to bank GOLD (and, rarely, DIAMONDS) -> spend gold
+	-- on tools, skills, and bigger bags.
+	CLIPPING_TO_GOLD = 1, -- gold banked per clipping deposited
+	-- Diamonds: a rare bonus at deposit time. Every DIAMOND_ROLL_PER_CLIPPINGS
+	-- clippings deposited rolls once at DIAMOND_CHANCE for one diamond (so ~5% per
+	-- 50 clippings by default -- roughly one diamond per ~1,000 clippings).
+	DIAMOND_ROLL_PER_CLIPPINGS = 50,
+	DIAMOND_CHANCE = 0.05,
+	-- Clipping bag tiers: how many clippings you can carry before the bag is full and
+	-- you must deposit. Tier 1 is free (the starting bag); each later tier costs gold.
+	BAG_TIERS = {
+		{ capacity = 25, cost = 0 },
+		{ capacity = 60, cost = 150 },
+		{ capacity = 150, cost = 600 },
+		{ capacity = 400, cost = 2500 },
+		{ capacity = 1000, cost = 9000 },
+	},
+
 	-- Grass tiles (shared)
 	TILE_SIZE_STUDS = 4, -- footprint of one grass tile
 	TILE_FILL = 0.94, -- fraction of the cell the tile fills (small gap = individual blades read)
@@ -149,6 +168,12 @@ local GameConfig = {
 	-- radius so no grass grows over it. ShopService rests the stall on this point.
 	SHOP_POSITION = Vector3.new(-524.75, -1.5, -904.0),
 	SHOP_ZONE_RADIUS = 16,
+
+	-- Gardener deposit stand: walk into its glowing pad to bank everything in your
+	-- bag. Placed at the front-LEFT of the house (mirror of the shop across the house
+	-- center X = -564.75), resting on the ground (Y = -1.5).
+	GARDENER_POSITION = Vector3.new(-604.75, -1.5, -904.0),
+	GARDENER_ZONE_RADIUS = 14,
 }
 
 return GameConfig
