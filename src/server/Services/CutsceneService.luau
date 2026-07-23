@@ -35,6 +35,12 @@ local CutsceneService = {}
 local MapService: any
 local ToolService: any
 
+-- Where the teddy bear comes to rest after its fall (position + orientation, read
+-- from Studio). The fall animation plays out, then a static duplicate is placed
+-- exactly here (see runSequence).
+local TEDDY_FINAL_CFRAME = CFrame.new(-544.694, 1.497, -1040.417)
+	* CFrame.fromOrientation(math.rad(55.245), math.rad(-96.144), math.rad(-157.756))
+
 local sceneRoot: Model? = nil
 local houseClone: Model? = nil
 -- The house model currently on screen (House, then House 2 after the swap). The
@@ -331,12 +337,11 @@ local function runSequence(player: Player)
 		return
 	end
 
-	-- The teddy bear falls out the window. When the fall animation finishes we
-	-- capture its exact final pose, build a frozen DUPLICATE standing in that spot,
-	-- and delete the animated original -- so the teddy stays exactly where the
-	-- animation left it instead of snapping back up toward the window. (The living
-	-- teddy's Humanoid + joints keep re-posing it, which is why simply anchoring it
-	-- didn't hold; a jointless, script-free copy stays put.)
+	-- The teddy bear falls out the window. When the fall animation finishes we build
+	-- a static DUPLICATE, place it at the authored resting spot (TEDDY_FINAL_CFRAME),
+	-- and delete the animated original -- so there's only ever one teddy at a time and
+	-- it ends exactly where you want it. The later "remove the teddy" step deletes the
+	-- duplicate.
 	if teddyFalling then
 		local track = teddyFalling :: AnimationTrack
 		local originalTeddy = teddyClone
@@ -347,33 +352,15 @@ local function runSequence(player: Player)
 			if not originalTeddy then
 				return
 			end
-			-- Ordered list of the animated teddy's parts; the clone's parts come out
-			-- in the same order, so we copy the pose across by index.
-			local parts: { BasePart } = {}
-			for _, d in originalTeddy:GetDescendants() do
-				if d:IsA("BasePart") then
-					table.insert(parts, d)
-				end
-			end
-			-- Wait for the fall to start, then record every part's world CFrame each
-			-- frame until the (non-looped) track ends. The last recording is the pose
-			-- at the moment the animation finishes.
+			-- Wait for the fall to start, then run until the (non-looped) track ends.
 			local guard = 0
 			while not track.IsPlaying and guard < 3 do
 				guard += task.wait()
 			end
-			local finalPose: { CFrame } = {}
 			while track.IsPlaying do
-				for i, p in parts do
-					finalPose[i] = p.CFrame
-				end
 				task.wait()
 			end
-			if #finalPose == 0 then
-				-- The animation never streamed in; leave the teddy as-is.
-				return
-			end
-			-- Build the frozen duplicate posed at that final frame.
+			-- Build the static duplicate at the authored resting position.
 			local frozen = originalTeddy:Clone()
 			-- Strip everything that could move or re-pose it: the Humanoid, the
 			-- Animator, every joint, and any (possibly unowned) scripts.
@@ -389,23 +376,16 @@ local function runSequence(player: Player)
 					d:Destroy()
 				end
 			end
-			local frozenParts: { BasePart } = {}
+			-- Anchor the (now jointless) parts so they hold the teddy's shape.
 			for _, d in frozen:GetDescendants() do
 				if d:IsA("BasePart") then
-					table.insert(frozenParts, d)
+					d.Anchored = true
+					d.CanCollide = false
 				end
 			end
-			for i, p in frozenParts do
-				local cf = finalPose[i]
-				if cf then
-					p.CFrame = cf
-				end
-				p.Anchored = true
-				p.CanCollide = false
-			end
+			frozen:PivotTo(TEDDY_FINAL_CFRAME)
 			frozen.Parent = sceneRoot or Workspace
-			-- Swap the animated teddy out for the frozen copy so the later "remove the
-			-- teddy" step cleans up the right one.
+			-- Only ever one teddy at a time: remove the animated original now.
 			originalTeddy:Destroy()
 			teddyClone = frozen
 		end)

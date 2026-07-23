@@ -68,23 +68,6 @@ local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Inst
 	tile:SetAttribute("BaseCFrame", baseCF)
 	tile.Parent = parent
 
-	-- Invisible collision wall: same footprint as the block, a fixed 15 studs tall, so
-	-- the player can neither walk through nor jump over standing grass. It never shrinks
-	-- with the blade and is destroyed the instant the tile is fully cut down (see
-	-- onRequestCut), letting the player pass. CanQuery is off so the mouse still targets
-	-- the grass blade behind it, not the invisible wall.
-	local barrier = Instance.new("Part")
-	barrier.Name = "Barrier"
-	barrier.Anchored = true
-	barrier.CanCollide = true
-	barrier.CanQuery = false
-	barrier.CanTouch = false
-	barrier.Transparency = 1
-	barrier.CastShadow = false
-	barrier.Size = Vector3.new(footprint, GameConfig.GRASS_BARRIER_HEIGHT, footprint)
-	barrier.CFrame = baseCF * CFrame.new(0, GameConfig.GRASS_BARRIER_HEIGHT / 2, 0)
-	barrier.Parent = tile
-
 	return tile
 end
 
@@ -223,14 +206,9 @@ local function onRequestCut(player: Player, tile: Instance?)
 		ClippingsService.Drop(player, dropFrom, reward, isCrit)
 	end
 
-	-- Fully cut down. Drop the invisible barrier immediately so the player can walk
-	-- through, then fade the (shrinking) blade out.
+	-- Reveal whatever is underneath and let the player walk through now.
 	tile.CanQuery = false
 	tile.CanCollide = false
-	local barrier = tile:FindFirstChild("Barrier")
-	if barrier then
-		barrier:Destroy()
-	end
 	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
 end
 
