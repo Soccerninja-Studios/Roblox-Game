@@ -26,7 +26,7 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 		if not toolDef then
 			return -- already at max tier
 		end
-		if PlayerDataService.Spend(player, toolDef.cost) then
+		if PlayerDataService.SpendGold(player, toolDef.cost) then
 			profile.toolTier = nextTier
 			-- Swap the held shears to the new tier's look
 			if ToolService then
@@ -43,8 +43,17 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 			return
 		end
 		local cost = StatCalculator.GetSkillCost(id, level)
-		if PlayerDataService.Spend(player, cost) then
+		if PlayerDataService.SpendGold(player, cost) then
 			profile.skills[id] = level + 1
+		end
+	elseif kind == "bag" then
+		local nextTier = (profile.bagTier or 1) + 1
+		local bagDef = GameConfig.BAG_TIERS[nextTier]
+		if not bagDef then
+			return -- already at the biggest bag
+		end
+		if PlayerDataService.SpendGold(player, bagDef.cost) then
+			profile.bagTier = nextTier
 		end
 	end
 

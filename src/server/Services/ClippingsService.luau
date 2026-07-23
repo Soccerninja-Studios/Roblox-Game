@@ -20,6 +20,8 @@ local ClippingsService = {}
 local PlayerDataService
 local pickupFolder: Folder
 local collecting: { [BasePart]: boolean } = {}
+local bagFullNotified: { [number]: number } = {}
+local BAG_FULL_NOTIFY_INTERVAL = 4 -- seconds between "bag full" nudges per player
 
 local NORMAL_COLOR = Color3.fromRGB(150, 224, 92)
 local CRIT_COLOR = Color3.fromRGB(255, 205, 54)
@@ -117,6 +119,7 @@ function ClippingsService.Start()
 			return
 		end
 		accumulator = 0
+		local now = os.clock()
 
 		-- Cache each player's collect range + root for this pass.
 		local rangeSq: { [number]: number } = {}
@@ -147,7 +150,17 @@ function ClippingsService.Start()
 			if (root.Position - pickup.Position):Dot(root.Position - pickup.Position) <= rangeSq[ownerId] then
 				local player = Players:GetPlayerByUserId(ownerId)
 				if player then
-					collect(pickup, player, root)
+					if PlayerDataService.IsBagFull(player) then
+						-- Bag is full: leave the clipping on the ground and nudge the
+						-- player to go deposit (throttled so we don't spam the banner).
+						local last = bagFullNotified[ownerId] or 0
+						if now - last > BAG_FULL_NOTIFY_INTERVAL then
+							bagFullNotified[ownerId] = now
+							Remotes.Get("BagFull"):FireClient(player)
+						end
+					else
+						collect(pickup, player, root)
+					end
 				end
 			end
 		end

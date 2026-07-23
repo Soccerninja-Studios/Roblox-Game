@@ -16,12 +16,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService = game:GetService("DataStoreService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local PlayerDataService = {}
 
 export type Profile = {
 	version: number,
-	clippings: number,
+	clippings: number, -- what's currently in the carry BAG (unbanked)
+	gold: number, -- banked, spendable currency
+	diamonds: number, -- rare premium currency
+	bagTier: number, -- index into GameConfig.BAG_TIERS
 	totalBladesCut: number,
 	toolTier: number,
 	skills: { [string]: number },
@@ -36,7 +40,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 1
+local PROFILE_VERSION = 2
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -58,6 +62,9 @@ local function defaultProfile(): Profile
 	return {
 		version = PROFILE_VERSION,
 		clippings = 0,
+		gold = 0,
+		diamonds = 0,
+		bagTier = 1,
 		totalBladesCut = 0,
 		toolTier = 1,
 		skills = {},
@@ -68,11 +75,20 @@ end
 
 -- Fill in any fields missing from an older save so the schema can grow safely.
 local function reconcile(profile: Profile): Profile
+	local incoming = (profile :: any).version or 1
 	local base = defaultProfile()
 	for key, value in base :: any do
 		if (profile :: any)[key] == nil then
 			(profile :: any)[key] = value
 		end
+	end
+	-- v1 -> v2: clippings USED to be the spendable currency. Under the new economy
+	-- clippings are just what's in your carry bag, and GOLD is what you bank/spend.
+	-- Preserve old progress by moving banked clippings into gold and starting the
+	-- (new) carry bag empty.
+	if incoming < 2 then
+		profile.gold = (profile.gold or 0) + (profile.clippings or 0)
+		profile.clippings = 0
 	end
 	profile.version = PROFILE_VERSION
 	return profile
@@ -205,22 +221,81 @@ function PlayerDataService.PushState(player: Player)
 	end
 	Remotes.Get("StateChanged"):FireClient(player, {
 		clippings = profile.clippings,
+		gold = profile.gold,
+		diamonds = profile.diamonds,
+		bagTier = profile.bagTier,
+		bagCapacity = PlayerDataService.GetBagCapacity(profile),
 		totalBladesCut = profile.totalBladesCut,
 		toolTier = profile.toolTier,
 		skills = profile.skills,
 	})
 end
 
-function PlayerDataService.AddClippings(player: Player, amount: number)
-	local profile = profiles[player]
-	if not profile then
-		return
-	end
-	profile.clippings += amount
-	PlayerDataService.PushState(player)
+-- Clipping bag capacity for the player's current bag tier.
+function PlayerDataService.GetBagCapacity(profile: Profile): number
+	local tier = GameConfig.BAG_TIERS[profile.bagTier] or GameConfig.BAG_TIERS[1]
+	return tier.capacity
 end
 
--- Returns true and deducts if the player can afford it; false otherwise.
+function PlayerDataService.IsBagFull(player: Player): boolean
+	local profile = profiles[player]
+	if not profile then
+		return false
+	end
+	return profile.clippings >= PlayerDataService.GetBagCapacity(profile)
+end
+
+-- Add mown clippings to the carry bag, never exceeding its capacity. Returns how
+-- many were actually stored (0 if the bag was already full).
+function PlayerDataService.AddClippings(player: Player, amount: number): number
+	local profile = profiles[player]
+	if not profile then
+		return 0
+	end
+	local capacity = PlayerDataService.GetBagCapacity(profile)
+	local space = math.max(0, capacity - profile.clippings)
+	local added = math.min(space, amount)
+	if added > 0 then
+		profile.clippings += added
+		PlayerDataService.PushState(player)
+	end
+	return added
+end
+
+-- Bank the whole bag: clippings -> gold (plus a rare diamond roll), bag emptied.
+-- Returns a summary for the deposit banner.
+function PlayerDataService.Deposit(player: Player): { clippings: number, gold: number, diamonds: number }
+	local profile = profiles[player]
+	if not profile or profile.clippings <= 0 then
+		return { clippings = 0, gold = 0, diamonds = 0 }
+	end
+	local carried = profile.clippings
+	local goldGained = math.floor(carried * GameConfig.CLIPPING_TO_GOLD)
+	local diamondsGained = 0
+	local rolls = math.floor(carried / GameConfig.DIAMOND_ROLL_PER_CLIPPINGS)
+	for _ = 1, rolls do
+		if math.random() < GameConfig.DIAMOND_CHANCE then
+			diamondsGained += 1
+		end
+	end
+	profile.clippings = 0
+	profile.gold += goldGained
+	profile.diamonds += diamondsGained
+	PlayerDataService.PushState(player)
+	return { clippings = carried, gold = goldGained, diamonds = diamondsGained }
+end
+
+-- Returns true and deducts GOLD if the player can afford it; false otherwise.
+function PlayerDataService.SpendGold(player: Player, amount: number): boolean
+	local profile = profiles[player]
+	if not profile or profile.gold < amount then
+		return false
+	end
+	profile.gold -= amount
+	return true
+end
+
+-- Legacy clipping spend (kept for compatibility; upgrades now use SpendGold).
 function PlayerDataService.Spend(player: Player, amount: number): boolean
 	local profile = profiles[player]
 	if not profile or profile.clippings < amount then
