@@ -158,19 +158,32 @@ local function buildCurrency(gui: ScreenGui)
 	pill.Parent = gui
 	bagPill = pill
 
-	local icon = Instance.new("TextLabel")
+	-- Backpack icon: try the requested decal, with an emoji fallback behind it so
+	-- something always shows even if the image can't be fetched.
+	local iconFallback = Instance.new("TextLabel")
+	iconFallback.Name = "BagIconFallback"
+	iconFallback.BackgroundTransparency = 1
+	iconFallback.Size = UDim2.fromOffset(46, 46)
+	iconFallback.Position = UDim2.fromOffset(12, 6)
+	iconFallback.Text = "\u{1F392}"
+	iconFallback.TextScaled = true
+	iconFallback.ZIndex = 6
+	iconFallback.Parent = pill
+
+	local icon = Instance.new("ImageLabel")
+	icon.Name = "BagIcon"
 	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.fromOffset(42, 44)
-	icon.Position = UDim2.fromOffset(10, 4)
-	icon.Text = "\u{1F392}"
-	icon.TextScaled = true
-	icon.ZIndex = 6
+	icon.Size = UDim2.fromOffset(46, 46)
+	icon.Position = UDim2.fromOffset(12, 6)
+	icon.Image = "rbxassetid://962094726"
+	icon.ScaleType = Enum.ScaleType.Fit
+	icon.ZIndex = 7
 	icon.Parent = pill
 
 	bagCountLabel = Instance.new("TextLabel")
 	bagCountLabel.BackgroundTransparency = 1
-	bagCountLabel.Size = UDim2.new(1, -58, 0, 34)
-	bagCountLabel.Position = UDim2.fromOffset(52, 3)
+	bagCountLabel.Size = UDim2.new(1, -78, 0, 34)
+	bagCountLabel.Position = UDim2.fromOffset(70, 3)
 	bagCountLabel.Font = Enum.Font.FredokaOne
 	bagCountLabel.Text = "0 / 25"
 	bagCountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -180,7 +193,8 @@ local function buildCurrency(gui: ScreenGui)
 	local bcp = Instance.new("UIPadding")
 	bcp.PaddingTop = UDim.new(0, 5)
 	bcp.PaddingBottom = UDim.new(0, 5)
-	bcp.PaddingRight = UDim.new(0, 12)
+	bcp.PaddingLeft = UDim.new(0, 8)
+	bcp.PaddingRight = UDim.new(0, 14)
 	bcp.Parent = bagCountLabel
 	bagCountLabel.Parent = pill
 
@@ -206,47 +220,37 @@ local function buildCurrency(gui: ScreenGui)
 	corner(bagFill, 4)
 	bagFill.Parent = track
 
-	-- Gold + diamond counters, stacked in the top-left.
-	local holder = Instance.new("Frame")
-	holder.Name = "Counters"
-	holder.Position = UDim2.fromOffset(18, 18)
-	holder.Size = UDim2.fromOffset(146, 92)
-	holder.BackgroundTransparency = 1
-	holder.ZIndex = 5
-	local list = Instance.new("UIListLayout")
-	list.FillDirection = Enum.FillDirection.Vertical
-	list.Padding = UDim.new(0, 10)
-	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = holder
-	holder.Parent = gui
-
-	local function makeCounter(order: number, emoji: string, tint: Color3): TextLabel
+	-- Gold and diamond counters flank the bag meter: gold to its left, diamond to
+	-- its right. The bag meter is 250px wide and centered, so its edges sit 125px
+	-- either side of screen center; we anchor each counter just beyond that.
+	local function makeCounter(emoji: string, tint: Color3, anchorX: number, offsetX: number): TextLabel
 		local c = Instance.new("Frame")
-		c.Size = UDim2.fromOffset(140, 40)
+		c.AnchorPoint = Vector2.new(anchorX, 0)
+		c.Position = UDim2.new(0.5, offsetX, 0, 22)
+		c.Size = UDim2.fromOffset(120, 44)
 		c.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		c.LayoutOrder = order
 		c.ZIndex = 5
-		corner(c, 20)
+		corner(c, 22)
 		stroke(c, 2, tint, 0.1)
-		c.Parent = holder
+		c.Parent = gui
 
 		local badge = Instance.new("TextLabel")
 		badge.BackgroundTransparency = 1
-		badge.Size = UDim2.fromOffset(30, 40)
-		badge.Position = UDim2.fromOffset(8, 0)
+		badge.Size = UDim2.fromOffset(30, 44)
+		badge.Position = UDim2.fromOffset(12, 0)
 		badge.Text = emoji
 		badge.TextScaled = true
 		badge.ZIndex = 6
 		local ep = Instance.new("UIPadding")
-		ep.PaddingTop = UDim.new(0, 9)
-		ep.PaddingBottom = UDim.new(0, 9)
+		ep.PaddingTop = UDim.new(0, 10)
+		ep.PaddingBottom = UDim.new(0, 10)
 		ep.Parent = badge
 		badge.Parent = c
 
 		local lbl = Instance.new("TextLabel")
 		lbl.BackgroundTransparency = 1
-		lbl.Size = UDim2.new(1, -44, 1, 0)
-		lbl.Position = UDim2.fromOffset(42, 0)
+		lbl.Size = UDim2.new(1, -50, 1, 0)
+		lbl.Position = UDim2.fromOffset(46, 0)
 		lbl.Font = Enum.Font.FredokaOne
 		lbl.Text = "0"
 		lbl.TextColor3 = INK
@@ -254,16 +258,17 @@ local function buildCurrency(gui: ScreenGui)
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
 		lbl.ZIndex = 6
 		local lpad = Instance.new("UIPadding")
-		lpad.PaddingTop = UDim.new(0, 9)
-		lpad.PaddingBottom = UDim.new(0, 9)
-		lpad.PaddingRight = UDim.new(0, 10)
+		lpad.PaddingTop = UDim.new(0, 10)
+		lpad.PaddingBottom = UDim.new(0, 10)
+		lpad.PaddingRight = UDim.new(0, 12)
 		lpad.Parent = lbl
 		lbl.Parent = c
 		return lbl
 	end
 
-	goldLabel = makeCounter(1, "\u{1FA99}", GOLD)
-	diamondLabel = makeCounter(2, "\u{1F48E}", DIAMOND)
+	-- gold: right edge 135px left of center; diamond: left edge 135px right of center.
+	goldLabel = makeCounter("\u{1FA99}", GOLD, 1, -135)
+	diamondLabel = makeCounter("\u{1F48E}", DIAMOND, 0, 135)
 end
 
 -- Right-side round action button ----------------------------------------------
