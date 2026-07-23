@@ -18,11 +18,11 @@ local GameConfig = {
 	TILE_FILL = 0.94, -- fraction of the cell the tile fills (small gap = individual blades read)
 	GRASS_SHRINK_TWEEN = 0.12, -- seconds for the shrink animation per cut
 	GRASS_MIN_STUB = 0.05, -- tile height at the instant before it is removed
-	-- Every grass block is forced to at least this tall (studs). It's set above the
-	-- player's jump height (JumpPower 50 clears ~7 studs) so the player can't hop over
-	-- uncut grass -- they have to mow a path. While a tile still has health its shrink
-	-- is clamped to this height too, so it stays un-jumpable until it's FULLY cut down.
-	GRASS_MIN_BLOCK_HEIGHT = 10,
+	-- Height (studs) of the invisible collision wall placed over every grass block.
+	-- It blocks both walking through AND jumping over uncut grass (well above the
+	-- ~7-stud jump), never shrinks with the blade, and is destroyed the moment the
+	-- tile is fully cut down. The visible grass blade itself never collides.
+	GRASS_BARRIER_HEIGHT = 15,
 	MIN_CUT_DAMAGE = 1, -- if a swing would deal less than this vs a grass type, it's "too tough"
 
 	-- How the map is coated in grass.
