@@ -28,6 +28,7 @@ local GREEN = Color3.fromRGB(88, 178, 84)
 local GREEN_DARK = Color3.fromRGB(58, 138, 64)
 local LOCKED = Color3.fromRGB(168, 172, 162)
 local GOLD = Color3.fromRGB(240, 190, 70)
+local DIAMOND = Color3.fromRGB(120, 210, 235)
 
 -- Upgrade display metadata ----------------------------------------------------
 local SKILL_ORDER = { "SharpBlades", "QuickHands", "ClippingMagnet", "GreenerThumb" }
@@ -39,11 +40,15 @@ local SKILL_META: { [string]: { icon: string, name: string, desc: string } } = {
 }
 
 -- State -----------------------------------------------------------------------
-local latestState: any = { clippings = 0, toolTier = 1, skills = {} }
+local latestState: any = { clippings = 0, gold = 0, diamonds = 0, bagCapacity = 25, toolTier = 1, skills = {} }
 local isOpen = false
 local openedByZone = false
 local cardUpdaters: { (state: any) -> () } = {}
-local clippingsLabel: TextLabel
+local bagPill: Frame
+local bagCountLabel: TextLabel
+local bagFill: Frame
+local goldLabel: TextLabel
+local diamondLabel: TextLabel
 local modal: Frame
 local backdrop: TextButton
 local lastShown = -1
@@ -137,49 +142,128 @@ local function formatNumber(n: number): string
 	return formatted
 end
 
--- Currency pill (top-center) --------------------------------------------------
+-- Currency + bag HUD ----------------------------------------------------------
 local function buildCurrency(gui: ScreenGui)
+	-- Bag meter (top-center): how full your carry bag is, with a fill bar.
 	local pill = Instance.new("Frame")
-	pill.Name = "Currency"
+	pill.Name = "BagMeter"
 	pill.AnchorPoint = Vector2.new(0.5, 0)
 	pill.Position = UDim2.new(0.5, 0, 0, 18)
-	pill.Size = UDim2.fromOffset(220, 52)
-	pill.BackgroundColor3 = GREEN
+	pill.Size = UDim2.fromOffset(250, 58)
+	pill.BackgroundColor3 = GREEN_DARK
 	pill.ZIndex = 5
 	corner(pill, 26)
 	gradient(pill, Color3.fromRGB(104, 194, 98), GREEN_DARK, 90)
 	stroke(pill, 3, Color3.fromRGB(255, 255, 255), 0.35)
 	pill.Parent = gui
+	bagPill = pill
 
 	local icon = Instance.new("TextLabel")
 	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.fromOffset(44, 52)
-	icon.Position = UDim2.fromOffset(6, 0)
-	icon.Text = "\u{1F33F}"
+	icon.Size = UDim2.fromOffset(42, 44)
+	icon.Position = UDim2.fromOffset(10, 4)
+	icon.Text = "\u{1F392}"
 	icon.TextScaled = true
 	icon.ZIndex = 6
-	local ip = Instance.new("UIPadding")
-	ip.PaddingTop = UDim.new(0, 8)
-	ip.PaddingBottom = UDim.new(0, 8)
-	ip.Parent = icon
 	icon.Parent = pill
 
-	clippingsLabel = Instance.new("TextLabel")
-	clippingsLabel.BackgroundTransparency = 1
-	clippingsLabel.Size = UDim2.new(1, -50, 1, 0)
-	clippingsLabel.Position = UDim2.fromOffset(48, 0)
-	clippingsLabel.Font = Enum.Font.FredokaOne
-	clippingsLabel.Text = "0"
-	clippingsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	clippingsLabel.TextScaled = true
-	clippingsLabel.TextXAlignment = Enum.TextXAlignment.Left
-	clippingsLabel.ZIndex = 6
-	local lp = Instance.new("UIPadding")
-	lp.PaddingTop = UDim.new(0, 12)
-	lp.PaddingBottom = UDim.new(0, 12)
-	lp.PaddingRight = UDim.new(0, 14)
-	lp.Parent = clippingsLabel
-	clippingsLabel.Parent = pill
+	bagCountLabel = Instance.new("TextLabel")
+	bagCountLabel.BackgroundTransparency = 1
+	bagCountLabel.Size = UDim2.new(1, -58, 0, 34)
+	bagCountLabel.Position = UDim2.fromOffset(52, 3)
+	bagCountLabel.Font = Enum.Font.FredokaOne
+	bagCountLabel.Text = "0 / 25"
+	bagCountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	bagCountLabel.TextScaled = true
+	bagCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+	bagCountLabel.ZIndex = 6
+	local bcp = Instance.new("UIPadding")
+	bcp.PaddingTop = UDim.new(0, 5)
+	bcp.PaddingBottom = UDim.new(0, 5)
+	bcp.PaddingRight = UDim.new(0, 12)
+	bcp.Parent = bagCountLabel
+	bagCountLabel.Parent = pill
+
+	-- Fill-bar track along the bottom edge.
+	local track = Instance.new("Frame")
+	track.Name = "Track"
+	track.AnchorPoint = Vector2.new(0.5, 1)
+	track.Position = UDim2.new(0.5, 0, 1, -8)
+	track.Size = UDim2.new(1, -28, 0, 8)
+	track.BackgroundColor3 = Color3.fromRGB(28, 46, 26)
+	track.BackgroundTransparency = 0.25
+	track.BorderSizePixel = 0
+	track.ZIndex = 6
+	corner(track, 4)
+	track.Parent = pill
+
+	bagFill = Instance.new("Frame")
+	bagFill.Name = "Fill"
+	bagFill.Size = UDim2.new(0, 0, 1, 0)
+	bagFill.BackgroundColor3 = Color3.fromRGB(180, 240, 150)
+	bagFill.BorderSizePixel = 0
+	bagFill.ZIndex = 7
+	corner(bagFill, 4)
+	bagFill.Parent = track
+
+	-- Gold + diamond counters, stacked in the top-left.
+	local holder = Instance.new("Frame")
+	holder.Name = "Counters"
+	holder.Position = UDim2.fromOffset(18, 18)
+	holder.Size = UDim2.fromOffset(146, 92)
+	holder.BackgroundTransparency = 1
+	holder.ZIndex = 5
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Vertical
+	list.Padding = UDim.new(0, 10)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = holder
+	holder.Parent = gui
+
+	local function makeCounter(order: number, emoji: string, tint: Color3): TextLabel
+		local c = Instance.new("Frame")
+		c.Size = UDim2.fromOffset(140, 40)
+		c.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		c.LayoutOrder = order
+		c.ZIndex = 5
+		corner(c, 20)
+		stroke(c, 2, tint, 0.1)
+		c.Parent = holder
+
+		local badge = Instance.new("TextLabel")
+		badge.BackgroundTransparency = 1
+		badge.Size = UDim2.fromOffset(30, 40)
+		badge.Position = UDim2.fromOffset(8, 0)
+		badge.Text = emoji
+		badge.TextScaled = true
+		badge.ZIndex = 6
+		local ep = Instance.new("UIPadding")
+		ep.PaddingTop = UDim.new(0, 9)
+		ep.PaddingBottom = UDim.new(0, 9)
+		ep.Parent = badge
+		badge.Parent = c
+
+		local lbl = Instance.new("TextLabel")
+		lbl.BackgroundTransparency = 1
+		lbl.Size = UDim2.new(1, -44, 1, 0)
+		lbl.Position = UDim2.fromOffset(42, 0)
+		lbl.Font = Enum.Font.FredokaOne
+		lbl.Text = "0"
+		lbl.TextColor3 = INK
+		lbl.TextScaled = true
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.ZIndex = 6
+		local lpad = Instance.new("UIPadding")
+		lpad.PaddingTop = UDim.new(0, 9)
+		lpad.PaddingBottom = UDim.new(0, 9)
+		lpad.PaddingRight = UDim.new(0, 10)
+		lpad.Parent = lbl
+		lbl.Parent = c
+		return lbl
+	end
+
+	goldLabel = makeCounter(1, "\u{1FA99}", GOLD)
+	diamondLabel = makeCounter(2, "\u{1F48E}", DIAMOND)
 end
 
 -- Right-side round action button ----------------------------------------------
@@ -315,8 +399,8 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 			buyStroke.Transparency = 0.7
 		else
 			local cost = data.cost or 0
-			local afford = state.clippings >= cost
-			buy.Text = (cost == 0) and "FREE" or ("\u{1F33F} " .. formatNumber(cost))
+			local afford = (state.gold or 0) >= cost
+			buy.Text = (cost == 0) and "FREE" or ("\u{1FA99} " .. formatNumber(cost))
 			buy.BackgroundColor3 = afford and GREEN or LOCKED
 			buyStroke.Transparency = afford and 0.4 or 0.7
 		end
@@ -490,6 +574,42 @@ local function buildShopModal(gui: ScreenGui)
 			Remotes.Get("PurchaseUpgrade"):FireServer("skill", skillName)
 		end)
 	end
+
+	-- Section: Storage (bag upgrades) -----------------------------------------
+	local storageHeader = Instance.new("TextLabel")
+	storageHeader.BackgroundTransparency = 1
+	storageHeader.Size = UDim2.new(1, 0, 0, 24)
+	storageHeader.Font = Enum.Font.FredokaOne
+	storageHeader.Text = "Storage"
+	storageHeader.TextColor3 = INK
+	storageHeader.TextXAlignment = Enum.TextXAlignment.Left
+	storageHeader.TextSize = 18
+	storageHeader.LayoutOrder = 20
+	storageHeader.ZIndex = 11
+	storageHeader.Parent = body
+
+	buildCard(body, 21, "\u{1F392}", Color3.fromRGB(214, 232, 244), function(state)
+		local tier = state.bagTier or 1
+		local current = GameConfig.BAG_TIERS[tier]
+		local nextDef = GameConfig.BAG_TIERS[tier + 1]
+		if not nextDef then
+			return {
+				name = "Clipping Bag",
+				desc = "The biggest bag in the kingdom!",
+				level = "Capacity: " .. (current and current.capacity or 0),
+				maxed = true,
+			}
+		end
+		return {
+			name = "Bigger Bag",
+			desc = "Carry " .. current.capacity .. " \u{2192} " .. nextDef.capacity .. " clippings",
+			level = "Tier " .. tier .. " / " .. #GameConfig.BAG_TIERS,
+			cost = nextDef.cost,
+			maxed = false,
+		}
+	end, function()
+		Remotes.Get("PurchaseUpgrade"):FireServer("bag")
+	end)
 end
 
 -- Open / close ----------------------------------------------------------------
@@ -538,17 +658,35 @@ end
 -- Refresh ---------------------------------------------------------------------
 local function updateUI(state: any)
 	latestState = state
-	if clippingsLabel then
-		clippingsLabel.Text = formatNumber(state.clippings or 0)
-		if lastShown >= 0 and (state.clippings or 0) ~= lastShown then
-			-- little pop when the balance changes
-			clippingsLabel.Parent.Size = UDim2.fromOffset(206, 48)
-			TweenService:Create(clippingsLabel.Parent, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-				Size = UDim2.fromOffset(220, 52),
-			}):Play()
-		end
-		lastShown = state.clippings or 0
+	local clippings = state.clippings or 0
+	local capacity = state.bagCapacity or 0
+
+	if bagCountLabel then
+		bagCountLabel.Text = formatNumber(clippings) .. " / " .. formatNumber(capacity)
 	end
+	if bagFill then
+		local frac = (capacity > 0) and math.clamp(clippings / capacity, 0, 1) or 0
+		TweenService:Create(bagFill, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(frac, 0, 1, 0),
+		}):Play()
+		local full = capacity > 0 and clippings >= capacity
+		bagFill.BackgroundColor3 = full and Color3.fromRGB(255, 120, 96) or Color3.fromRGB(180, 240, 150)
+	end
+	if goldLabel then
+		goldLabel.Text = formatNumber(state.gold or 0)
+	end
+	if diamondLabel then
+		diamondLabel.Text = formatNumber(state.diamonds or 0)
+	end
+	if bagPill and lastShown >= 0 and clippings ~= lastShown then
+		-- little pop when the bag amount changes
+		bagPill.Size = UDim2.fromOffset(236, 54)
+		TweenService:Create(bagPill, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.fromOffset(250, 58),
+		}):Play()
+	end
+	lastShown = clippings
+
 	for _, update in cardUpdaters do
 		update(state)
 	end
@@ -571,6 +709,32 @@ local function startZoneWatch()
 			UIController.OpenShop(true)
 		elseif not inside and isOpen and openedByZone then
 			UIController.CloseShop()
+		end
+	end)
+end
+
+-- Walk onto the Gardener pad to auto-deposit the whole bag. We fire once per entry
+-- (reset when you step off) so a single walk-in banks everything, not every frame.
+local function startGardenerWatch()
+	local inside = false
+	RunService.Heartbeat:Connect(function()
+		local stand = Workspace:FindFirstChild("Gardener")
+		local zone = stand and stand:FindFirstChild("GardenerZone") :: BasePart?
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if not zone or not root then
+			inside = false
+			return
+		end
+		local delta = root.Position - zone.Position
+		local horizontal = math.sqrt(delta.X * delta.X + delta.Z * delta.Z)
+		if horizontal <= GameConfig.GARDENER_ZONE_RADIUS then
+			if not inside then
+				inside = true
+				Remotes.Get("RequestDeposit"):FireServer()
+			end
+		else
+			inside = false
 		end
 	end)
 end
@@ -674,8 +838,20 @@ end
 function UIController.Start()
 	Remotes.Get("StateChanged").OnClientEvent:Connect(updateUI)
 	Remotes.Get("DistrictCleared").OnClientEvent:Connect(showBanner)
+	Remotes.Get("BagFull").OnClientEvent:Connect(function()
+		showBanner("\u{1F392} Bag Full!", "Head to the Gardener to deposit your clippings")
+	end)
+	Remotes.Get("Deposited").OnClientEvent:Connect(function(summary)
+		summary = summary or {}
+		local sub = "+" .. formatNumber(summary.gold or 0) .. " gold"
+		if (summary.diamonds or 0) > 0 then
+			sub = sub .. "    +" .. formatNumber(summary.diamonds) .. " \u{1F48E}"
+		end
+		showBanner("\u{1FA99} Deposited " .. formatNumber(summary.clippings or 0) .. " clippings", sub)
+	end)
 	Remotes.Get("RequestState"):FireServer()
 	startZoneWatch()
+	startGardenerWatch()
 	hookShopPrompt()
 end
 
