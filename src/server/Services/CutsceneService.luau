@@ -331,83 +331,50 @@ local function runSequence(player: Player)
 		return
 	end
 
-	-- The teddy bear falls out the window. When the fall animation finishes we
-	-- capture its exact final pose, build a frozen DUPLICATE standing in that spot,
-	-- and delete the animated original -- so the teddy stays exactly where the
-	-- animation left it instead of snapping back up toward the window. (The living
-	-- teddy's Humanoid + joints keep re-posing it, which is why simply anchoring it
-	-- didn't hold; a jointless, script-free copy stays put.)
+	-- The teddy bear falls out the window and freezes exactly where it LANDS.
 	if teddyFalling then
 		local track = teddyFalling :: AnimationTrack
-		local originalTeddy = teddyClone
 		pcall(function()
 			track:Play(0.1)
 		end)
+		-- Record each teddy part's world CFrame every frame while the fall plays,
+		-- then -- the instant the (non-looped) track ends -- re-apply that last
+		-- captured pose and anchor every part. This holds the true final (landed)
+		-- frame no matter what AnimationTrack.Length reports, so it never freezes
+		-- mid-air and never snaps back to its rest pose. (Effectively: capture the
+		-- end position, then lock a copy of it in place.)
 		task.spawn(function()
-			if not originalTeddy then
+			local teddy = teddyClone
+			if not teddy then
 				return
 			end
-			-- Ordered list of the animated teddy's parts; the clone's parts come out
-			-- in the same order, so we copy the pose across by index.
 			local parts: { BasePart } = {}
-			for _, d in originalTeddy:GetDescendants() do
+			for _, d in teddy:GetDescendants() do
 				if d:IsA("BasePart") then
 					table.insert(parts, d)
 				end
 			end
-			-- Wait for the fall to start, then record every part's world CFrame each
-			-- frame until the (non-looped) track ends. The last recording is the pose
-			-- at the moment the animation finishes.
+			local lastPose: { [BasePart]: CFrame } = {}
+			-- Wait for the track to actually start.
 			local guard = 0
 			while not track.IsPlaying and guard < 3 do
 				guard += task.wait()
 			end
-			local finalPose: { CFrame } = {}
+			-- Capture the animated world pose every frame while it plays.
 			while track.IsPlaying do
-				for i, p in parts do
-					finalPose[i] = p.CFrame
+				for _, p in parts do
+					lastPose[p] = p.CFrame
 				end
 				task.wait()
 			end
-			if #finalPose == 0 then
-				-- The animation never streamed in; leave the teddy as-is.
-				return
-			end
-			-- Build the frozen duplicate posed at that final frame.
-			local frozen = originalTeddy:Clone()
-			-- Strip everything that could move or re-pose it: the Humanoid, the
-			-- Animator, every joint, and any (possibly unowned) scripts.
-			for _, d in frozen:GetDescendants() do
-				if
-					d:IsA("Humanoid")
-					or d:IsA("Animator")
-					or d:IsA("Motor6D")
-					or d:IsA("Weld")
-					or d:IsA("WeldConstraint")
-					or d:IsA("LuaSourceContainer")
-				then
-					d:Destroy()
-				end
-			end
-			local frozenParts: { BasePart } = {}
-			for _, d in frozen:GetDescendants() do
-				if d:IsA("BasePart") then
-					table.insert(frozenParts, d)
-				end
-			end
-			for i, p in frozenParts do
-				local cf = finalPose[i]
+			-- Track ended: lock the final landed frame in place.
+			for _, p in parts do
+				local cf = lastPose[p]
 				if cf then
 					p.CFrame = cf
 				end
 				p.Anchored = true
-				p.CanCollide = false
 			end
-			frozen.Parent = sceneRoot or Workspace
-			-- Swap the animated teddy out for the frozen copy so the later "remove the
-			-- teddy" step cleans up the right one.
-			originalTeddy:Destroy()
-			teddyClone = frozen
 		end)
 	end
 

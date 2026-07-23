@@ -37,19 +37,16 @@ end
 -- Build one grass tile standing on a surface point.
 -- baseCF: a CFrame sitting ON the surface, its up-vector pointing along the surface normal.
 local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Instance, tileSize: number?)
-	-- Force every block to at least jump-proof height so the player can't hop over
-	-- uncut grass (see GameConfig.GRASS_MIN_BLOCK_HEIGHT).
-	local height = math.max(def.height, GameConfig.GRASS_MIN_BLOCK_HEIGHT)
+	local height = def.height
 	local footprint = (tileSize or GameConfig.TILE_SIZE_STUDS) * GameConfig.TILE_FILL
 
 	local tile = Instance.new("Part")
 	tile.Name = "GrassTile"
 	tile.Anchored = true
-	-- Solid until cut: the player physically can't walk through standing grass;
-	-- clearing a tile (health 0) turns collision off so they can pass. As a tile
-	-- is cut down it also shrinks (refreshTileHeight), so tall grass gradually
-	-- becomes easier to step over the more it's mowed.
-	tile.CanCollide = true
+	-- The visible grass blade itself never collides (back to how it was). A separate
+	-- invisible barrier part (built below) is what blocks the player until the tile is
+	-- fully cut down.
+	tile.CanCollide = false
 	tile.CanQuery = true -- must stay true so the mouse can target it
 	tile.CanTouch = false
 	tile.Material = Enum.Material.Grass
@@ -70,6 +67,24 @@ local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Inst
 	tile:SetAttribute("FullHeight", height)
 	tile:SetAttribute("BaseCFrame", baseCF)
 	tile.Parent = parent
+
+	-- Invisible collision wall: same footprint as the block, a fixed 15 studs tall, so
+	-- the player can neither walk through nor jump over standing grass. It never shrinks
+	-- with the blade and is destroyed the instant the tile is fully cut down (see
+	-- onRequestCut), letting the player pass. CanQuery is off so the mouse still targets
+	-- the grass blade behind it, not the invisible wall.
+	local barrier = Instance.new("Part")
+	barrier.Name = "Barrier"
+	barrier.Anchored = true
+	barrier.CanCollide = true
+	barrier.CanQuery = false
+	barrier.CanTouch = false
+	barrier.Transparency = 1
+	barrier.CastShadow = false
+	barrier.Size = Vector3.new(footprint, GameConfig.GRASS_BARRIER_HEIGHT, footprint)
+	barrier.CFrame = baseCF * CFrame.new(0, GameConfig.GRASS_BARRIER_HEIGHT / 2, 0)
+	barrier.Parent = tile
+
 	return tile
 end
 
@@ -134,11 +149,7 @@ local function refreshTileHeight(tile: BasePart)
 	local footprint = tile.Size.X
 
 	local fraction = math.clamp(health / maxHealth, 0, 1)
-	-- While the tile still has health, keep it jump-proof (clamped to
-	-- GRASS_MIN_BLOCK_HEIGHT) so a partly-cut block still can't be jumped over; only
-	-- once it's fully cleared (health 0) does it collapse to the tiny removal stub.
-	local floorHeight = if health > 0 then GameConfig.GRASS_MIN_BLOCK_HEIGHT else GameConfig.GRASS_MIN_STUB
-	local newHeight = math.max(floorHeight, fullHeight * fraction)
+	local newHeight = math.max(GameConfig.GRASS_MIN_STUB, fullHeight * fraction)
 
 	local tween = TweenService:Create(
 		tile,
@@ -212,9 +223,14 @@ local function onRequestCut(player: Player, tile: Instance?)
 		ClippingsService.Drop(player, dropFrom, reward, isCrit)
 	end
 
-	-- Reveal whatever is underneath and let the player walk through now.
+	-- Fully cut down. Drop the invisible barrier immediately so the player can walk
+	-- through, then fade the (shrinking) blade out.
 	tile.CanQuery = false
 	tile.CanCollide = false
+	local barrier = tile:FindFirstChild("Barrier")
+	if barrier then
+		barrier:Destroy()
+	end
 	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
 end
 
