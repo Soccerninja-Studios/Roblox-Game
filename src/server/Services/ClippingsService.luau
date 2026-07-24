@@ -23,27 +23,36 @@ local collecting: { [BasePart]: boolean } = {}
 local bagFullNotified: { [number]: number } = {}
 local BAG_FULL_NOTIFY_INTERVAL = 4 -- seconds between "bag full" nudges per player
 
-local NORMAL_COLOR = Color3.fromRGB(150, 224, 92)
+local NORMAL_COLOR = Color3.fromRGB(126, 204, 84)
 local CRIT_COLOR = Color3.fromRGB(255, 205, 54)
 
+-- A dropped clipping is a single small BLADE OF GRASS (a thin, tapered part made
+-- with a Wedge mesh) rather than a glowing orb. It stays one BasePart so the
+-- magnet-collect tween can still shrink it and fly it into the player.
 local function makePickup(restPos: Vector3, isCrit: boolean): BasePart
 	local p = Instance.new("Part")
 	p.Name = "Clipping"
-	p.Shape = Enum.PartType.Ball
-	p.Size = Vector3.new(0.75, 0.75, 0.75)
+	p.Size = Vector3.new(0.42, 1.05, 0.16)
 	p.Anchored = true
 	p.CanCollide = false
 	p.CanQuery = false
 	p.CanTouch = false
-	p.Material = Enum.Material.Neon
+	p.Material = Enum.Material.Grass
 	p.Color = isCrit and CRIT_COLOR or NORMAL_COLOR
 	p.CFrame = CFrame.new(restPos)
 
-	local light = Instance.new("PointLight")
-	light.Brightness = 1.5
-	light.Range = 6
-	light.Color = p.Color
-	light.Parent = p
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Wedge
+	mesh.Parent = p
+
+	if isCrit then
+		-- crits still get a subtle golden glow so they read as special
+		local light = Instance.new("PointLight")
+		light.Brightness = 1.4
+		light.Range = 6
+		light.Color = CRIT_COLOR
+		light.Parent = p
+	end
 	return p
 end
 
@@ -70,9 +79,11 @@ function ClippingsService.Drop(owner: Player, fromPos: Vector3, value: number, i
 	pickup:SetAttribute("Crit", isCrit)
 	pickup.Parent = pickupFolder
 
-	-- Little toss arc onto the ground.
+	-- Little toss arc onto the ground; land with a random upright spin so a scatter
+	-- of blades doesn't look like a grid.
+	local restCF = CFrame.new(restPos) * CFrame.Angles(0, math.random() * math.pi * 2, 0)
 	TweenService
-		:Create(pickup, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = CFrame.new(restPos) })
+		:Create(pickup, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = restCF })
 		:Play()
 
 	Debris:AddItem(pickup, GameConfig.PICKUP_LIFETIME)

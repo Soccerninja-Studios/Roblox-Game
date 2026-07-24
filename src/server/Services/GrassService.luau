@@ -167,7 +167,7 @@ local function onRequestCut(player: Player, tile: Instance?)
 	local typeName = tile:GetAttribute("GrassType") or GameConfig.DEFAULT_GRASS_TYPE
 	local def = grassDef(typeName)
 
-	local power = StatCalculator.GetCutPower(profile.toolTier, profile.skills)
+	local power = StatCalculator.GetCutPowerForGrass(profile.toolTier, typeName, profile.skills)
 	local damage = power - def.armor
 	if damage < GameConfig.MIN_CUT_DAMAGE then
 		-- Tool isn't strong enough for this grass type yet.
