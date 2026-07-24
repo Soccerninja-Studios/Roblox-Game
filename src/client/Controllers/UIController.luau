@@ -464,7 +464,7 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 			else
 				buy.Text = formatNumber(cost)
 				buy.TextXAlignment = Enum.TextXAlignment.Left
-				buyPad.PaddingLeft = UDim.new(0, 40)
+				buyPad.PaddingLeft = UDim.new(0, 54)
 				buyCoin.Visible = true
 			end
 			buy.BackgroundColor3 = afford and GREEN or LOCKED
@@ -921,8 +921,17 @@ local function hud(): ScreenGui?
 	return (playerGui and playerGui:FindFirstChild("HUD")) :: ScreenGui?
 end
 
+-- Remember each counter's TRUE resting size the first time it bumps. Deposits
+-- fire one chip (and one bump) per unit banked, so reading frame.Size live let a
+-- second bump capture an already-enlarged size as "base" -- the counter then grew
+-- with every deposit and never shrank back. Anchoring to a stored base fixes it.
+local counterBaseSize: { [Instance]: UDim2 } = {}
 local function bumpCounter(frame: GuiObject)
-	local base = frame.Size
+	local base = counterBaseSize[frame]
+	if not base then
+		base = frame.Size
+		counterBaseSize[frame] = base
+	end
 	TweenService:Create(frame, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
 		Size = base + UDim2.fromOffset(8, 8),
 	}):Play()
