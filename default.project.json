@@ -25,6 +25,9 @@
         },
         "TeddyBear": {
           "$path": "assets/Teddy Bear.rbxmx"
+        },
+        "Gardener": {
+          "$path": "assets/Gardener.rbxmx"
         }
       }
     },
