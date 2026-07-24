@@ -68,45 +68,43 @@ local GameConfig = {
 		Ironweed = { displayName = "Ironweed", health = 40, armor = 5, height = 5.0, clipReward = 80, color = { 44, 92, 74 } },
 	},
 
-	-- Tool tiers.
-	--   bladesPerSwing = base cut power (how much damage one swing deals before skills)
-	--   cost           = Clippings cost to buy
+	-- Tool tiers form the progression LADDER. You always wield your highest owned
+	-- tier; buying the next tier in the Shop swaps your tool. The ladder alternates
+	-- balanced ALL-ROUNDER tools with grass-TYPE SPECIALISTS, and ends in one
+	-- ultimate tool that shreds every grass type.
+	--   bladesPerSwing = base cut power (damage per swing before skills + type bonus)
+	--   cost           = Gold cost to buy the tier (bought in order)
 	--   style          = which 3D model to build ("shears", "sickle", "scythe")
+	--   favored        = grass type this tool EXCELS at (see GRASS_TYPES); "all" for
+	--                    the ultimate; nil for a balanced all-rounder
+	--   favoredMul     = cut-power multiplier vs favored grass (or vs ALL for "all")
+	--   offMul         = cut-power multiplier vs every OTHER grass type
 	--   handleColor / bladeColor = {r,g,b}
 	--   bladeMaterial  = Enum.Material name
 	--   toolScale      = overall size multiplier
 	TOOL_TIERS = {
-		{
-			name = "Rusty Shears",
-			bladesPerSwing = 1,
-			cost = 0,
-			style = "shears",
-			handleColor = { 92, 64, 40 },
-			bladeColor = { 138, 120, 96 },
-			bladeMaterial = "CorrodedMetal",
-			toolScale = 1.0,
-		},
-		{
-			name = "Sickle",
-			bladesPerSwing = 3,
-			cost = 100,
-			style = "sickle",
-			handleColor = { 116, 80, 46 },
-			bladeColor = { 198, 200, 210 },
-			bladeMaterial = "Metal",
-			toolScale = 1.1,
-		},
-		{
-			name = "Scythe",
-			bladesPerSwing = 8,
-			cost = 750,
-			style = "scythe",
-			handleColor = { 74, 52, 34 },
-			bladeColor = { 220, 224, 235 },
-			bladeMaterial = "Metal",
-			toolScale = 1.25,
-		},
-		-- Tiers 4-15 added in a later balancing pass
+		-- 1 \u{00B7} all-rounder (starter)
+		{ name = "Rusty Shears", bladesPerSwing = 2, cost = 0, style = "shears", favored = nil, handleColor = { 92, 64, 40 }, bladeColor = { 138, 120, 96 }, bladeMaterial = "CorrodedMetal", toolScale = 1.0 },
+		-- 2 \u{00B7} specialist: Meadow
+		{ name = "Meadow Trimmer", bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
+		-- 3 \u{00B7} all-rounder
+		{ name = "Steel Shears", bladesPerSwing = 7, cost = 900, style = "shears", favored = nil, handleColor = { 70, 74, 82 }, bladeColor = { 198, 204, 214 }, bladeMaterial = "Metal", toolScale = 1.1 },
+		-- 4 \u{00B7} specialist: Wild
+		{ name = "Bramble Sickle", bladesPerSwing = 13, cost = 2500, style = "sickle", favored = "Wild", favoredMul = 2.6, offMul = 0.7, handleColor = { 96, 68, 40 }, bladeColor = { 120, 168, 96 }, bladeMaterial = "Metal", toolScale = 1.12 },
+		-- 5 \u{00B7} all-rounder
+		{ name = "Garden Sickle", bladesPerSwing = 15, cost = 6000, style = "sickle", favored = nil, handleColor = { 116, 80, 46 }, bladeColor = { 210, 214, 224 }, bladeMaterial = "Metal", toolScale = 1.15 },
+		-- 6 \u{00B7} specialist: Moss
+		{ name = "Moss Whip", bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Moss", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
+		-- 7 \u{00B7} all-rounder
+		{ name = "Keen Scythe", bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
+		-- 8 \u{00B7} specialist: Thicket
+		{ name = "Thornbite Machete", bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thick", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
+		-- 9 \u{00B7} all-rounder
+		{ name = "Royal Reaper", bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
+		-- 10 \u{00B7} specialist: Ironweed
+		{ name = "Ironfang Scythe", bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
+		-- 11 \u{00B7} ULTIMATE: excels at every grass type
+		{ name = "Verdant Kingcutter", bladesPerSwing = 70, cost = 900000, style = "scythe", favored = "all", favoredMul = 1.6, handleColor = { 40, 90, 60 }, bladeColor = { 180, 245, 170 }, bladeMaterial = "Neon", toolScale = 1.42 },
 	},
 
 	-- Kingdom Skills: small leveled upgrades

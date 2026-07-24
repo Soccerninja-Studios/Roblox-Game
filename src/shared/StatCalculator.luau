@@ -21,6 +21,27 @@ function StatCalculator.GetCutPower(toolTier: number, skills: { [string]: number
 	return math.max(1, tool.bladesPerSwing * multiplier)
 end
 
+-- Cut power vs a SPECIFIC grass type. Specialist tools multiply their base power
+-- against their favored grass (favoredMul) and are weaker against everything else
+-- (offMul); the ultimate tool (favored == "all") applies favoredMul to every type.
+-- Balanced tools (favored == nil) hit every type at their base power. This is what
+-- makes a specialist shine in its zone but struggle outside it.
+function StatCalculator.GetCutPowerForGrass(toolTier: number, grassType: string, skills: { [string]: number }): number
+	local tool = GameConfig.TOOL_TIERS[toolTier] or GameConfig.TOOL_TIERS[1]
+	local sharp = skillLevel(skills, "SharpBlades")
+	local skillMul = 1 + sharp * SKILLS.SharpBlades.effectPerLevel
+
+	local typeMul = 1
+	local favored = tool.favored
+	if favored == "all" then
+		typeMul = tool.favoredMul or 1.6
+	elseif favored ~= nil then
+		typeMul = if favored == grassType then (tool.favoredMul or 2.6) else (tool.offMul or 0.7)
+	end
+
+	return math.max(1, tool.bladesPerSwing * skillMul * typeMul)
+end
+
 -- Seconds between swings, reduced by Quick Hands
 function StatCalculator.GetSwingCooldown(skills: { [string]: number }): number
 	local quick = skillLevel(skills, "QuickHands")
