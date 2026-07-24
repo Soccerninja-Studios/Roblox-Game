@@ -168,6 +168,14 @@ local function onRequestCut(player: Player, tile: Instance?)
 	local typeName = tile:GetAttribute("GrassType") or GameConfig.DEFAULT_GRASS_TYPE
 	local def = grassDef(typeName)
 
+	-- Zone gating: your current tool must be rated for this grass's zone. A tool
+	-- can cut its own zone and every earlier one, but tougher zones are locked
+	-- until you upgrade -- this keeps players moving through zones in order.
+	if not StatCalculator.CanCutGrass(profile.toolTier, typeName) then
+		Remotes.Get("GrassTooTough"):FireClient(player, tile.Position, typeName)
+		return
+	end
+
 	local power = StatCalculator.GetCutPowerForGrass(profile.toolTier, typeName, profile.skills)
 	local damage = power - def.armor
 	if damage < GameConfig.MIN_CUT_DAMAGE then

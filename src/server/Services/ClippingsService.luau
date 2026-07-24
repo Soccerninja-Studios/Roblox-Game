@@ -26,6 +26,7 @@ local BAG_FULL_NOTIFY_INTERVAL = 4 -- seconds between "bag full" nudges per play
 
 local NORMAL_COLOR = Color3.fromRGB(126, 204, 84)
 local CRIT_COLOR = Color3.fromRGB(255, 205, 54)
+local HIGHLIGHT_GREEN = Color3.fromRGB(120, 235, 90) -- glow-outline color for normal clippings
 
 -- A dropped clipping is a single small BLADE OF GRASS (a thin, tapered part made
 -- with a Wedge mesh) rather than a glowing orb. It stays one BasePart so the
@@ -33,7 +34,8 @@ local CRIT_COLOR = Color3.fromRGB(255, 205, 54)
 local function makePickup(restPos: Vector3, isCrit: boolean): BasePart
 	local p = Instance.new("Part")
 	p.Name = "Clipping"
-	p.Size = Vector3.new(0.42, 1.05, 0.16)
+	-- Twice the old size (was 0.42 x 1.05 x 0.16) so blades are easy to see.
+	p.Size = Vector3.new(0.84, 2.1, 0.32)
 	p.Anchored = true
 	p.CanCollide = false
 	p.CanQuery = false
@@ -45,6 +47,18 @@ local function makePickup(restPos: Vector3, isCrit: boolean): BasePart
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Wedge
 	mesh.Parent = p
+
+	-- Green glow-outline so a dropped blade pops against the lawn (gold for crits).
+	-- SelectionBox has no per-scene instance cap, unlike Highlight, so every
+	-- clipping stays lit even when a lot drop at once.
+	local glow = Instance.new("SelectionBox")
+	glow.Adornee = p
+	glow.LineThickness = 0.05
+	glow.Color3 = isCrit and CRIT_COLOR or HIGHLIGHT_GREEN
+	glow.SurfaceColor3 = isCrit and CRIT_COLOR or HIGHLIGHT_GREEN
+	glow.SurfaceTransparency = 0.5
+	glow.Transparency = 0.1
+	glow.Parent = p
 
 	if isCrit then
 		-- crits still get a subtle golden glow so they read as special
