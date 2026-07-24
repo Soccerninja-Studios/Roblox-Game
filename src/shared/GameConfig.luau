@@ -172,6 +172,12 @@ local GameConfig = {
 	-- center X = -564.75), resting on the ground (Y = -1.5).
 	GARDENER_POSITION = Vector3.new(-479.75, -0.16, -1037),
 	GARDENER_ZONE_RADIUS = 14,
+
+	-- Quest Giver ("Sprig the Quartermaster"): hands out the zone quest board. Placed
+	-- at the front-CENTER of the house, between the shop and the gardener, on the
+	-- ground (Y = -0.16). Walk near and press the prompt to open the quest board.
+	QUEST_GIVER_POSITION = Vector3.new(-480, -0.16, -995),
+	QUEST_GIVER_ZONE_RADIUS = 10,
 }
 
 return GameConfig

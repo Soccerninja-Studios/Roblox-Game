@@ -18,6 +18,11 @@ local REMOTE_NAMES = {
 	"RequestDeposit", -- client -> server: I stepped onto the Gardener pad; bank my bag
 	"Deposited", -- server -> client: deposit summary (clippings, gold, diamonds) for the banner
 	"BagFull", -- server -> client: your carry bag is full; go deposit
+	-- Quests
+	"RequestQuests", -- client -> server: send me my full quest board
+	"QuestState", -- server -> client: full quest list with progress + claimed flags
+	"ClaimQuest", -- client -> server: claim the reward for a completed quest (id)
+	"QuestToast", -- server -> client: a quest was completed/claimed (name, reward) popup
 	-- Intro cutscene (client<->server).
 	"CutsceneReady", -- client -> server: my camera/UI is ready, start the intro
 	"CutsceneSkip", -- client -> server: player pressed Skip
