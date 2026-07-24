@@ -19,6 +19,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local GardenerService = {}
 
 local PlayerDataService: any
+local QuestService: any
 
 -- The Gardener's walk-in circle is LIGHT GREEN.
 local ZONE_FILL = Color3.fromRGB(150, 235, 130)
@@ -163,11 +164,16 @@ local function onRequestDeposit(player: Player)
 	local summary = PlayerDataService.Deposit(player)
 	if summary and summary.clippings > 0 then
 		Remotes.Get("Deposited"):FireClient(player, summary)
+		-- Quests: credit banked gold and any diamonds earned this deposit.
+		if QuestService then
+			QuestService.ReportDeposit(player, summary.gold or 0, summary.diamonds or 0)
+		end
 	end
 end
 
 function GardenerService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
+	QuestService = services.QuestService
 	Remotes.Get("RequestDeposit").OnServerEvent:Connect(onRequestDeposit)
 end
 

@@ -18,6 +18,7 @@ local Remotes = require(Shared.Remotes)
 local ClippingsService = {}
 
 local PlayerDataService
+local QuestService
 local pickupFolder: Folder
 local collecting: { [BasePart]: boolean } = {}
 local bagFullNotified: { [number]: number } = {}
@@ -112,6 +113,7 @@ end
 
 function ClippingsService.Init(services)
 	PlayerDataService = services.PlayerDataService
+	QuestService = services.QuestService
 
 	pickupFolder = Workspace:FindFirstChild("Clippings") :: Folder
 	if not pickupFolder then
@@ -168,6 +170,9 @@ function ClippingsService.Start()
 						if now - last > BAG_FULL_NOTIFY_INTERVAL then
 							bagFullNotified[ownerId] = now
 							Remotes.Get("BagFull"):FireClient(player)
+							if QuestService then
+								QuestService.ReportFillBag(player)
+							end
 						end
 					else
 						collect(pickup, player, root)

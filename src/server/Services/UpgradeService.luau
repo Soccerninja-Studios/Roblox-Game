@@ -13,6 +13,7 @@ local UpgradeService = {}
 
 local PlayerDataService: any
 local ToolService: any
+local QuestService: any
 
 local function onPurchase(player: Player, kind: unknown, id: unknown)
 	local profile = PlayerDataService.Get(player)
@@ -32,6 +33,11 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 			if ToolService then
 				ToolService.GiveTool(player)
 			end
+			if QuestService then
+				QuestService.ReportSpend(player, toolDef.cost)
+				QuestService.ReportPurchase(player)
+				QuestService.ReportToolTier(player, nextTier)
+			end
 		end
 	elseif kind == "skill" and type(id) == "string" then
 		local skillDef = SKILLS[id]
@@ -45,6 +51,11 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 		local cost = StatCalculator.GetSkillCost(id, level)
 		if PlayerDataService.SpendGold(player, cost) then
 			profile.skills[id] = level + 1
+			if QuestService then
+				QuestService.ReportSpend(player, cost)
+				QuestService.ReportPurchase(player)
+				QuestService.ReportSkill(player, id, level + 1)
+			end
 		end
 	elseif kind == "bag" then
 		local nextTier = (profile.bagTier or 1) + 1
@@ -54,6 +65,10 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 		end
 		if PlayerDataService.SpendGold(player, bagDef.cost) then
 			profile.bagTier = nextTier
+			if QuestService then
+				QuestService.ReportSpend(player, bagDef.cost)
+				QuestService.ReportPurchase(player)
+			end
 		end
 	end
 
@@ -63,6 +78,7 @@ end
 function UpgradeService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
 	ToolService = services.ToolService
+	QuestService = services.QuestService
 	Remotes.Get("PurchaseUpgrade").OnServerEvent:Connect(onPurchase)
 end
 

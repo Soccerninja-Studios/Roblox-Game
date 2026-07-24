@@ -24,6 +24,7 @@ local GrassService = {}
 
 local PlayerDataService
 local ClippingsService
+local QuestService
 local grassRoot: Model -- workspace.Kingdom, holds every grass tile
 
 local function color3(rgb: { number }): Color3
@@ -206,6 +207,11 @@ local function onRequestCut(player: Player, tile: Instance?)
 		ClippingsService.Drop(player, dropFrom, reward, isCrit)
 	end
 
+	-- Quests: one tuft of this grass type was fully cleared.
+	if QuestService then
+		QuestService.ReportMow(player, typeName)
+	end
+
 	-- Reveal whatever is underneath and let the player walk through now.
 	tile.CanQuery = false
 	tile.CanCollide = false
@@ -250,6 +256,7 @@ end
 function GrassService.Init(services)
 	PlayerDataService = services.PlayerDataService
 	ClippingsService = services.ClippingsService
+	QuestService = services.QuestService
 
 	grassRoot = Workspace:FindFirstChild("Kingdom") :: Model
 	if not grassRoot then

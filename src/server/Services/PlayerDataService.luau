@@ -31,6 +31,11 @@ export type Profile = {
 	skills: { [string]: number },
 	zones: { [string]: { tilesCut: number, restored: boolean } },
 	prestige: number,
+	quests: {
+		progress: { [string]: number }, -- questId (as string) -> current progress
+		claimed: { [string]: boolean }, -- questId (as string) -> reward claimed
+		reached: { [string]: boolean }, -- grass type -> has the player mown it (zone unlock)
+	},
 }
 
 -- What we actually store: the profile plus a lightweight session lock.
@@ -70,6 +75,7 @@ local function defaultProfile(): Profile
 		skills = {},
 		zones = {},
 		prestige = 0,
+		quests = { progress = {}, claimed = {}, reached = {} },
 	}
 end
 
@@ -283,6 +289,21 @@ function PlayerDataService.Deposit(player: Player): { clippings: number, gold: n
 	profile.diamonds += diamondsGained
 	PlayerDataService.PushState(player)
 	return { clippings = carried, gold = goldGained, diamonds = diamondsGained }
+end
+
+-- Grant currency directly (quest/boss rewards). Negative values are ignored.
+function PlayerDataService.GrantCurrency(player: Player, gold: number, diamonds: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	if gold and gold > 0 then
+		profile.gold += gold
+	end
+	if diamonds and diamonds > 0 then
+		profile.diamonds += diamonds
+	end
+	PlayerDataService.PushState(player)
 end
 
 -- Returns true and deducts GOLD if the player can afford it; false otherwise.
