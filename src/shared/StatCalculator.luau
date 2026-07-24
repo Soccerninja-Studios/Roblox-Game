@@ -66,4 +66,27 @@ function StatCalculator.GetSkillCost(skillName: string, currentLevel: number): n
 	return math.floor(skill.baseCost * skill.costGrowth ^ currentLevel + 0.5)
 end
 
+-- Zone gating: a tool can cut its own zone's grass and every EASIER zone before
+-- it, but not tougher zones. Grass zones in difficulty order:
+--   1 Meadow -> 2 Wild -> 3 Moss -> 4 Thick -> 5 Ironweed
+-- Tools open a new zone every two tiers, so tiers 1-2 reach zone 1, 3-4 reach
+-- zone 2, ... 9-10 reach zone 5, and the ultimate (tier 11) reaches everything.
+-- This lines up each specialist tool with the zone it excels at.
+local GRASS_ZONE_INDEX: { [string]: number } = {
+	Meadow = 1,
+	Wild = 2,
+	Moss = 3,
+	Thick = 4,
+	Ironweed = 5,
+}
+
+function StatCalculator.GetToolMaxZone(toolTier: number): number
+	return math.min(5, math.ceil(toolTier / 2))
+end
+
+function StatCalculator.CanCutGrass(toolTier: number, grassType: string): boolean
+	local zoneIndex = GRASS_ZONE_INDEX[grassType] or 1
+	return zoneIndex <= StatCalculator.GetToolMaxZone(toolTier)
+end
+
 return StatCalculator

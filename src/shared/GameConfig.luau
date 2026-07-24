@@ -84,7 +84,7 @@ local GameConfig = {
 	--   toolScale      = overall size multiplier
 	TOOL_TIERS = {
 		-- 1 \u{00B7} all-rounder (starter)
-		{ name = "Rusty Shears", bladesPerSwing = 2, cost = 0, style = "shears", favored = nil, handleColor = { 92, 64, 40 }, bladeColor = { 138, 120, 96 }, bladeMaterial = "CorrodedMetal", toolScale = 1.0 },
+		{ name = "Rusty Shears", bladesPerSwing = 1, cost = 0, style = "shears", favored = nil, handleColor = { 92, 64, 40 }, bladeColor = { 138, 120, 96 }, bladeMaterial = "CorrodedMetal", toolScale = 1.0 },
 		-- 2 \u{00B7} specialist: Meadow
 		{ name = "Meadow Trimmer", bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
 		-- 3 \u{00B7} all-rounder
