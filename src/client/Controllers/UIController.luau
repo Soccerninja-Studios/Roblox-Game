@@ -143,6 +143,40 @@ local function formatNumber(n: number): string
 end
 
 -- Currency + bag HUD ----------------------------------------------------------
+-- A small gold coin drawn purely with UI primitives (no image asset), so it
+-- always renders in-game regardless of emoji/font support.
+local function buildCoinIcon(diameter: number, baseZ: number): Frame
+	local coin = Instance.new("Frame")
+	coin.Size = UDim2.fromOffset(diameter, diameter)
+	coin.BackgroundColor3 = Color3.fromRGB(245, 196, 72)
+	coin.BorderSizePixel = 0
+	coin.ZIndex = baseZ
+	corner(coin, math.floor(diameter / 2))
+	stroke(coin, math.max(2, math.floor(diameter / 12)), Color3.fromRGB(196, 142, 38), 0)
+
+	local inner = Instance.new("Frame")
+	inner.AnchorPoint = Vector2.new(0.5, 0.5)
+	inner.Position = UDim2.fromScale(0.5, 0.5)
+	inner.Size = UDim2.fromScale(0.6, 0.6)
+	inner.BackgroundTransparency = 1
+	inner.ZIndex = baseZ + 1
+	corner(inner, math.floor(diameter / 2))
+	stroke(inner, math.max(1, math.floor(diameter / 16)), Color3.fromRGB(255, 226, 150), 0.15)
+	inner.Parent = coin
+
+	local shine = Instance.new("Frame")
+	shine.AnchorPoint = Vector2.new(0.5, 0.5)
+	shine.Position = UDim2.fromScale(0.36, 0.33)
+	shine.Size = UDim2.fromScale(0.2, 0.2)
+	shine.BackgroundColor3 = Color3.fromRGB(255, 244, 214)
+	shine.BackgroundTransparency = 0.1
+	shine.ZIndex = baseZ + 2
+	corner(shine, 999)
+	shine.Parent = coin
+
+	return coin
+end
+
 local function buildCurrency(gui: ScreenGui)
 	-- Bag meter (top-center): how full your carry bag is, with a fill bar.
 	local pill = Instance.new("Frame")
@@ -223,7 +257,7 @@ local function buildCurrency(gui: ScreenGui)
 	-- Gold and diamond counters flank the bag meter: gold to its left, diamond to
 	-- its right. The bag meter is 250px wide and centered, so its edges sit 125px
 	-- either side of screen center; we anchor each counter just beyond that.
-	local function makeCounter(emoji: string, tint: Color3, anchorX: number, offsetX: number): TextLabel
+	local function makeCounter(icon: string, tint: Color3, anchorX: number, offsetX: number): TextLabel
 		local c = Instance.new("Frame")
 		c.AnchorPoint = Vector2.new(anchorX, 0)
 		c.Position = UDim2.new(0.5, offsetX, 0, 22)
@@ -234,18 +268,25 @@ local function buildCurrency(gui: ScreenGui)
 		stroke(c, 2, tint, 0.1)
 		c.Parent = gui
 
-		local badge = Instance.new("TextLabel")
-		badge.BackgroundTransparency = 1
-		badge.Size = UDim2.fromOffset(30, 44)
-		badge.Position = UDim2.fromOffset(12, 0)
-		badge.Text = emoji
-		badge.TextScaled = true
-		badge.ZIndex = 6
-		local ep = Instance.new("UIPadding")
-		ep.PaddingTop = UDim.new(0, 10)
-		ep.PaddingBottom = UDim.new(0, 10)
-		ep.Parent = badge
-		badge.Parent = c
+		if icon == "COIN" then
+			local coin = buildCoinIcon(28, 6)
+			coin.AnchorPoint = Vector2.new(0.5, 0.5)
+			coin.Position = UDim2.new(0, 27, 0.5, 0)
+			coin.Parent = c
+		else
+			local badge = Instance.new("TextLabel")
+			badge.BackgroundTransparency = 1
+			badge.Size = UDim2.fromOffset(30, 44)
+			badge.Position = UDim2.fromOffset(12, 0)
+			badge.Text = icon
+			badge.TextScaled = true
+			badge.ZIndex = 6
+			local ep = Instance.new("UIPadding")
+			ep.PaddingTop = UDim.new(0, 10)
+			ep.PaddingBottom = UDim.new(0, 10)
+			ep.Parent = badge
+			badge.Parent = c
+		end
 
 		local lbl = Instance.new("TextLabel")
 		lbl.BackgroundTransparency = 1
@@ -267,7 +308,7 @@ local function buildCurrency(gui: ScreenGui)
 	end
 
 	-- gold: right edge 135px left of center; diamond: left edge 135px right of center.
-	goldLabel = makeCounter("\u{1FA99}", GOLD, 1, -135)
+	goldLabel = makeCounter("COIN", GOLD, 1, -135)
 	diamondLabel = makeCounter("\u{1F48E}", DIAMOND, 0, 135)
 end
 
@@ -389,6 +430,13 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 	buy.ZIndex = 12
 	corner(buy, 12)
 	local buyStroke = stroke(buy, 2, Color3.fromRGB(255, 255, 255), 0.4)
+	local buyCoin = buildCoinIcon(20, 13)
+	buyCoin.AnchorPoint = Vector2.new(0, 0.5)
+	buyCoin.Position = UDim2.new(0, 14, 0.5, 0)
+	buyCoin.Visible = false
+	buyCoin.Parent = buy
+	local buyPad = Instance.new("UIPadding")
+	buyPad.Parent = buy
 	buy.Parent = card
 	buy.Activated:Connect(onBuy)
 
@@ -399,13 +447,26 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 		levelLabel.Text = data.level
 		if data.maxed then
 			buy.Text = "MAX"
+			buy.TextXAlignment = Enum.TextXAlignment.Center
+			buyPad.PaddingLeft = UDim.new(0, 0)
+			buyCoin.Visible = false
 			buy.BackgroundColor3 = LOCKED
 			buy.AutoButtonColor = false
 			buyStroke.Transparency = 0.7
 		else
 			local cost = data.cost or 0
 			local afford = (state.gold or 0) >= cost
-			buy.Text = (cost == 0) and "FREE" or ("\u{1FA99} " .. formatNumber(cost))
+			if cost == 0 then
+				buy.Text = "FREE"
+				buy.TextXAlignment = Enum.TextXAlignment.Center
+				buyPad.PaddingLeft = UDim.new(0, 0)
+				buyCoin.Visible = false
+			else
+				buy.Text = formatNumber(cost)
+				buy.TextXAlignment = Enum.TextXAlignment.Left
+				buyPad.PaddingLeft = UDim.new(0, 40)
+				buyCoin.Visible = true
+			end
 			buy.BackgroundColor3 = afford and GREEN or LOCKED
 			buyStroke.Transparency = afford and 0.4 or 0.7
 		end
@@ -910,7 +971,7 @@ local function clippingPopup(amount: number, isCrit: boolean)
 end
 
 -- One "+N <emoji>" chip that flies from `startAbs` (pixels) into the given counter.
-local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, color: Color3, startAbs: Vector2, delay: number)
+local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, color: Color3, startAbs: Vector2, delay: number, showCoin: boolean?)
 	local chip = Instance.new("TextLabel")
 	chip.AnchorPoint = Vector2.new(0.5, 0.5)
 	chip.BackgroundTransparency = 1
@@ -927,6 +988,12 @@ local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, col
 	s.Color = Color3.fromRGB(28, 40, 24)
 	s.Transparency = 1
 	s.Parent = chip
+	if showCoin then
+		local coin = buildCoinIcon(18, 41)
+		coin.AnchorPoint = Vector2.new(0.5, 0.5)
+		coin.Position = UDim2.new(0.5, -20, 0.5, 0)
+		coin.Parent = chip
+	end
 	chip.Parent = gui
 
 	task.delay(delay, function()
@@ -960,7 +1027,7 @@ end
 
 -- Spawn a burst of counter-bound chips for a banked amount. One chip per unit up
 -- to a cap; past the cap the chips are batched so huge deposits stay readable.
-local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3)
+local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3, useCoin: boolean?)
 	if amount <= 0 or not targetLabel then
 		return
 	end
@@ -974,7 +1041,8 @@ local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: Te
 			vp.X * (0.40 + math.random() * 0.20),
 			vp.Y * (0.30 + math.random() * 0.16)
 		)
-		flyChip(gui, targetLabel, "+" .. shown .. " " .. emoji, color, startAbs, (i - 1) * 0.05)
+		local label = if useCoin then "+" .. shown else "+" .. shown .. " " .. emoji
+		flyChip(gui, targetLabel, label, color, startAbs, (i - 1) * 0.05, useCoin)
 	end
 end
 
@@ -995,7 +1063,7 @@ function UIController.Start()
 		end
 		-- Instead of a single summary banner, fly a chip to the gold counter for each
 		-- gold banked and to the diamond counter for each diamond.
-		spawnDepositChips(gui, summary.gold or 0, goldLabel, "\u{1FA99}", GOLD)
+		spawnDepositChips(gui, summary.gold or 0, goldLabel, "", GOLD, true)
 		spawnDepositChips(gui, summary.diamonds or 0, diamondLabel, "\u{1F48E}", DIAMOND)
 	end)
 	Remotes.Get("RequestState"):FireServer()
