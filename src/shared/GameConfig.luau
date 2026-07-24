@@ -166,13 +166,13 @@ local GameConfig = {
 	-- +40 studs to the right (X) and +95 studs toward the front (Z, the spawn side),
 	-- resting on the ground (Y = -1.5). It sits inside MapService's central clear
 	-- radius so no grass grows over it. ShopService rests the stall on this point.
-	SHOP_POSITION = Vector3.new(-524.75, -1.5, -904.0),
+	SHOP_POSITION = Vector3.new(-480, 5.75, -953),
 	SHOP_ZONE_RADIUS = 16,
 
 	-- Gardener deposit stand: walk into its glowing pad to bank everything in your
 	-- bag. Placed at the front-LEFT of the house (mirror of the shop across the house
 	-- center X = -564.75), resting on the ground (Y = -1.5).
-	GARDENER_POSITION = Vector3.new(-604.75, -1.5, -904.0),
+	GARDENER_POSITION = Vector3.new(-479.75, -0.16, -1037),
 	GARDENER_ZONE_RADIUS = 14,
 }
 
