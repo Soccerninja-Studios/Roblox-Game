@@ -538,9 +538,18 @@ local function buildShopModal(gui: ScreenGui)
 				maxed = true,
 			}
 		end
+		local desc
+		if nextDef.favored == "all" then
+			desc = "\u{2B50} Cuts every grass type with ease"
+		elseif nextDef.favored then
+			local g = GameConfig.GRASS_TYPES[nextDef.favored]
+			desc = "Specialist \u{2022} excels at " .. (g and g.displayName or nextDef.favored)
+		else
+			desc = "All-rounder \u{2022} cut power " .. nextDef.bladesPerSwing
+		end
 		return {
 			name = nextDef.name,
-			desc = "Cut power " .. current.bladesPerSwing .. " \u{2192} " .. nextDef.bladesPerSwing,
+			desc = desc,
 			level = "Owned: " .. (current and current.name or "-"),
 			cost = nextDef.cost,
 			maxed = false,
@@ -840,19 +849,154 @@ local function showBanner(title: string, subtitle: string?)
 	end)
 end
 
+-- Floating "+N" popups -------------------------------------------------------
+-- Two flavors, both parented to the HUD:
+--   * clipping pickups pop in at a random spot in the UPPER HALF of the screen
+--     and drift up as they fade ("+N clippings")
+--   * deposit chips spawn near screen-center and FLY to the gold / diamond
+--     counter, one per unit banked (batched when the amount is large)
+local function hud(): ScreenGui?
+	local playerGui = player:FindFirstChild("PlayerGui")
+	return (playerGui and playerGui:FindFirstChild("HUD")) :: ScreenGui?
+end
+
+local function bumpCounter(frame: GuiObject)
+	local base = frame.Size
+	TweenService:Create(frame, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+		Size = base + UDim2.fromOffset(8, 8),
+	}):Play()
+	task.delay(0.09, function()
+		TweenService:Create(frame, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = base,
+		}):Play()
+	end)
+end
+
+-- A "+N clippings" popup at a random spot in the upper half of the screen.
+local function clippingPopup(amount: number, isCrit: boolean)
+	local gui = hud()
+	if not gui then
+		return
+	end
+	local px = 0.22 + math.random() * 0.56
+	local py = 0.16 + math.random() * 0.26
+	local lbl = Instance.new("TextLabel")
+	lbl.AnchorPoint = Vector2.new(0.5, 0.5)
+	lbl.BackgroundTransparency = 1
+	lbl.Size = UDim2.fromOffset(240, 40)
+	lbl.Position = UDim2.fromScale(px, py)
+	lbl.Font = Enum.Font.FredokaOne
+	lbl.TextScaled = false
+	lbl.TextSize = if isCrit then 30 else 24
+	lbl.Text = (if isCrit then "\u{1F31F} +" else "+") .. formatNumber(amount) .. " clippings"
+	lbl.TextColor3 = if isCrit then GOLD else Color3.fromRGB(150, 235, 120)
+	lbl.ZIndex = 30
+	local s = Instance.new("UIStroke")
+	s.Thickness = 2.5
+	s.Color = Color3.fromRGB(28, 40, 24)
+	s.Parent = lbl
+	lbl.Parent = gui
+
+	TweenService:Create(lbl, TweenInfo.new(0.85, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(px, 0, py, -64),
+		TextTransparency = 1,
+	}):Play()
+	TweenService:Create(s, TweenInfo.new(0.85), { Transparency = 1 }):Play()
+	task.delay(0.95, function()
+		if lbl.Parent then
+			lbl:Destroy()
+		end
+	end)
+end
+
+-- One "+N <emoji>" chip that flies from `startAbs` (pixels) into the given counter.
+local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, color: Color3, startAbs: Vector2, delay: number)
+	local chip = Instance.new("TextLabel")
+	chip.AnchorPoint = Vector2.new(0.5, 0.5)
+	chip.BackgroundTransparency = 1
+	chip.Size = UDim2.fromOffset(96, 30)
+	chip.Font = Enum.Font.FredokaOne
+	chip.TextSize = 20
+	chip.Text = text
+	chip.TextColor3 = color
+	chip.TextTransparency = 1
+	chip.ZIndex = 40
+	chip.Position = UDim2.fromOffset(startAbs.X, startAbs.Y)
+	local s = Instance.new("UIStroke")
+	s.Thickness = 2
+	s.Color = Color3.fromRGB(28, 40, 24)
+	s.Transparency = 1
+	s.Parent = chip
+	chip.Parent = gui
+
+	task.delay(delay, function()
+		if not chip.Parent then
+			return
+		end
+		local target = targetLabel.Parent :: GuiObject
+		local center = target.AbsolutePosition + target.AbsoluteSize / 2
+		TweenService:Create(chip, TweenInfo.new(0.12), { TextTransparency = 0 }):Play()
+		TweenService:Create(s, TweenInfo.new(0.12), { Transparency = 0 }):Play()
+		local flyTime = 0.55
+		local move = TweenService:Create(chip, TweenInfo.new(flyTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.fromOffset(center.X, center.Y),
+			Size = UDim2.fromOffset(60, 20),
+		})
+		move.Completed:Connect(function()
+			if chip.Parent then
+				chip:Destroy()
+			end
+			bumpCounter(target)
+		end)
+		move:Play()
+		task.delay(flyTime - 0.12, function()
+			if chip.Parent then
+				TweenService:Create(chip, TweenInfo.new(0.14), { TextTransparency = 1 }):Play()
+				TweenService:Create(s, TweenInfo.new(0.14), { Transparency = 1 }):Play()
+			end
+		end)
+	end)
+end
+
+-- Spawn a burst of counter-bound chips for a banked amount. One chip per unit up
+-- to a cap; past the cap the chips are batched so huge deposits stay readable.
+local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3)
+	if amount <= 0 or not targetLabel then
+		return
+	end
+	local vp = gui.AbsoluteSize
+	local MAX_CHIPS = 16
+	local chips = math.min(amount, MAX_CHIPS)
+	local per = amount / chips
+	for i = 1, chips do
+		local shown = if amount <= MAX_CHIPS then 1 else math.max(1, math.floor(per + 0.5))
+		local startAbs = Vector2.new(
+			vp.X * (0.40 + math.random() * 0.20),
+			vp.Y * (0.30 + math.random() * 0.16)
+		)
+		flyChip(gui, targetLabel, "+" .. shown .. " " .. emoji, color, startAbs, (i - 1) * 0.05)
+	end
+end
+
 function UIController.Start()
 	Remotes.Get("StateChanged").OnClientEvent:Connect(updateUI)
 	Remotes.Get("DistrictCleared").OnClientEvent:Connect(showBanner)
 	Remotes.Get("BagFull").OnClientEvent:Connect(function()
 		showBanner("\u{1F392} Bag Full!", "Head to the Gardener to deposit your clippings")
 	end)
+	Remotes.Get("ClippingCollected").OnClientEvent:Connect(function(_position, amount, isCrit)
+		clippingPopup(amount or 0, isCrit or false)
+	end)
 	Remotes.Get("Deposited").OnClientEvent:Connect(function(summary)
 		summary = summary or {}
-		local sub = "+" .. formatNumber(summary.gold or 0) .. " gold"
-		if (summary.diamonds or 0) > 0 then
-			sub = sub .. "    +" .. formatNumber(summary.diamonds) .. " \u{1F48E}"
+		local gui = hud()
+		if not gui then
+			return
 		end
-		showBanner("\u{1FA99} Deposited " .. formatNumber(summary.clippings or 0) .. " clippings", sub)
+		-- Instead of a single summary banner, fly a chip to the gold counter for each
+		-- gold banked and to the diamond counter for each diamond.
+		spawnDepositChips(gui, summary.gold or 0, goldLabel, "\u{1FA99}", GOLD)
+		spawnDepositChips(gui, summary.diamonds or 0, diamondLabel, "\u{1F48E}", DIAMOND)
 	end)
 	Remotes.Get("RequestState"):FireServer()
 	startZoneWatch()

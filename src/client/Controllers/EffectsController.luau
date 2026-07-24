@@ -120,13 +120,9 @@ function EffectsController.Start()
 		grassBurst(position, grassColor(grassType))
 	end)
 
-	Remotes.Get("ClippingCollected").OnClientEvent:Connect(function(position: Vector3, amount: number, isCrit: boolean)
-		if isCrit then
-			floatingText(position, "\u{1F31F}+" .. amount, Color3.fromRGB(255, 205, 54), true)
-		else
-			floatingText(position, "+" .. amount, Color3.fromRGB(180, 240, 120), false)
-		end
-	end)
+	-- "+N clippings" pickup popups now render on the HUD in the upper half of the
+	-- screen (see UIController). The world-space grass burst on each swing (TileCut)
+	-- and the "Too tough!" popup below stay here.
 
 	Remotes.Get("GrassTooTough").OnClientEvent:Connect(function(position: Vector3, _grassType: string)
 		floatingText(position, "Too tough!", Color3.fromRGB(255, 110, 90), false)
