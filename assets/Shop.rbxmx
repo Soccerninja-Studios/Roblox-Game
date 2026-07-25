@@ -2,7 +2,7 @@
 	<Meta name="ExplicitAutoJoints">true</Meta>
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Model" referent="RBX4DF20B554AAF45F3AE687B956F51F710">
+	<Item class="Model" referent="RBX3EF6D729BD8B4DE09D2D5697A6B36F77">
 		<Properties>
 			<token name="LevelOfDetail">0</token>
 			<CoordinateFrame name="ModelMeshCFrame">
@@ -53,7 +53,7 @@
 			<int64 name="SourceAssetId">-1</int64>
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 		</Properties>
-		<Item class="Model" referent="RBX92BFFE21A82949B29C1D752AF7C0ECC8">
+		<Item class="Model" referent="RBX05172B28FC1341FDBB95E74ACFBE6451">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -104,7 +104,7 @@
 				<int64 name="SourceAssetId">14569360395</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBXAD5DB37919624A4794B4DB7CBDA5D906">
+			<Item class="Part" referent="RBX74BCBB1ECA334AA0ADBF4C9F9F50D1B9">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -203,7 +203,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX80C26BE848214375A42A96CF8DE38A9B">
+			<Item class="Part" referent="RBX97C0D0BDF7954661AD97FE547CE4EBFF">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -302,7 +302,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXD82C7524C6B64000910FD9E64AC5351A">
+			<Item class="Part" referent="RBXC5D64711F74B4C8EAD84794B393E98A8">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -400,7 +400,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="PointLight" referent="RBX3E0FC97F85474961846FF3C595961497">
+				<Item class="PointLight" referent="RBXE11A2C8B56994116B2CE83759DEF714F">
 					<Properties>
 						<float name="Range">15</float>
 						<float name="Brightness">1</float>
@@ -420,7 +420,7 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXC1CD669F4BD34DC5A8EC75AFFA370381">
+			<Item class="Part" referent="RBXC2BF80E7C56C457485AD5DA5E99E9221">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -519,7 +519,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXEA9BE9F0DB7C4426969556D6DAD14755">
+			<Item class="Part" referent="RBXD468BBD581D74D619DF142B13BEA3171">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -618,7 +618,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX358255DBDDA748E590D386BFE857E932">
+			<Item class="Part" referent="RBXF65FE19AEC6B4E76A354C140E2C57044">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -717,7 +717,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX11075FA1A50746DAB6DCE909495876B3">
+			<Item class="Part" referent="RBX20281EF5B5124199B22606064B75BED7">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -816,7 +816,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX4237525BF42F4026ADB5A274F4803161">
+			<Item class="Part" referent="RBXD77CA1E4884846BE8F25BA887F6A2EE8">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -916,7 +916,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBXF8C38DEB3E1745BE819E02CF7D9014D1">
+		<Item class="Model" referent="RBX99BBFFF07CAE4121B68D1B7BA484B225">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -967,7 +967,7 @@
 				<int64 name="SourceAssetId">14542752174</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBX4FEC218A7353469CA48D3D7ED0B6BDDB">
+			<Item class="Part" referent="RBX034CB1DEB15E41B5AB74632DBA983FCC">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -1066,7 +1066,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXDB299C2FE046409299D750540C0E8ADA">
+			<Item class="Part" referent="RBXB0ADD3257A164DE68A99FD47F1EFA408">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -1165,7 +1165,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="UnionOperation" referent="RBXA6FC37463C1B49469BE4CA0686B81450">
+			<Item class="UnionOperation" referent="RBXADE32DCF0FE246C482BD2AFDE15E3009">
 				<Properties>
 					<Content name="AssetId"><url>https://www.roblox.com//asset/?id=14542751976</url></Content>
 					<BinaryString name="ChildData"></BinaryString>
@@ -1301,7 +1301,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXB527AB1C8A8A45CAA4D34CD777B58ABE">
+			<Item class="Part" referent="RBX97F94F78B9E64482B648B017022CF606">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -1400,7 +1400,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX16ACE9410FC5445F8D1D2990CF1CB7E6">
+			<Item class="Part" referent="RBX16370B8E58374DE7BB7DDE43D90DCC8C">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -1499,7 +1499,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX48A066B22D904441B31CC933174A7CFE">
+			<Item class="Part" referent="RBXA138B8F4561043108C732C5B0224396A">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -1599,7 +1599,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX2C857608934844BAB7CAD72326D70706">
+		<Item class="Part" referent="RBX2A30D17D50E5468C947A66EC61394CFA">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -1698,7 +1698,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX72ED22DB713D4BE684604FA1053ED56D">
+		<Item class="Part" referent="RBX6BCC8BE981714F76A3755373A99502A8">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -1797,7 +1797,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX650A23B7B54C4353AD690CB634F2BCDF">
+		<Item class="Part" referent="RBX83DBD0D5C8C443618F629755CC5F8658">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -1896,7 +1896,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC99836ACEB3A48F0B137A1EB82F63B41">
+		<Item class="Part" referent="RBXB559495DE22B4F96A9391D63FFD26AA5">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -1995,7 +1995,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX5FA467E27E4F4689AE824A58F486324D">
+		<Item class="Part" referent="RBX4B4ECEC8C69E4843B69A042D8086FAE7">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2094,7 +2094,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX1C9CB829C3D44EBD936F3EFDDA635AD1">
+		<Item class="Part" referent="RBX4B07A76CA31F48349564C293F59748C1">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2192,7 +2192,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="PointLight" referent="RBXF93651B1D63844E7ADFEBC3AA494E4D4">
+			<Item class="PointLight" referent="RBXA2A1EC4351044853B5E0400D44234C4B">
 				<Properties>
 					<float name="Range">14</float>
 					<float name="Brightness">2</float>
@@ -2212,7 +2212,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX9D8A383A242F4CF3A6BD46BECA911374">
+		<Item class="Part" referent="RBXC87B87C5151E4B7BBE132CF429A866EF">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2311,7 +2311,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX987A7C3D7B11412DAEB29CADF6728E90">
+		<Item class="Part" referent="RBX4FE13E2691E743EA80188E0BA8E3432B">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2410,7 +2410,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX637AB5C4A2D64EFFBB7A68B00719E9FD">
+		<Item class="Part" referent="RBX6584D886CB47400990CFB0443197DDD8">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2509,7 +2509,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="MeshPart" referent="RBX39BC94E623F54A82B88C1F819A412E69">
+		<Item class="MeshPart" referent="RBX82E9C6086F6043688BC6DE3DD38CF51E">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -2643,7 +2643,7 @@
 				<int64 name="SourceAssetId">74278683048689</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ProximityPrompt" referent="RBXAE189F831B9645E2ADA268BBDC8F997B">
+			<Item class="ProximityPrompt" referent="RBX7B7A90E4848343169B984CFAC776C770">
 				<Properties>
 					<string name="ActionText">Interact</string>
 					<bool name="AutoLocalize">true</bool>
@@ -2671,7 +2671,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Motor6D" referent="RBXDB76B961F9EB4E3CADF50B57312431ED">
+			<Item class="Motor6D" referent="RBX648A17155BE74E639260F5188DF2327E">
 				<Properties>
 					<float name="DesiredAngle">0</float>
 					<float name="MaxVelocity">0</float>
@@ -2704,8 +2704,8 @@
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
-					<Ref name="Part0">RBX39BC94E623F54A82B88C1F819A412E69</Ref>
-					<Ref name="Part1">RBXED7ED63D16104B268626A634ABEAC85F</Ref>
+					<Ref name="Part0">RBX82E9C6086F6043688BC6DE3DD38CF51E</Ref>
+					<Ref name="Part1">RBX8BCF25B2059C44FD9E91ACB27467F3ED</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -2715,7 +2715,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXBFDA6DCB018242CDA5F38B983C4B8C45">
+		<Item class="Part" referent="RBXEDFB5D9F131346A8A89A328054C6E211">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -2814,7 +2814,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="MeshPart" referent="RBX16FF62977E794D669F1020104CF120A0">
+		<Item class="MeshPart" referent="RBXBE6CD46CD4A947DAA2F5A7010082207C">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -2854,7 +2854,7 @@
 					<Z>0</Z>
 				</Vector3>
 				<float name="UnscaledVolume">328.846741</float>
-				<bool name="Anchored">false</bool>
+				<bool name="Anchored">true</bool>
 				<bool name="AudioCanCollide">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
@@ -2948,7 +2948,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX75FC9D48497943B2A3B0A4475EBDB50D">
+			<Item class="ManualWeld" referent="RBX5863FD0985F24CC1898E02D760E8EC6A">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0</X>
@@ -2979,8 +2979,8 @@
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
-					<Ref name="Part0">RBX16FF62977E794D669F1020104CF120A0</Ref>
-					<Ref name="Part1">RBXED7ED63D16104B268626A634ABEAC85F</Ref>
+					<Ref name="Part0">RBXBE6CD46CD4A947DAA2F5A7010082207C</Ref>
+					<Ref name="Part1">RBX8BCF25B2059C44FD9E91ACB27467F3ED</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -2990,7 +2990,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="MeshPart" referent="RBX179A28126F3C4C3DAA607430856EC26F">
+		<Item class="MeshPart" referent="RBXD569444EC85943DC92F6CD09D180C026">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -3030,7 +3030,7 @@
 					<Z>0</Z>
 				</Vector3>
 				<float name="UnscaledVolume">325.16983</float>
-				<bool name="Anchored">false</bool>
+				<bool name="Anchored">true</bool>
 				<bool name="AudioCanCollide">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
@@ -3124,7 +3124,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX141A0D2E5EBC40DAB3E4711278358AF0">
+			<Item class="ManualWeld" referent="RBXE9CEFCED25BB4D3682DCC33E844E6CBB">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0</X>
@@ -3155,8 +3155,8 @@
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
-					<Ref name="Part0">RBX179A28126F3C4C3DAA607430856EC26F</Ref>
-					<Ref name="Part1">RBX39BC94E623F54A82B88C1F819A412E69</Ref>
+					<Ref name="Part0">RBXD569444EC85943DC92F6CD09D180C026</Ref>
+					<Ref name="Part1">RBX82E9C6086F6043688BC6DE3DD38CF51E</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -3166,7 +3166,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="MeshPart" referent="RBXB6555EBE4BE44DA6B2CD61DB058643BC">
+		<Item class="MeshPart" referent="RBX61CD6DC3AB9B417288C6E410EFF9DFFB">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -3206,7 +3206,7 @@
 					<Z>0</Z>
 				</Vector3>
 				<float name="UnscaledVolume">21.2105255</float>
-				<bool name="Anchored">false</bool>
+				<bool name="Anchored">true</bool>
 				<bool name="AudioCanCollide">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
@@ -3300,7 +3300,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX305E139EE30C4B5ABEA6B02341C3F134">
+			<Item class="ManualWeld" referent="RBX71338076164A4E70B48E15ADF72A2CF7">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0</X>
@@ -3331,8 +3331,8 @@
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
-					<Ref name="Part0">RBXB6555EBE4BE44DA6B2CD61DB058643BC</Ref>
-					<Ref name="Part1">RBX39BC94E623F54A82B88C1F819A412E69</Ref>
+					<Ref name="Part0">RBX61CD6DC3AB9B417288C6E410EFF9DFFB</Ref>
+					<Ref name="Part1">RBX82E9C6086F6043688BC6DE3DD38CF51E</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -3342,7 +3342,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="MeshPart" referent="RBX93B0A78F339843EA9EAC89BDFD7D244C">
+		<Item class="MeshPart" referent="RBXB00F0CE99C924A459D2FF168CC4846AF">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -3382,7 +3382,7 @@
 					<Z>0</Z>
 				</Vector3>
 				<float name="UnscaledVolume">21.4627132</float>
-				<bool name="Anchored">false</bool>
+				<bool name="Anchored">true</bool>
 				<bool name="AudioCanCollide">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
@@ -3476,7 +3476,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX490F2B4E0E0945DAB7AFD6A44B83BAB1">
+			<Item class="ManualWeld" referent="RBXAE07BF1CEA5C47F690017129F7C6FD3C">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>0</X>
@@ -3507,8 +3507,8 @@
 						<R22>1</R22>
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
-					<Ref name="Part0">RBX93B0A78F339843EA9EAC89BDFD7D244C</Ref>
-					<Ref name="Part1">RBXED7ED63D16104B268626A634ABEAC85F</Ref>
+					<Ref name="Part0">RBXB00F0CE99C924A459D2FF168CC4846AF</Ref>
+					<Ref name="Part1">RBX8BCF25B2059C44FD9E91ACB27467F3ED</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -3518,7 +3518,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBX7381385CFDA840589CB04232F0075525">
+		<Item class="Model" referent="RBX9131B357DC744FFA947BC14F9DDA3FDA">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -3556,7 +3556,7 @@
 						<R02>0</R02>
 						<R10>1</R10>
 						<R11>0</R11>
-						<R12>0</R12>
+						<R12>-0</R12>
 						<R20>0</R20>
 						<R21>0</R21>
 						<R22>1</R22>
@@ -3569,7 +3569,7 @@
 				<int64 name="SourceAssetId">8533240903</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBXB3CD8486AB0F4945B45FBB7110793BF4">
+			<Item class="Part" referent="RBXAC1DBBD368E94CCB836E069949EEC0E1">
 				<Properties>
 					<token name="shape">2</token>
 					<token name="formFactorRaw">1</token>
@@ -3667,11 +3667,11 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Part" referent="RBXDB948D559E024CDEBF9A1DBB74A220A6">
+				<Item class="Part" referent="RBX035B7FB60D824C72B0E290BC8AFB18DC">
 					<Properties>
 						<token name="shape">2</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -3766,11 +3766,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBX8B66B1084B2A4EEDB9F3730942D67E4B">
+				<Item class="Part" referent="RBXBFAC325F50734256B409C83F131D8E87">
 					<Properties>
 						<token name="shape">2</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -3865,11 +3865,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBX564F80C612BC47B4830499F8AD132CA4">
+				<Item class="Part" referent="RBX4D17EE9EA9A941A688C117EC644CE3C9">
 					<Properties>
 						<token name="shape">0</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -3964,11 +3964,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBX27865E97719844049EA03BC88130E981">
+				<Item class="Part" referent="RBXA403C38B71E942F8865EA9E6738E0674">
 					<Properties>
 						<token name="shape">0</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -4063,11 +4063,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBXAF10D22CFC464F0389BDE8266C8E5E48">
+				<Item class="Part" referent="RBXB09D1D9F1FA1474E979F6A9EE71F3213">
 					<Properties>
 						<token name="shape">0</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -4162,11 +4162,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBXF2633370CEA74A228A28ACDBA36BCEBE">
+				<Item class="Part" referent="RBX2A1542E5967647848EE29DE16BBDB379">
 					<Properties>
 						<token name="shape">0</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -4261,11 +4261,11 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Part" referent="RBX785B2B55C7BD4E05A7FBB79EC592F169">
+				<Item class="Part" referent="RBX932819C04F9B4F7D8ED7BA175B4DD06E">
 					<Properties>
 						<token name="shape">0</token>
 						<token name="formFactorRaw">1</token>
-						<bool name="Anchored">false</bool>
+						<bool name="Anchored">true</bool>
 						<bool name="AudioCanCollide">true</bool>
 						<float name="BackParamA">-0.5</float>
 						<float name="BackParamB">0.5</float>
@@ -4362,7 +4362,7 @@
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXC25AF17247A2476C9F0B7FB603D3A072">
+		<Item class="Part" referent="RBX1BC836C941D941198BE78F03523697B0">
 			<Properties>
 				<token name="shape">2</token>
 				<token name="formFactorRaw">1</token>
@@ -4461,7 +4461,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Model" referent="RBX0B98316942B2452CA949CFB98FE6A5E2">
+		<Item class="Model" referent="RBX398FA3085A374D65A5C2899FDFE95A32">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -4512,7 +4512,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBXC007F3B80BE645CAAA86C9DBCFB9081D">
+			<Item class="Part" referent="RBX34FAC0F47E8F4D92B88D48A0A964207D">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -4611,7 +4611,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX7F8B7F8C29144957BFAC40D88255FDE9">
+			<Item class="Part" referent="RBX0A89DF167AB342539AAE7D6FE2AF103A">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -4710,7 +4710,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX3CCD68CB3FC54A6C8274D0C527A0474A">
+			<Item class="Part" referent="RBXE1E7F493002F4C6392C93005627FECF3">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -4809,7 +4809,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX394A3044ECB149C291A30C98F180A6B4">
+			<Item class="Part" referent="RBX31FBEC5A81D948B69621F2EB9FF6B4C7">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -4908,7 +4908,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXBC0E46DF56A04A3AA3E820FA59BBD7C7">
+			<Item class="Part" referent="RBXDC4E47EF63E6478B8BAF893A16E90948">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5007,7 +5007,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX4F4CF1E68A724613BD898C06CC2666DC">
+			<Item class="Part" referent="RBXC05344A8DCFD4EE685324DE005A52262">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5106,7 +5106,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX5687F3D8983C4E4FAFE8F22E6E1BD0BB">
+			<Item class="Part" referent="RBX35D86DD0C186477DA7B39DCCC3B6359A">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5205,7 +5205,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX7F96FD479AC1461397B1F2DC96715C15">
+			<Item class="Part" referent="RBX8AF3A9DD4AEE4A5FB9150E6808DF4EFC">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5304,7 +5304,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXC5A3E899F78548A6A755218825A41C5C">
+			<Item class="Part" referent="RBX9BE5C89336BA48E8B6D6CB3E18371E6F">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5403,7 +5403,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX9C2464938BE5436587F13009FA0642C8">
+			<Item class="Part" referent="RBX38D7FF9F7D7E42B7B536A01F7A2D4A69">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5502,7 +5502,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXD709588D7CA14E32B2BAF8E6DABA118E">
+			<Item class="Part" referent="RBX87C9957CBC504523B03E5959E76A2FE3">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5601,7 +5601,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX617B908A7F8D4413B7400E7E268759DA">
+			<Item class="Part" referent="RBXAE09F16E537B40498129B6E85FD3D2AD">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5700,7 +5700,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXF3AEE6FB93E44D2A883890A2C62D2280">
+			<Item class="Part" referent="RBX4279B4E6EC8C4A518E30D3910687B11A">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5799,7 +5799,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX5971D9110C714666AD0BABA5BCC4640B">
+			<Item class="Part" referent="RBXAD9D648052054D42852D892B15CB8834">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5898,7 +5898,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXB3C7E3B6879A4C35AD890B1BC38B74FD">
+			<Item class="Part" referent="RBXD7ECF67424864011A2D4472D60CBD032">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -5997,7 +5997,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX8A2768BC2BD94A0D8C0C69D569C887B5">
+			<Item class="Part" referent="RBX39645814CF25457A895AED4169057EF6">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -6097,7 +6097,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBX21B8A9578F36409094B91DE59D251C5B">
+		<Item class="Model" referent="RBX6CCB1BA808974701987D24ADDC84C8E9">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -6122,7 +6122,7 @@
 				</Vector3>
 				<token name="ModelStreamingMode">0</token>
 				<bool name="NeedsPivotMigration">false</bool>
-				<Ref name="PrimaryPart">RBX60255D2F797148B39D3E5987781B1089</Ref>
+				<Ref name="PrimaryPart">RBX50D84E58762A424EA378C726B1C5A8FB</Ref>
 				<float name="ScaleFactor">1</float>
 				<SharedString name="SlimHash">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				<OptionalCoordinateFrame name="WorldPivotData">
@@ -6148,7 +6148,7 @@
 				<int64 name="SourceAssetId">9078175262</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Pants" referent="RBX1302BB6E245C4D93AC6A516E42B88CC1">
+			<Item class="Pants" referent="RBXDC9C7EFA4D5942FB95375429407B6FB6">
 				<Properties>
 					<Content name="PantsTemplate"><url>rbxassetid://3479638228</url></Content>
 					<Color3 name="Color3">
@@ -6164,7 +6164,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="BodyColors" referent="RBX397D90AF8D4745A09691B575811CF05B">
+			<Item class="BodyColors" referent="RBXF08F10215C164240AFC3B03FAC22354B">
 				<Properties>
 					<Color3 name="HeadColor3">
 						<R>0.917647123</R>
@@ -6204,7 +6204,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Shirt" referent="RBXE6A6941045BA4268BEAF295E48F393FC">
+			<Item class="Shirt" referent="RBXB2ED3B4848D84697BF765BD8074B129E">
 				<Properties>
 					<Content name="ShirtTemplate"><url>rbxassetid://3479606408</url></Content>
 					<Color3 name="Color3">
@@ -6220,7 +6220,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Humanoid" referent="RBX2F8840072C6A401DBC4FADFCA96F082B">
+			<Item class="Humanoid" referent="RBXED12FF4F6B6A43A79F8EE71433D5BABF">
 				<Properties>
 					<bool name="AutoJumpEnabled">true</bool>
 					<bool name="AutoRotate">true</bool>
@@ -6257,7 +6257,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Animator" referent="RBX4C856F35FAF44D6F85A2FAD57CB955CF">
+				<Item class="Animator" referent="RBX059CDEF270794579A3B0EE542FCE0A3C">
 					<Properties>
 						<bool name="PreferLodEnabled">true</bool>
 						<BinaryString name="AttributesSerialize"></BinaryString>
@@ -6269,11 +6269,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXF1AEADCAF39148538D1DF7DD8A6B0FFD">
+			<Item class="Part" referent="RBX30A86C3247D2480286602FB4D004A2CC">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -6367,7 +6367,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Attachment" referent="RBXC40442C0C4614716B07BFA5C3D5BAB5A">
+				<Item class="Attachment" referent="RBXBAC7024389B84FD3BEE978061EB8EE7C">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6392,7 +6392,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX5B2F94092478406C95739C3C8D39F699">
+				<Item class="Weld" referent="RBX11F9A427ECA9478B942EC75D5B44BAF1">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-0.5</X>
@@ -6423,7 +6423,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBXF1AEADCAF39148538D1DF7DD8A6B0FFD</Ref>
+						<Ref name="Part0">RBX30A86C3247D2480286602FB4D004A2CC</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -6433,7 +6433,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX4AE817E9952D4DCD8D9B003DCBB43FBC">
+				<Item class="Attachment" referent="RBX346A01D0B15843A8BDBF476B0FB4B7AC">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6459,11 +6459,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX035C1C5FBEEF430786EB2187F1BE2ACA">
+			<Item class="Part" referent="RBX6CBA7AFCCD264E9181943EA01CB717C8">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -6557,7 +6557,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Attachment" referent="RBXD7D676871D3B4A49A504B545E129E706">
+				<Item class="Attachment" referent="RBX2FB5C7E0E0CC451D9577C883F6D5DCD9">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6582,7 +6582,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX554E3823EF684E8184DB3E28A3D96943">
+				<Item class="Attachment" referent="RBX3D726C2B7A384048982769A4BFE8E93C">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6607,7 +6607,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="SpecialMesh" referent="RBXF68CAC1DFEF2428EA47ED0C5059EA6E8">
+				<Item class="SpecialMesh" referent="RBXEB25473295754BD5A7D240C82E13D413">
 					<Properties>
 						<token name="MeshType">0</token>
 						<Content name="MeshId"><null></null></Content>
@@ -6635,7 +6635,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Decal" referent="RBX0A839B9381EB49398A23A846F7386217">
+				<Item class="Decal" referent="RBXA1FA5677168B459BBBABE60C4DD9A88D">
 					<Properties>
 						<bool name="AutoLocalize">true</bool>
 						<Color3 name="Color3">
@@ -6669,7 +6669,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBXD1851E3D932341BAAC3829B4FAAEE98A">
+				<Item class="Attachment" referent="RBX62AEA95364A94BC987EBFE8737FB769E">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6694,7 +6694,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX55CC3CA8C696432AB4E9CE1FC5E441E0">
+				<Item class="Attachment" referent="RBX78854B92E89E452286E032A3FC734E73">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6720,11 +6720,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX8BC14D6334C44269BFC49D94309D4802">
+			<Item class="Part" referent="RBX14F0952736EC47A1A497C50ADB560E14">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -6818,7 +6818,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX591DBEF015CE47A88670E82B8EF9187B">
+				<Item class="Weld" referent="RBXD835B857E2E14B729B4F1F9A88FAABE0">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>1</X>
@@ -6849,7 +6849,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -6859,7 +6859,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX72D1FAAF003C4CAAB3E691091189C968">
+				<Item class="Weld" referent="RBX81F4E507A77E453899525EBACF26BA1E">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-1</X>
@@ -6890,7 +6890,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -6900,7 +6900,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX1ACA7904D72D451EA034AB6A9BCEA523">
+				<Item class="Attachment" referent="RBX167213720D674DA09738A03E53ECD400">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>-1</X>
@@ -6925,7 +6925,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBX053237A75BFA49E69F03422F3DDB69CC">
+				<Item class="Motor6D" referent="RBXA94BAE831E0844D888F7345E397A76D4">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -6958,8 +6958,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
-						<Ref name="Part1">RBX035C1C5FBEEF430786EB2187F1BE2ACA</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
+						<Ref name="Part1">RBX6CBA7AFCCD264E9181943EA01CB717C8</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -6968,7 +6968,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX6BB351FF0A0A4B9791C9090CB1C1C7D5">
+				<Item class="Attachment" referent="RBX52290029FB45470B90D6E5D7F8FD621C">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -6993,7 +6993,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX59A0792AFEE840B9B892D27696EF577A">
+				<Item class="Attachment" referent="RBX02EFBDD0992347EA9BF65BB8C0E264CD">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7018,7 +7018,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX31A19873F42E4CA9AF0B5AEBD1C2B5EE">
+				<Item class="Attachment" referent="RBX6241723468AF4E89882E763BA53415AC">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7043,7 +7043,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBXB90FD2266FA44A998E627832DB5F3D62">
+				<Item class="Motor6D" referent="RBXD737981FDD234A6D8F478FE06D37CEFF">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -7076,8 +7076,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
-						<Ref name="Part1">RBXB86558DFA7624F669EBA79FF5F13604E</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
+						<Ref name="Part1">RBX2E775518CD204387BE0167B9F54C8249</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -7086,7 +7086,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX4B667E86993C4456B865C5AEBAFC9757">
+				<Item class="Attachment" referent="RBX26EE4F24289B4A72900849BC5233FC5C">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7111,7 +7111,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXE113F2FFE3824435BCBF87732F67CBB8">
+				<Item class="Weld" referent="RBX8C53652299064F01BCA1C52EE112BDC2">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-1</X>
@@ -7142,7 +7142,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -7152,7 +7152,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX50210A9339A24B85AF7B4EB0EE9A4213">
+				<Item class="Attachment" referent="RBX7102D1EF62414F27B62E02F43695CE3E">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>1</X>
@@ -7177,7 +7177,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX27115EA54F494D8ABC4E109E490E3484">
+				<Item class="Weld" referent="RBX7E040863EA864344BA03E14B766AE28E">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>-1</X>
@@ -7208,7 +7208,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -7218,7 +7218,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBXA0F635BA12CE4100A771BF9DFDFB7BAC">
+				<Item class="Motor6D" referent="RBX8136328D33C3407E9704881197A0BEC4">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -7251,8 +7251,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
-						<Ref name="Part1">RBXF1AEADCAF39148538D1DF7DD8A6B0FFD</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
+						<Ref name="Part1">RBX30A86C3247D2480286602FB4D004A2CC</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -7261,7 +7261,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBX1DA5E84082854B92B56758092CF05BBB">
+				<Item class="Motor6D" referent="RBXC76A4C1EEC19424D8D8AACCBC24D0DB1">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -7294,8 +7294,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
-						<Ref name="Part1">RBX7732EB7AB5DD4E54A4388127FA0F73D5</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
+						<Ref name="Part1">RBX54DDA4AF43014499B378AC292F44B13E</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -7304,7 +7304,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX0A457EABA0F14F8AA4BB1FD8AC4181E2">
+				<Item class="Attachment" referent="RBXB1C870655C6F4B2FB85C37FD0FE6C89B">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7329,7 +7329,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX5D02341366734D95BA625C23B35B146A">
+				<Item class="Weld" referent="RBX93D6224FBE6E4F1D90C2D971C82D5539">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>1</X>
@@ -7360,7 +7360,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -7370,7 +7370,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBX6E1D560FEDED4A018769B42A798BACA4">
+				<Item class="Attachment" referent="RBX8B23E249681C44D3BB163831DE6928AB">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7395,7 +7395,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBX08DF49FE28B74CB296CA3C507FDD8390">
+				<Item class="Motor6D" referent="RBXEA87B220AE924522AE9A72477FBC9813">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -7428,8 +7428,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
-						<Ref name="Part1">RBX0339EED2D7554C60A941641AC7EBFC71</Ref>
+						<Ref name="Part0">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
+						<Ref name="Part1">RBXC8991ADCEFB44374B2282256AA698CF2</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -7439,11 +7439,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX7732EB7AB5DD4E54A4388127FA0F73D5">
+			<Item class="Part" referent="RBX54DDA4AF43014499B378AC292F44B13E">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -7537,7 +7537,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Attachment" referent="RBX85762CD8E2784DC8BD63982CD3C2A7B9">
+				<Item class="Attachment" referent="RBX4B2C2D03386F4C6AB15ECDB5DB87A073">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7562,7 +7562,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX32CACE73CDA547C685FA52138DB414B4">
+				<Item class="Weld" referent="RBX1D4AEFDCFC144F00A1176B8A1291BE50">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.5</X>
@@ -7593,7 +7593,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX7732EB7AB5DD4E54A4388127FA0F73D5</Ref>
+						<Ref name="Part0">RBX54DDA4AF43014499B378AC292F44B13E</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -7603,7 +7603,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBXBBCDF3CA9D804A2A8129B0123FD9AF95">
+				<Item class="Attachment" referent="RBXE6C2D2059DC74B7F9C7E789FAB76068C">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7629,11 +7629,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX60255D2F797148B39D3E5987781B1089">
+			<Item class="Part" referent="RBX50D84E58762A424EA378C726B1C5A8FB">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -7727,7 +7727,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Attachment" referent="RBX1D45E1773670420FA0AFB0BC72B2F84C">
+				<Item class="Attachment" referent="RBXB01A5A95C1FD4E00AC36CD2F363DEFA4">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7752,7 +7752,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Motor6D" referent="RBXE83C8448C9784C91BB596CC226C1139A">
+				<Item class="Motor6D" referent="RBX5F99602E98DA4E8B9186F44769D30D41">
 					<Properties>
 						<float name="DesiredAngle">0</float>
 						<float name="MaxVelocity">0.100000001</float>
@@ -7785,8 +7785,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX60255D2F797148B39D3E5987781B1089</Ref>
-						<Ref name="Part1">RBX8BC14D6334C44269BFC49D94309D4802</Ref>
+						<Ref name="Part0">RBX50D84E58762A424EA378C726B1C5A8FB</Ref>
+						<Ref name="Part1">RBX14F0952736EC47A1A497C50ADB560E14</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -7796,11 +7796,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX0339EED2D7554C60A941641AC7EBFC71">
+			<Item class="Part" referent="RBXC8991ADCEFB44374B2282256AA698CF2">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -7894,7 +7894,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Snap" referent="RBXCD4D99BB2B8A4FAAA7D5AFB7EBAE2C3D">
+				<Item class="Snap" referent="RBX12FCE38986F743CA81CB2FC779FD797C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -7925,7 +7925,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX0339EED2D7554C60A941641AC7EBFC71</Ref>
+						<Ref name="Part0">RBXC8991ADCEFB44374B2282256AA698CF2</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -7935,7 +7935,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Attachment" referent="RBXC87D6F89559A4C529332ACDDA37FDEF7">
+				<Item class="Attachment" referent="RBXA0E7FCECC33248EF8C5774742259CF81">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -7960,7 +7960,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Snap" referent="RBXAF0E31E2BF7445C3A2F5798845190C8A">
+				<Item class="Snap" referent="RBXE8B83D6DEA354103A701F2ECA379F037">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -7991,7 +7991,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX0339EED2D7554C60A941641AC7EBFC71</Ref>
+						<Ref name="Part0">RBXC8991ADCEFB44374B2282256AA698CF2</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -8002,11 +8002,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXB86558DFA7624F669EBA79FF5F13604E">
+			<Item class="Part" referent="RBX2E775518CD204387BE0167B9F54C8249">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">0</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -8100,7 +8100,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Attachment" referent="RBX9F1C67C2A6D643C380B9A6277FDF341F">
+				<Item class="Attachment" referent="RBX620C45D0B8C142B087FBC267E188593A">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -8125,7 +8125,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Snap" referent="RBX8FD90C19D257443E855363F65591A3B0">
+				<Item class="Snap" referent="RBX43B66E9E0233451BABFD65319C100A73">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -8156,7 +8156,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBXB86558DFA7624F669EBA79FF5F13604E</Ref>
+						<Ref name="Part0">RBX2E775518CD204387BE0167B9F54C8249</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -8166,7 +8166,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Snap" referent="RBXE6E7A52F52384BB39F2526EE5BBFDA04">
+				<Item class="Snap" referent="RBX248543E0740D40B3B2346FEF877439C8">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -8197,7 +8197,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBXB86558DFA7624F669EBA79FF5F13604E</Ref>
+						<Ref name="Part0">RBX2E775518CD204387BE0167B9F54C8249</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -8209,7 +8209,7 @@
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX284F59751AB749B78B4C145F87B2004E">
+		<Item class="Part" referent="RBX28310DDE32F04D739D07637EBA09C9AF">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8308,7 +8308,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXED3C2A423CB74C4D9614FCB4390FB21F">
+		<Item class="Part" referent="RBX33F693DF358B405AB0FB6161D49B63E1">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8407,7 +8407,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX070F27FC02A64071B6C9EEF400763B2B">
+		<Item class="Part" referent="RBX2302C5C2A2DF440CA0354C4EC9E7A2DE">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8506,7 +8506,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXD44711DA28C34E969CE6E89184587BCE">
+		<Item class="Part" referent="RBXAEAB2FC1F6354499876D8849F38D45F9">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8605,7 +8605,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXB1941B3B36D249C58F76B7C1CBCC7F7D">
+		<Item class="Part" referent="RBX9ED673E0A6E643F7A044EF3027681B62">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8704,7 +8704,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX790B4923D00B4D7C8B0A6D4CB4F06E19">
+		<Item class="Part" referent="RBX72785019B0104AA89752CA5FF3FDB6AF">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8803,7 +8803,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC6638F4D5BA2435087E544A212EFFBC2">
+		<Item class="Part" referent="RBX0FA1290DED4E48478F11A5137240AAD2">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -8902,7 +8902,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXD10FB8BFA12749018795F43A182BEF82">
+		<Item class="Part" referent="RBXF4C710C58E1441409095D60422BC7320">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9001,7 +9001,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX78CD4235974E421BB1D115E0E14BE325">
+		<Item class="Part" referent="RBX8522BC71C6E143E1ACE3AE99567D24D4">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9100,7 +9100,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX65946C4EE0CC48F0B3024055F5C131C1">
+		<Item class="Part" referent="RBXF0C864BD798A4771BAF28073C47F755B">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9199,7 +9199,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXACDC1127214F4B4390AB8E399F799F65">
+		<Item class="Part" referent="RBX396132B1B5CF482792BF3FFBDECCFECC">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9298,7 +9298,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC0458AC319C5445D9627D965A4F52CBB">
+		<Item class="Part" referent="RBX686D474D388E45E683F09EFA378246AC">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9397,7 +9397,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC18C12BEDBBE462C8B2701158CA401B1">
+		<Item class="Part" referent="RBX6E47C55BB6194681BCA70F32E421CD0D">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9495,7 +9495,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="BillboardGui" referent="RBX83CF078D2833430EB9BE97FE8B5FA3C2">
+			<Item class="BillboardGui" referent="RBXAEF42CE7F19B458CA25EC09118E34447">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Ref name="Adornee">null</Ref>
@@ -9554,7 +9554,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="TextLabel" referent="RBX8151320C124341C2AA2E59E42D078585">
+				<Item class="TextLabel" referent="RBXF7A0176EDF224F3694819F9A3F709393">
 					<Properties>
 						<Font name="FontFace">
 							<Family><url>rbxasset://fonts/families/FredokaOne.json</url></Family>
@@ -9568,7 +9568,7 @@
 						<int name="MaxVisibleGraphemes">-1</int>
 						<string name="OpenTypeFeatures"></string>
 						<bool name="RichText">false</bool>
-						<string name="Text">&#240;&#159;&#155;&#146; SHOP</string>
+						<string name="Text">SHOP</string>
 						<Color3 name="TextColor3">
 							<R>1</R>
 							<G>0.956862748</G>
@@ -9649,7 +9649,7 @@
 						<int64 name="SourceAssetId">-1</int64>
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
-					<Item class="UIGradient" referent="RBX44C63C8101AB486D9E579557173B79D7">
+					<Item class="UIGradient" referent="RBXE67835AD500D4BD6888688A277F63EA8">
 						<Properties>
 							<ColorSequence name="Color">0 1 0.92549 0.666667 0 1 0.941176 0.666667 0.235294 0 </ColorSequence>
 							<bool name="Enabled">true</bool>
@@ -9670,7 +9670,7 @@
 							<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 						</Properties>
 					</Item>
-					<Item class="UIStroke" referent="RBX6C78800091D44FC4BAF780CD17861A9D">
+					<Item class="UIStroke" referent="RBX03D3D1AC83AA41189FB77E5B42C955FB">
 						<Properties>
 							<token name="ApplyStrokeMode">0</token>
 							<UDim name="BorderOffset">
@@ -9700,7 +9700,7 @@
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXAD7CF9B4E34347D7815E5BED4D3F4F07">
+		<Item class="Part" referent="RBX405A2D6371584FB1BC1DAD53E766F979">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9799,7 +9799,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC01841521FA34663BC0E7B72DAFEAC3B">
+		<Item class="Part" referent="RBX300AA6FCCD384FD3814438A8BEEAEC52">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9898,7 +9898,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXC9734398DDD948898124BEC6985CF41C">
+		<Item class="Part" referent="RBX7DC0D9D246B14634A945AA02CD6CA105">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -9997,7 +9997,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX9D0AFCFB32A149E6B01CD915882D2042">
+		<Item class="Part" referent="RBXFB13CD7821734F60B992ACFDDCE48755">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -10096,7 +10096,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXFDFB462C7A9843B1B29677E1D6B74F62">
+		<Item class="Part" referent="RBXF0FE3D65AF314F029E67FCCAD6F695A1">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -10195,7 +10195,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXE2B1CBCABE4C4135B905F122D5D5B251">
+		<Item class="Part" referent="RBX18992E267B4A4064B6F8EC5644728AFE">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -10294,7 +10294,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBXE5B2F7CE654F4318BC2E412898151F6F">
+		<Item class="Part" referent="RBX8DD6EAFD2FCA48529B280B21F0735D9F">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -10393,7 +10393,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="UnionOperation" referent="RBXD07BC400C2DA455E9E1CF198AD1AA1D1">
+		<Item class="UnionOperation" referent="RBXC1B889926A0945099B3E13CE856C4BE1">
 			<Properties>
 				<Content name="AssetId"><url>http://www.roblox.com//asset/?id=218555294</url></Content>
 				<BinaryString name="ChildData"></BinaryString>
@@ -10528,7 +10528,7 @@
 				<int64 name="SourceAssetId">3678395320</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBXB7EEF87EA20D41BF868512FE22E194C6">
+			<Item class="ManualWeld" referent="RBX65D0227A37174569BD2C725FAE184029">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-39.7153473</X>
@@ -10560,7 +10560,7 @@
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
 					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">RBXD07BC400C2DA455E9E1CF198AD1AA1D1</Ref>
+					<Ref name="Part1">RBXC1B889926A0945099B3E13CE856C4BE1</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -10570,7 +10570,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Model" referent="RBX6E64B2CF515D4804B0E1D58B26CE5777">
+		<Item class="Model" referent="RBX72724C9CA63E4BE7AFC6E52E0AAE9ECA">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -10621,11 +10621,11 @@
 				<int64 name="SourceAssetId">10691102318</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBX94410882933344F0B401B790915C0C40">
+			<Item class="Part" referent="RBXE64D30F7AB754836934143D68161E738">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -10719,7 +10719,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX0A4742864B744D048AD54626A614EB72">
+				<Item class="Weld" referent="RBXD6F49A50605049899BC1F4E475A9540C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -10750,7 +10750,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX94410882933344F0B401B790915C0C40</Ref>
+						<Ref name="Part0">RBXE64D30F7AB754836934143D68161E738</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -10761,11 +10761,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX85F3C9D7078A4C11B5C66CE29F4E730C">
+			<Item class="Part" referent="RBX9A3F7EFBE80342BD821CC151A27406B7">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -10859,7 +10859,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX2CA81CDEEB4148A590DC0DC44FFF84A1">
+				<Item class="Weld" referent="RBX96FD9B5C3958408DB010CD2A5B3CB90C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -10890,8 +10890,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
-						<Ref name="Part1">RBX91BCE63A962B4E79A6FF1D5C1DD796BD</Ref>
+						<Ref name="Part0">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
+						<Ref name="Part1">RBX7974B128EA924296B050FB8F8CE29435</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -10900,7 +10900,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXB77712591C374C7EB682534ADFA21AD6">
+				<Item class="Weld" referent="RBXEDF16333C7304C3886F306FE48DEE0B2">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -10931,7 +10931,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
+						<Ref name="Part0">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -10941,7 +10941,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX483466ADB9BC4CCE86E11B5A9E5DD694">
+				<Item class="Weld" referent="RBXDBF304C3E49A4CFE99617D871577A2BB">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -10972,8 +10972,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
-						<Ref name="Part1">RBX94410882933344F0B401B790915C0C40</Ref>
+						<Ref name="Part0">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
+						<Ref name="Part1">RBXE64D30F7AB754836934143D68161E738</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -10982,7 +10982,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX387CF347CD8E47D289A234886B93A53D">
+				<Item class="Weld" referent="RBX24EF241C5CD8418296648C5D25F11451">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11013,8 +11013,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
-						<Ref name="Part1">RBXE06B5747824740CA8179EFBDC903C861</Ref>
+						<Ref name="Part0">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
+						<Ref name="Part1">RBX8091601CB40E44DEBED8A12BAD180E90</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11023,7 +11023,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX99946F4D02714829B3BEA4C202ACEDC7">
+				<Item class="Weld" referent="RBX0C7349E5969C4C8B8BBEB6D9999AF050">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11054,8 +11054,8 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
-						<Ref name="Part1">RBX91408A4B691B41AF80596762C294D9E2</Ref>
+						<Ref name="Part0">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
+						<Ref name="Part1">RBX25C21A73DEA046B2B7B81EA35B5867FB</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11065,11 +11065,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX49F9F378A35540FBBEBAF847F0461412">
+			<Item class="Part" referent="RBXF842EF54AB4042D09E68F04EA1DE76FD">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -11163,7 +11163,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBXAB2CE04DECC24B12B78AE340E2CB6A31">
+				<Item class="Weld" referent="RBX5AD6E33CCCFC46CD8FC0BA559F19F047">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.841231346</X>
@@ -11194,8 +11194,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX49F9F378A35540FBBEBAF847F0461412</Ref>
-						<Ref name="Part1">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
+						<Ref name="Part0">RBXF842EF54AB4042D09E68F04EA1DE76FD</Ref>
+						<Ref name="Part1">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11204,7 +11204,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX10998522B2B34A8FBDFBFBE1D0406431">
+				<Item class="Weld" referent="RBX113A68501D1C4676BB309C5757BC3F62">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11235,7 +11235,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX49F9F378A35540FBBEBAF847F0461412</Ref>
+						<Ref name="Part0">RBXF842EF54AB4042D09E68F04EA1DE76FD</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -11246,11 +11246,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX91BCE63A962B4E79A6FF1D5C1DD796BD">
+			<Item class="Part" referent="RBX7974B128EA924296B050FB8F8CE29435">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -11344,7 +11344,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBXF57B06A1153841F6AFB0E1F04CD216B9">
+				<Item class="Weld" referent="RBXEC4A9DD5A739476EAF3FDD67B1A5C6B8">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11375,7 +11375,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX91BCE63A962B4E79A6FF1D5C1DD796BD</Ref>
+						<Ref name="Part0">RBX7974B128EA924296B050FB8F8CE29435</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -11386,11 +11386,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX36506EC7A70E4E13B6B442386C43C3C7">
+			<Item class="Part" referent="RBXBC9B643FD1CC4DD3B4743AB48E2235B4">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -11484,7 +11484,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBXBAD3E010CC354CBBAA833B904EC13CB3">
+				<Item class="Weld" referent="RBXAE7588FF8D8F4FD39222A0F624974727">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11515,8 +11515,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX49F9F378A35540FBBEBAF847F0461412</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBXF842EF54AB4042D09E68F04EA1DE76FD</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11525,7 +11525,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX98B49B51B42D421593B1AB8187091302">
+				<Item class="Weld" referent="RBX6E5473EA26054D7188EBE78BAE8F4CCD">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11556,8 +11556,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX91BCE63A962B4E79A6FF1D5C1DD796BD</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBX7974B128EA924296B050FB8F8CE29435</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11566,7 +11566,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXADF1988E5FAE46F6B92A38AC346F0C5B">
+				<Item class="Weld" referent="RBX9A98FEC3644A46A6A247E8714DFCF04E">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11597,8 +11597,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX5C27481821E24B569C92E3EC2F4B247B</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBX3AC1EDD80EA545278312F89665E57B6D</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11607,7 +11607,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX0FFF6B1A8DF34408856264262EC98687">
+				<Item class="Weld" referent="RBXBB64EC4FB56243CC972F0AC1F45B5BA2">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11638,8 +11638,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBXDA32074370304A48AF23384E84A7BD2C</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBX6CA26BF16DF142AAB9234632A9F3A7FF</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11648,7 +11648,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX8D4F18F30C1E480684D5825DF7350A44">
+				<Item class="Weld" referent="RBXFC65FEF7E0994D9D9456ECD6E07A1852">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11679,8 +11679,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX94410882933344F0B401B790915C0C40</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBXE64D30F7AB754836934143D68161E738</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11689,7 +11689,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXAECFB8CBD3524BB1B01150066692A1B8">
+				<Item class="Weld" referent="RBX4C57A049A3D84FE99F9F1187BE432577">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11720,8 +11720,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBXE06B5747824740CA8179EFBDC903C861</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBX8091601CB40E44DEBED8A12BAD180E90</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11730,7 +11730,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX0D06A5182CB04422A7B4AFE089B86A73">
+				<Item class="Weld" referent="RBXB9D634491EDA43EDA689215B231342A5">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11761,8 +11761,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX5DD05D3A1048445BB303168B5CD92D76</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBXC25FB3582F8C47C6A6E891580189BD5E</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11771,7 +11771,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBX3EC3F474728F4F6283CEF7E4A9BE277D">
+				<Item class="Weld" referent="RBX0B8269B3D9ED489CBA268AC890AA8BA4">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11802,7 +11802,7 @@
 							<R22>-0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -11812,7 +11812,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXCDD29235ACD24EFEAD1C61A687ACBE33">
+				<Item class="Weld" referent="RBXB759DF0A56C14EA5A835C054CD0DE277">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>7.62939453e-06</X>
@@ -11843,8 +11843,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX36506EC7A70E4E13B6B442386C43C3C7</Ref>
-						<Ref name="Part1">RBX91408A4B691B41AF80596762C294D9E2</Ref>
+						<Ref name="Part0">RBXBC9B643FD1CC4DD3B4743AB48E2235B4</Ref>
+						<Ref name="Part1">RBX25C21A73DEA046B2B7B81EA35B5867FB</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -11854,11 +11854,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXE06B5747824740CA8179EFBDC903C861">
+			<Item class="Part" referent="RBX8091601CB40E44DEBED8A12BAD180E90">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -11952,7 +11952,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBXF88532B78FD3436EBA7F962E11C63D40">
+				<Item class="Weld" referent="RBX1AE907A67A5B4179AAEFBF07E0C669CF">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -11983,7 +11983,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBXE06B5747824740CA8179EFBDC903C861</Ref>
+						<Ref name="Part0">RBX8091601CB40E44DEBED8A12BAD180E90</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -11994,11 +11994,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX5DD05D3A1048445BB303168B5CD92D76">
+			<Item class="Part" referent="RBXC25FB3582F8C47C6A6E891580189BD5E">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -12092,7 +12092,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX21A4699A4FF244DFB7B5E75C22938FE7">
+				<Item class="Weld" referent="RBX34C17DEB554346558D1A710B58E8B097">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -12123,7 +12123,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX5DD05D3A1048445BB303168B5CD92D76</Ref>
+						<Ref name="Part0">RBXC25FB3582F8C47C6A6E891580189BD5E</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -12133,7 +12133,7 @@
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
 				</Item>
-				<Item class="Weld" referent="RBXAC6D04408C8A4575B168DF72A87F8DB9">
+				<Item class="Weld" referent="RBX6ABAA580708B454EB52FC78CF4C4B5C0">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.841231346</X>
@@ -12164,8 +12164,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX5DD05D3A1048445BB303168B5CD92D76</Ref>
-						<Ref name="Part1">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
+						<Ref name="Part0">RBXC25FB3582F8C47C6A6E891580189BD5E</Ref>
+						<Ref name="Part1">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -12175,11 +12175,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX5C27481821E24B569C92E3EC2F4B247B">
+			<Item class="Part" referent="RBX3AC1EDD80EA545278312F89665E57B6D">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -12273,7 +12273,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBXDF0629F207CD4F978C01E802A9B8C57E">
+				<Item class="Weld" referent="RBX41A25BDD126F40B9866E9403FEF87812">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.841231346</X>
@@ -12304,8 +12304,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX5C27481821E24B569C92E3EC2F4B247B</Ref>
-						<Ref name="Part1">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
+						<Ref name="Part0">RBX3AC1EDD80EA545278312F89665E57B6D</Ref>
+						<Ref name="Part1">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -12315,11 +12315,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBXDA32074370304A48AF23384E84A7BD2C">
+			<Item class="Part" referent="RBX6CA26BF16DF142AAB9234632A9F3A7FF">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -12413,7 +12413,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX9AB36EA89AF247698264E05D46264102">
+				<Item class="Weld" referent="RBX952A566153B4484FA49DFE5C2983AC5C">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0.841231346</X>
@@ -12444,8 +12444,8 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBXDA32074370304A48AF23384E84A7BD2C</Ref>
-						<Ref name="Part1">RBX85F3C9D7078A4C11B5C66CE29F4E730C</Ref>
+						<Ref name="Part0">RBX6CA26BF16DF142AAB9234632A9F3A7FF</Ref>
+						<Ref name="Part1">RBX9A3F7EFBE80342BD821CC151A27406B7</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 						<bool name="DefinesCapabilities">false</bool>
@@ -12455,11 +12455,11 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Part" referent="RBX91408A4B691B41AF80596762C294D9E2">
+			<Item class="Part" referent="RBX25C21A73DEA046B2B7B81EA35B5867FB">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
-					<bool name="Anchored">false</bool>
+					<bool name="Anchored">true</bool>
 					<bool name="AudioCanCollide">true</bool>
 					<float name="BackParamA">-0.5</float>
 					<float name="BackParamB">0.5</float>
@@ -12553,7 +12553,7 @@
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Weld" referent="RBX53D692B5072B4BC590B3B6DC37AEF858">
+				<Item class="Weld" referent="RBX18AB4570A06849909C77397985101638">
 					<Properties>
 						<CoordinateFrame name="C0">
 							<X>0</X>
@@ -12584,7 +12584,7 @@
 							<R22>0</R22>
 						</CoordinateFrame>
 						<bool name="Enabled">true</bool>
-						<Ref name="Part0">RBX91408A4B691B41AF80596762C294D9E2</Ref>
+						<Ref name="Part0">RBX25C21A73DEA046B2B7B81EA35B5867FB</Ref>
 						<Ref name="Part1">null</Ref>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -12596,7 +12596,7 @@
 				</Item>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX26BE138539D94FF08D15FD8BF47314B4">
+		<Item class="Part" referent="RBXDA291F87F27745638BC034217086CD58">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -12695,7 +12695,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Model" referent="RBXC6D11D4DA7474843B67DCD9068E54253">
+		<Item class="Model" referent="RBX7D3538C080694AB9AE51111CA36DDA7D">
 			<Properties>
 				<token name="LevelOfDetail">0</token>
 				<CoordinateFrame name="ModelMeshCFrame">
@@ -12746,7 +12746,7 @@
 				<int64 name="SourceAssetId">14542752174</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Part" referent="RBX4294112A15F34A49A4337BE717A9A319">
+			<Item class="Part" referent="RBXBC789F67C0A54E8C9BD82F606163DA02">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -12845,7 +12845,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX5E8D913EC84342E19411F0CFC2A3A648">
+			<Item class="Part" referent="RBX6645C88F25E142A885BEA2E7909C83C2">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -12944,7 +12944,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="UnionOperation" referent="RBXE5B7FC39D1904ADDB8B2EB8F509C8E26">
+			<Item class="UnionOperation" referent="RBX40B95F5A6B2B4BD8A1C7107C005C2FBA">
 				<Properties>
 					<Content name="AssetId"><url>https://www.roblox.com//asset/?id=14542751976</url></Content>
 					<BinaryString name="ChildData"></BinaryString>
@@ -13080,7 +13080,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBX9EAD58B25A0E4DBDB22AE0AC9C71C3EB">
+			<Item class="Part" referent="RBX740C969BE5DD446ABAE25388D71F6663">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -13179,7 +13179,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXB46C0EB8540743DFABB4C91D99445A08">
+			<Item class="Part" referent="RBXBB9D6193E50F4A2C8E308703EE026FDD">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -13278,7 +13278,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Part" referent="RBXBBF0EBB18C4447E78C8E22A620B1953A">
+			<Item class="Part" referent="RBXA3FD2A3C4CAA40F099D2BEDB8941FE9C">
 				<Properties>
 					<token name="shape">1</token>
 					<token name="formFactorRaw">1</token>
@@ -13378,7 +13378,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXB20EB4BB534A4C95A12E524A97D5BD38">
+		<Item class="Part" referent="RBX43F7589B1EFB45B6AEF70ADBF608ECCD">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13477,7 +13477,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX14332A448EF942E49DDF05F1D8FD134B">
+		<Item class="Part" referent="RBX72B287D475254ADB90B8F360858FE0A9">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13576,7 +13576,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX1FDFF787CBA54B97A090E7DBEFA72029">
+		<Item class="Part" referent="RBX06D02BA5C0A140789CF05C4FFA733712">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13674,7 +13674,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="PointLight" referent="RBXA94493BEEE384D2982BF3398A904A0A4">
+			<Item class="PointLight" referent="RBX27A4A2A26A534AFFA853C9E15A199311">
 				<Properties>
 					<float name="Range">14</float>
 					<float name="Brightness">2</float>
@@ -13694,7 +13694,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBX3013259F2426457A938B9642C80A5F95">
+		<Item class="Part" referent="RBX09CEE3E1D4384158A4499A0C1F09F29D">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13793,7 +13793,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX509275F0088B4F82BA55920057DF8221">
+		<Item class="Part" referent="RBX2D27DE3180354C6D9B8B8255A39DBC3F">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13892,7 +13892,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Part" referent="RBX2FF3EEBBBD7C4BFEBDD0FD6E69275504">
+		<Item class="Part" referent="RBXC51795B8A83242A1BC02F11ADFEB7702">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">1</token>
@@ -13991,7 +13991,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="UnionOperation" referent="RBXE63CA28FCDB949EFBBA3C66540ACB35D">
+		<Item class="UnionOperation" referent="RBXA1F69EA30F7A49ABBDFFB60DC2ACE6D4">
 			<Properties>
 				<Content name="AssetId"><url>http://www.roblox.com//asset/?id=218555294</url></Content>
 				<BinaryString name="ChildData"></BinaryString>
@@ -14126,7 +14126,7 @@
 				<int64 name="SourceAssetId">3678395320</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX3FA9557806F9472BA547C7A04C0F09CA">
+			<Item class="ManualWeld" referent="RBXC9533310848D4FC8BBE06E3F17BD5A99">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-39.7153473</X>
@@ -14158,7 +14158,7 @@
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
 					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">RBXE63CA28FCDB949EFBBA3C66540ACB35D</Ref>
+					<Ref name="Part1">RBXA1F69EA30F7A49ABBDFFB60DC2ACE6D4</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -14168,7 +14168,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="UnionOperation" referent="RBXB5B67B3972134FCE84C9B835D8679AE9">
+		<Item class="UnionOperation" referent="RBX21301A56693241A6BD64B3484D7F2465">
 			<Properties>
 				<Content name="AssetId"><url>http://www.roblox.com//asset/?id=218555294</url></Content>
 				<BinaryString name="ChildData"></BinaryString>
@@ -14303,7 +14303,7 @@
 				<int64 name="SourceAssetId">3678395320</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="ManualWeld" referent="RBX8A7840DEE24B4269BF9A455951C99DB2">
+			<Item class="ManualWeld" referent="RBXC22A35E0260746ACAFB3717A32D9819D">
 				<Properties>
 					<CoordinateFrame name="C0">
 						<X>-39.7153473</X>
@@ -14335,7 +14335,7 @@
 					</CoordinateFrame>
 					<bool name="Enabled">true</bool>
 					<Ref name="Part0">null</Ref>
-					<Ref name="Part1">RBXB5B67B3972134FCE84C9B835D8679AE9</Ref>
+					<Ref name="Part1">RBX21301A56693241A6BD64B3484D7F2465</Ref>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
 					<bool name="DefinesCapabilities">false</bool>
@@ -14345,7 +14345,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Part" referent="RBXEEA451519D6F4FA991AF8A60F1732E13">
+		<Item class="Part" referent="RBX89B39312A50D42C89B018A3FFBCF9378">
 			<Properties>
 				<token name="shape">2</token>
 				<token name="formFactorRaw">1</token>
@@ -14444,7 +14444,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="MeshPart" referent="RBXED7ED63D16104B268626A634ABEAC85F">
+		<Item class="MeshPart" referent="RBX8BCF25B2059C44FD9E91ACB27467F3ED">
 			<Properties>
 				<bool name="DoubleSided">false</bool>
 				<bool name="HasJointOffset">false</bool>
@@ -14484,7 +14484,7 @@
 					<Z>0</Z>
 				</Vector3>
 				<float name="UnscaledVolume">333.905548</float>
-				<bool name="Anchored">false</bool>
+				<bool name="Anchored">true</bool>
 				<bool name="AudioCanCollide">true</bool>
 				<float name="BackParamA">-0.5</float>
 				<float name="BackParamB">0.5</float>
