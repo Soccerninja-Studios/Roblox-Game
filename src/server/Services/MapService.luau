@@ -22,9 +22,14 @@ local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local Players = game:GetService("Players")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local MapService = {}
+
+-- The one authoritative spawn pad (built by buildSpawn). Every player's
+-- RespawnLocation is forced to this so resets always land in the hub.
+local spawnPart: BasePart? = nil
 
 ----------------------------------------------------------------------
 -- Layout
@@ -133,18 +138,27 @@ local function buildRings(cx: number, cz: number, gy: number)
 	end
 end
 
-local function buildSpawn(cx: number, cz: number, gy: number)
+local function buildSpawn(_cx: number, _cz: number, _gy: number)
+	-- The spawn pad lives at a fixed hub position (GameConfig.SPAWN_POSITION),
+	-- NOT relative to the map center, so players always land next to the shop,
+	-- gardener, and Sprigman regardless of where the plains is centered. The pad
+	-- is solid + anchored, so players stand on it even if terrain shifts.
+	if spawnPart then
+		spawnPart:Destroy()
+		spawnPart = nil
+	end
 	local sp = Instance.new("SpawnLocation")
 	sp.Name = "PlayerSpawn"
 	sp.Anchored = true
 	sp.Neutral = true
 	sp.Duration = 0
 	sp.Size = Vector3.new(12, 1, 12)
-	sp.CFrame = CFrame.new(cx, gy + 0.5, cz + (CLEAR_RADIUS - 20))
+	sp.CFrame = CFrame.new(GameConfig.SPAWN_POSITION)
 	sp.Color = PAL.YARD
 	sp.Material = Enum.Material.Ground
 	sp.TopSurface = Enum.SurfaceType.Smooth
 	sp.Parent = mapRoot
+	spawnPart = sp
 end
 
 ----------------------------------------------------------------------
@@ -360,6 +374,42 @@ function MapService.Init(_services: any)
 	end
 end
 
-function MapService.Start() end
+-- Force every player to (re)spawn on the hub pad, never inside the house. We set
+-- RespawnLocation so Roblox uses our pad, and also snap the character onto it on
+-- spawn as a belt-and-suspenders guarantee against any stray SpawnLocations that
+-- may exist in the authored place.
+local function pinToSpawn(character: Model)
+	if not spawnPart then
+		return
+	end
+	local hrp = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if not hrp then
+		hrp = character:WaitForChild("HumanoidRootPart", 5) :: BasePart?
+	end
+	if hrp and spawnPart then
+		character:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
+	end
+end
+
+local function onPlayer(plr: Player)
+	if spawnPart then
+		plr.RespawnLocation = spawnPart
+	end
+	plr.CharacterAdded:Connect(pinToSpawn)
+	if plr.Character then
+		task.defer(pinToSpawn, plr.Character)
+	end
+end
+
+function MapService.Start()
+	-- When the intro cutscene is on, CutsceneService owns character placement.
+	if GameConfig.INTRO_CUTSCENE then
+		return
+	end
+	Players.PlayerAdded:Connect(onPlayer)
+	for _, plr in Players:GetPlayers() do
+		onPlayer(plr)
+	end
+end
 
 return MapService

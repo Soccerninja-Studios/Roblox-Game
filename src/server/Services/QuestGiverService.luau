@@ -1,10 +1,10 @@
 --!strict
--- QuestGiverService: spawns "Sprig the Quartermaster", the quest-board NPC that
--- stands at the front-center of the house (between the shop and the gardener).
--- Sprig is a real R6 character (Humanoid + jointed body) that plays a looping
--- idle animation so he breathes and sways in place, not just a static prop. He
--- keeps a glowing walk-in pad, a floating "!" marker, and a ProximityPrompt named
--- "QuestPrompt" that the client hooks to open the quest board.
+-- QuestGiverService: spawns "Sprigman The Questgiver", the quest-board NPC that
+-- stands in the hub near the shop and the gardener. Sprigman is a real R6
+-- character (Humanoid + jointed body) that plays a looping idle animation so he
+-- breathes and sways in place, not just a static prop. He has a floating "!"
+-- marker and a ProximityPrompt named "QuestPrompt" that the client hooks to open
+-- the quest board.
 
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
@@ -49,26 +49,14 @@ local function joint(name: string, part0: BasePart, part1: BasePart, c0: CFrame,
 	m.Parent = part0
 end
 
--- Ground pulse so the walk-in pad reads as interactive.
-local function pulse(zone: BasePart)
-	task.spawn(function()
-		while zone.Parent do
-			TweenService:Create(zone, TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.72 }):Play()
-			task.wait(1.1)
-			TweenService:Create(zone, TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.42 }):Play()
-			task.wait(1.1)
-		end
-	end)
-end
-
 local function buildSprig(): Model
 	local model = Instance.new("Model")
 	model.Name = "QuestGiver"
 
-	-- Where the NPC stands. QUEST_GIVER_POSITION is the ground point; an R6
-	-- character's HumanoidRootPart sits ~3 studs above its feet, so lift by 3.
-	-- Rotate 180 degrees so Sprig faces out toward players walking up.
-	local base = CFrame.new(GameConfig.QUEST_GIVER_POSITION + Vector3.new(0, 3, 0)) * CFrame.Angles(0, math.rad(180), 0)
+	-- Where the NPC stands. QUEST_GIVER_POSITION is the exact Studio transform for
+	-- his HumanoidRootPart, so we use it directly (no lift). Face him with the
+	-- authored Y orientation.
+	local base = CFrame.new(GameConfig.QUEST_GIVER_POSITION) * CFrame.Angles(0, math.rad(GameConfig.QUEST_GIVER_ORIENTATION_Y), 0)
 
 	-- Core parts (names MUST match the R6 rig so the Humanoid + animations work).
 	local rootPart = makePart("HumanoidRootPart", Vector3.new(2, 2, 1), SKIN)
@@ -132,7 +120,7 @@ local function buildSprig(): Model
 
 	-- Humanoid (defaults to R6 with these part names). Show his name overhead.
 	local humanoid = Instance.new("Humanoid")
-	humanoid.DisplayName = "Sprig the Quartermaster"
+	humanoid.DisplayName = "Sprigman The Questgiver"
 	humanoid.WalkSpeed = 0
 	humanoid.JumpPower = 0
 	humanoid.MaxHealth = 100
@@ -174,36 +162,17 @@ local function buildSprig(): Model
 	bang.TextScaled = true
 	bang.Parent = billboard
 
-	-- Glowing walk-in pad + ring on the ground.
-	local zone = makePart("QuestZone", Vector3.new(GameConfig.QUEST_GIVER_ZONE_RADIUS * 2, 0.2, GameConfig.QUEST_GIVER_ZONE_RADIUS * 2), ZONE_FILL)
-	zone.Anchored = true
-	zone.Material = Enum.Material.Neon
-	zone.Shape = Enum.PartType.Cylinder
-	zone.Transparency = 0.5
-	-- Cylinder parts lie on their side; rotate so the flat face points up.
-	zone.CFrame = CFrame.new(GameConfig.QUEST_GIVER_POSITION + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, 0, math.rad(90))
-	zone.Parent = model
-
-	local ring = makePart("QuestZoneRing", Vector3.new(GameConfig.QUEST_GIVER_ZONE_RADIUS * 2 + 1.2, 0.3, GameConfig.QUEST_GIVER_ZONE_RADIUS * 2 + 1.2), ZONE_EDGE)
-	ring.Anchored = true
-	ring.Material = Enum.Material.Neon
-	ring.Shape = Enum.PartType.Cylinder
-	ring.Transparency = 0.25
-	ring.CFrame = CFrame.new(GameConfig.QUEST_GIVER_POSITION + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.rad(90))
-	ring.Parent = model
-
 	-- Proximity prompt the client hooks to open the quest board.
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "QuestPrompt"
 	prompt.ActionText = "Quests"
-	prompt.ObjectText = "Sprig the Quartermaster"
+	prompt.ObjectText = "Sprigman The Questgiver"
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.HoldDuration = 0
 	prompt.RequiresLineOfSight = false
 	prompt.MaxActivationDistance = GameConfig.QUEST_GIVER_ZONE_RADIUS + 4
 	prompt.Parent = rootPart
 
-	pulse(zone)
 	return model
 end
 
@@ -242,7 +211,7 @@ function QuestGiverService.Init(_services: any) end
 
 function QuestGiverService.Start()
 	spawnQuestGiver()
-	print("[QuestGiverService] Sprig the Quartermaster is ready.")
+	print("[QuestGiverService] Sprigman The Questgiver is ready.")
 end
 
 return QuestGiverService

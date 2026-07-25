@@ -124,6 +124,71 @@ local function styleZone(model: Model)
 	end
 end
 
+-- Anchor every part before the stand is live so walking into it can't knock it
+-- out of place. Animated NPC characters are the exception: we pin only their
+-- HumanoidRootPart and free the limbs so the idle animation still plays.
+local function anchorModel(model: Model)
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	for _, d in model:GetDescendants() do
+		if d:IsA("Humanoid") then
+			local char = d.Parent
+			if char then
+				for _, p in char:GetChildren() do
+					if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+						p.Anchored = false
+					end
+				end
+			end
+		end
+	end
+end
+
+-- A floating green "GARDENER" sign hovering above the stand, mirroring the shop's
+-- "SHOP" label so players can spot the deposit point from a distance.
+local function floatLabel(model: Model)
+	local anchor = Instance.new("Part")
+	anchor.Name = "GardenerLabelAnchor"
+	anchor.Size = Vector3.new(1, 1, 1)
+	anchor.Transparency = 1
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
+	anchor.CastShadow = false
+	anchor.CFrame = CFrame.new(GameConfig.GARDENER_POSITION + Vector3.new(0, 8, 0))
+	anchor.Parent = model
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "GardenerSign"
+	gui.Adornee = anchor
+	gui.Size = UDim2.new(9, 0, 2.4, 0)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, 0, 0)
+	gui.MaxDistance = 300
+	gui.AlwaysOnTop = false
+	gui.Parent = anchor
+
+	local label = Instance.new("TextLabel")
+	label.Name = "TextLabel"
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.FredokaOne
+	label.Text = "GARDENER"
+	label.TextColor3 = Color3.fromRGB(238, 255, 226)
+	label.TextScaled = true
+	label.TextStrokeColor3 = Color3.fromRGB(24, 54, 22)
+	label.TextStrokeTransparency = 0.35
+	label.Parent = gui
+
+	local grad = Instance.new("UIGradient")
+	grad.Color = ColorSequence.new(Color3.fromRGB(150, 240, 120), Color3.fromRGB(64, 168, 72))
+	grad.Rotation = 90
+	grad.Parent = label
+end
+
 local function spawnGardener()
 	local template = getTemplate()
 	if not template then
@@ -141,10 +206,13 @@ local function spawnGardener()
 
 	-- Place exactly at the designer-specified pivot with zero orientation.
 	model:PivotTo(CFrame.new(GameConfig.GARDENER_POSITION))
+	-- Anchor before it goes live so it can't be shoved around.
+	anchorModel(model)
 	model.Parent = Workspace
 
 	animateNPC(model)
 	styleZone(model)
+	floatLabel(model)
 end
 
 local function onRequestDeposit(player: Player)

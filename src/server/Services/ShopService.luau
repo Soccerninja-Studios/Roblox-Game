@@ -118,6 +118,29 @@ local function styleZone(model: Model)
 	end
 end
 
+-- Anchor every part before the model is live so walking into the stall can't
+-- knock it out of place. Animated NPC characters are the exception: we pin only
+-- their HumanoidRootPart and free the limbs so the idle animation still plays.
+local function anchorModel(model: Model)
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	for _, d in model:GetDescendants() do
+		if d:IsA("Humanoid") then
+			local char = d.Parent
+			if char then
+				for _, p in char:GetChildren() do
+					if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+						p.Anchored = false
+					end
+				end
+			end
+		end
+	end
+end
+
 local function spawnShop()
 	local template = getTemplate()
 	if not template then
@@ -135,6 +158,8 @@ local function spawnShop()
 
 	-- Place exactly at the designer-specified pivot with zero orientation.
 	model:PivotTo(CFrame.new(GameConfig.SHOP_POSITION))
+	-- Anchor before it goes live so it can't be shoved around.
+	anchorModel(model)
 	model.Parent = Workspace
 
 	animateNPC(model)
