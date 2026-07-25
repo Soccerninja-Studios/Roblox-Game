@@ -206,27 +206,30 @@ local function buildCurrency(gui: ScreenGui)
 	pill.Parent = gui
 	bagPill = pill
 
-	-- Backpack icon: try the requested decal, with an emoji fallback behind it so
-	-- something always shows even if the image can't be fetched.
-	local iconFallback = Instance.new("TextLabel")
-	iconFallback.Name = "BagIconFallback"
-	iconFallback.BackgroundTransparency = 1
-	iconFallback.Size = UDim2.fromOffset(46, 46)
-	iconFallback.Position = UDim2.fromOffset(12, 6)
-	iconFallback.Text = "\u{1F392}"
-	iconFallback.TextScaled = true
-	iconFallback.ZIndex = 6
-	iconFallback.Parent = pill
-
-	local icon = Instance.new("ImageLabel")
-	icon.Name = "BagIcon"
-	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.fromOffset(46, 46)
-	icon.Position = UDim2.fromOffset(12, 6)
-	icon.Image = Assets.Backpack ~= "" and Assets.Backpack or "rbxassetid://962094726"
-	icon.ScaleType = Enum.ScaleType.Fit
-	icon.ZIndex = 7
-	icon.Parent = pill
+	-- Backpack icon: show the uploaded artwork when its asset ID is set
+	-- (src/shared/Assets.luau); otherwise fall back to a single emoji. Exactly ONE
+	-- of these is ever created, so the new image never stacks over an old icon.
+	if Assets.Backpack ~= "" then
+		local icon = Instance.new("ImageLabel")
+		icon.Name = "BagIcon"
+		icon.BackgroundTransparency = 1
+		icon.Size = UDim2.fromOffset(46, 46)
+		icon.Position = UDim2.fromOffset(12, 6)
+		icon.Image = Assets.Backpack
+		icon.ScaleType = Enum.ScaleType.Fit
+		icon.ZIndex = 7
+		icon.Parent = pill
+	else
+		local iconFallback = Instance.new("TextLabel")
+		iconFallback.Name = "BagIconFallback"
+		iconFallback.BackgroundTransparency = 1
+		iconFallback.Size = UDim2.fromOffset(46, 46)
+		iconFallback.Position = UDim2.fromOffset(12, 6)
+		iconFallback.Text = "\u{1F392}"
+		iconFallback.TextScaled = true
+		iconFallback.ZIndex = 6
+		iconFallback.Parent = pill
+	end
 
 	bagCountLabel = Instance.new("TextLabel")
 	bagCountLabel.BackgroundTransparency = 1
@@ -454,13 +457,39 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 	buy.ZIndex = 12
 	corner(buy, 12)
 	local buyStroke = stroke(buy, 2, Color3.fromRGB(255, 255, 255), 0.4)
-	local buyCoin = buildCoinIcon(20, 13)
-	buyCoin.AnchorPoint = Vector2.new(0, 0.5)
-	buyCoin.Position = UDim2.new(0, 14, 0.5, 0)
-	buyCoin.Visible = false
-	buyCoin.Parent = buy
-	local buyPad = Instance.new("UIPadding")
-	buyPad.Parent = buy
+	-- Cost display: a centered [coin][price] group with a fixed gap (UIListLayout
+	-- Padding) so the coin never crowds the number. Hidden for FREE/MAX buttons.
+	local costGroup = Instance.new("Frame")
+	costGroup.Name = "CostGroup"
+	costGroup.BackgroundTransparency = 1
+	costGroup.AnchorPoint = Vector2.new(0.5, 0.5)
+	costGroup.Position = UDim2.fromScale(0.5, 0.5)
+	costGroup.Size = UDim2.fromScale(1, 1)
+	costGroup.ZIndex = 13
+	costGroup.Visible = false
+	local costLayout = Instance.new("UIListLayout")
+	costLayout.FillDirection = Enum.FillDirection.Horizontal
+	costLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	costLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	costLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	costLayout.Padding = UDim.new(0, 8)
+	costLayout.Parent = costGroup
+	local buyCoin = buildCoinIcon(22, 13)
+	buyCoin.LayoutOrder = 1
+	buyCoin.Parent = costGroup
+	local costLabel = Instance.new("TextLabel")
+	costLabel.Name = "CostLabel"
+	costLabel.LayoutOrder = 2
+	costLabel.AutomaticSize = Enum.AutomaticSize.X
+	costLabel.Size = UDim2.fromOffset(0, 30)
+	costLabel.BackgroundTransparency = 1
+	costLabel.Font = Enum.Font.FredokaOne
+	costLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	costLabel.TextSize = 20
+	costLabel.Text = "0"
+	costLabel.ZIndex = 13
+	costLabel.Parent = costGroup
+	costGroup.Parent = buy
 	buy.Parent = card
 	buy.Activated:Connect(onBuy)
 
@@ -472,8 +501,7 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 		if data.maxed then
 			buy.Text = "MAX"
 			buy.TextXAlignment = Enum.TextXAlignment.Center
-			buyPad.PaddingLeft = UDim.new(0, 0)
-			buyCoin.Visible = false
+			costGroup.Visible = false
 			buy.BackgroundColor3 = LOCKED
 			buy.AutoButtonColor = false
 			buyStroke.Transparency = 0.7
@@ -483,13 +511,11 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 			if cost == 0 then
 				buy.Text = "FREE"
 				buy.TextXAlignment = Enum.TextXAlignment.Center
-				buyPad.PaddingLeft = UDim.new(0, 0)
-				buyCoin.Visible = false
+				costGroup.Visible = false
 			else
-				buy.Text = formatNumber(cost)
-				buy.TextXAlignment = Enum.TextXAlignment.Left
-				buyPad.PaddingLeft = UDim.new(0, 54)
-				buyCoin.Visible = true
+				buy.Text = ""
+				costLabel.Text = formatNumber(cost)
+				costGroup.Visible = true
 			end
 			buy.BackgroundColor3 = afford and GREEN or LOCKED
 			buyStroke.Transparency = afford and 0.4 or 0.7
