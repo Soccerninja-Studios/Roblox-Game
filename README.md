@@ -166,8 +166,10 @@ src/
       ClippingsService.luau    # dropped clipping pickups + walk-near collection
       UpgradeService.luau      # tool tiers + Kingdom Skills purchases
       ToolService.luau         # builds/gives the held cutting tool per tier
-      ShopService.luau         # spawns the Shop model; makes ShopZone a visible circle
-      MapService.luau          # builds the spawn plaza + grass zones from GameConfig.ZONES
+      ShopService.luau         # spawns the Shop model (anchored); makes ShopZone a visible circle
+      GardenerService.luau     # spawns the Gardener (anchored) + floating GARDENER sign; deposit pad
+      QuestGiverService.luau   # spawns Sprigman The Questgiver (animated R6) + "!" marker
+      MapService.luau          # builds the map + hub spawn pad; forces respawns to it
   client/
     init.client.luau
     Controllers/
@@ -179,4 +181,23 @@ src/
     GameConfig.luau            # all tunable numbers (grass types, tools, skills)
     StatCalculator.luau        # profile -> gameplay stats
     Remotes.luau               # client<->server events
+    Assets.luau                # custom image asset IDs (gold coin / diamond / backpack)
 ```
+
+## Custom UI artwork (gold coin, diamond, backpack)
+
+The source PNGs live in `assets/images/` (`gold-coin.png`, `diamond.png`, `backpack.png`). Roblox can only display an image once it has been uploaded and given a numeric asset ID, so a one-time step is needed to make them appear in-game:
+
+1. In Roblox Studio (connected via Rojo): **View -> Asset Manager -> Images -> the green [+]** and import the three PNGs from `assets/images/`.
+2. After moderation finishes, right-click each -> **Copy Asset ID**.
+3. Open **`src/shared/Assets.luau`** and paste each ID as `"rbxassetid://<number>"` into `GoldCoin`, `Diamond`, and `Backpack`.
+
+Until an ID is filled in, the HUD falls back to the built-in drawn coin / emoji, so nothing looks broken while the uploads moderate.
+
+## Recent changes
+
+- **Anchored NPC stalls** — the Shop and Gardener models are fully anchored before they go live, so walking into them no longer knocks them out of place (their animated NPCs keep only the root pinned, so idle animations still play).
+- **Reliable respawns** — a solid spawn pad is built in the hub (`GameConfig.SPAWN_POSITION`) and every player's `RespawnLocation` is forced to it, so resets land next to the shop/gardener/questgiver instead of inside the house.
+- **Sprigman The Questgiver** — the quest NPC (formerly "Sprig the Quartermaster") is an animated R6 character. He was repositioned/reoriented and the old glowing zone cylinder (which showed as a vertical yellow beam) was removed. The quest board's close button now draws an X to match the shop's.
+- **Tool zone-gating** — each tool cuts only its own zone and the easier zones before it.
+- **GARDENER sign** — a floating green "GARDENER" label now hovers over the gardener, mirroring the shop's "SHOP" sign.
