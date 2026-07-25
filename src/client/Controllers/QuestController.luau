@@ -1,6 +1,6 @@
 --!strict
 -- QuestController: the client-side Quest Board. Opens when you press the prompt
--- on Sprig the Quartermaster (Workspace.QuestGiver), asks the server for the
+-- on Sprigman The Questgiver (Workspace.QuestGiver), asks the server for the
 -- full quest list, and renders it grouped by zone with progress bars + Claim
 -- buttons. Locked zones show an unlock hint; objectives whose game systems are
 -- not built yet (combat, pets, auto-mowers, abilities) are tagged "Coming soon".
@@ -151,7 +151,7 @@ local function build()
 	subtitle.Position = UDim2.new(0, 24, 0, 46)
 	subtitle.Size = UDim2.new(1, -90, 0, 20)
 	subtitle.Font = Enum.Font.GothamMedium
-	subtitle.Text = "Sprig the Quartermaster"
+	subtitle.Text = "Sprigman The Questgiver"
 	subtitle.TextColor3 = Color3.fromRGB(210, 226, 200)
 	subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	subtitle.TextScaled = true
@@ -164,11 +164,38 @@ local function build()
 	closeBtn.Size = UDim2.new(0, 40, 0, 40)
 	closeBtn.BackgroundColor3 = Color3.fromRGB(226, 92, 84)
 	closeBtn.Font = Enum.Font.FredokaOne
-	closeBtn.Text = "\u{2715}"
+	closeBtn.Text = ""
 	closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	closeBtn.TextScaled = true
 	closeBtn.Parent = header
 	corner(closeBtn, 12)
+
+	-- Draw the X from two rotated bars (matches the shop's close button) so it
+	-- always renders, instead of relying on a font glyph.
+	local xIcon = Instance.new("Frame")
+	xIcon.Name = "XIcon"
+	xIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+	xIcon.Position = UDim2.fromScale(0.5, 0.5)
+	xIcon.Size = UDim2.fromScale(0.44, 0.44)
+	xIcon.BackgroundTransparency = 1
+	xIcon.ZIndex = closeBtn.ZIndex + 1
+	xIcon.Parent = closeBtn
+	for _, rot in { 45, -45 } do
+		local bar = Instance.new("Frame")
+		bar.Name = "Bar"
+		bar.AnchorPoint = Vector2.new(0.5, 0.5)
+		bar.Position = UDim2.fromScale(0.5, 0.5)
+		bar.Size = UDim2.new(1, 0, 0, 4)
+		bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		bar.BorderSizePixel = 0
+		bar.Rotation = rot
+		bar.ZIndex = xIcon.ZIndex
+		local bc = Instance.new("UICorner")
+		bc.CornerRadius = UDim.new(1, 0)
+		bc.Parent = bar
+		bar.Parent = xIcon
+	end
+
 	closeBtn.Activated:Connect(function()
 		QuestController.Close()
 	end)

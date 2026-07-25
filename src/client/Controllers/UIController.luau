@@ -15,6 +15,7 @@ local Workspace = game:GetService("Workspace")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local StatCalculator = require(ReplicatedStorage.Shared.StatCalculator)
+local Assets = require(ReplicatedStorage.Shared.Assets)
 
 local UIController = {}
 
@@ -145,7 +146,20 @@ end
 -- Currency + bag HUD ----------------------------------------------------------
 -- A small gold coin drawn purely with UI primitives (no image asset), so it
 -- always renders in-game regardless of emoji/font support.
-local function buildCoinIcon(diameter: number, baseZ: number): Frame
+local function buildCoinIcon(diameter: number, baseZ: number): GuiObject
+	-- Prefer the uploaded gold-coin artwork if its asset ID has been filled in
+	-- (see src/shared/Assets.luau); otherwise draw the coin from UI primitives so
+	-- something always renders.
+	if Assets.GoldCoin ~= "" then
+		local img = Instance.new("ImageLabel")
+		img.Size = UDim2.fromOffset(diameter, diameter)
+		img.BackgroundTransparency = 1
+		img.Image = Assets.GoldCoin
+		img.ScaleType = Enum.ScaleType.Fit
+		img.ZIndex = baseZ
+		return img
+	end
+
 	local coin = Instance.new("Frame")
 	coin.Size = UDim2.fromOffset(diameter, diameter)
 	coin.BackgroundColor3 = Color3.fromRGB(245, 196, 72)
@@ -209,7 +223,7 @@ local function buildCurrency(gui: ScreenGui)
 	icon.BackgroundTransparency = 1
 	icon.Size = UDim2.fromOffset(46, 46)
 	icon.Position = UDim2.fromOffset(12, 6)
-	icon.Image = "rbxassetid://962094726"
+	icon.Image = Assets.Backpack ~= "" and Assets.Backpack or "rbxassetid://962094726"
 	icon.ScaleType = Enum.ScaleType.Fit
 	icon.ZIndex = 7
 	icon.Parent = pill
@@ -273,6 +287,16 @@ local function buildCurrency(gui: ScreenGui)
 			coin.AnchorPoint = Vector2.new(0.5, 0.5)
 			coin.Position = UDim2.new(0, 27, 0.5, 0)
 			coin.Parent = c
+		elseif icon == "DIAMOND" and Assets.Diamond ~= "" then
+			local img = Instance.new("ImageLabel")
+			img.AnchorPoint = Vector2.new(0.5, 0.5)
+			img.Position = UDim2.new(0, 27, 0.5, 0)
+			img.Size = UDim2.fromOffset(30, 30)
+			img.BackgroundTransparency = 1
+			img.Image = Assets.Diamond
+			img.ScaleType = Enum.ScaleType.Fit
+			img.ZIndex = 6
+			img.Parent = c
 		else
 			local badge = Instance.new("TextLabel")
 			badge.BackgroundTransparency = 1
@@ -309,7 +333,7 @@ local function buildCurrency(gui: ScreenGui)
 
 	-- gold: right edge 135px left of center; diamond: left edge 135px right of center.
 	goldLabel = makeCounter("COIN", GOLD, 1, -135)
-	diamondLabel = makeCounter("\u{1F48E}", DIAMOND, 0, 135)
+	diamondLabel = makeCounter(Assets.Diamond ~= "" and "DIAMOND" or "\u{1F48E}", DIAMOND, 0, 135)
 end
 
 -- Right-side round action button ----------------------------------------------
