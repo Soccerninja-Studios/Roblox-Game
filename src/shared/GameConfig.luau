@@ -173,11 +173,21 @@ local GameConfig = {
 	GARDENER_POSITION = Vector3.new(-479.75, -0.16, -1037),
 	GARDENER_ZONE_RADIUS = 14,
 
-	-- Quest Giver ("Sprig the Quartermaster"): hands out the zone quest board. Placed
+	-- Quest Giver ("Sprigman The Questgiver"): hands out the zone quest board. Placed
 	-- at the front-CENTER of the house, between the shop and the gardener, on the
 	-- ground (Y = -0.16). Walk near and press the prompt to open the quest board.
-	QUEST_GIVER_POSITION = Vector3.new(-480, -0.16, -995),
+	QUEST_GIVER_POSITION = Vector3.new(-467.049, 2.45, -1013.96),
+	-- Y-axis facing (degrees) for Sprigman. This is the exact transform placed in
+	-- Studio, so QUEST_GIVER_POSITION is the character's root position (not the
+	-- ground point) -- QuestGiverService uses it directly without lifting.
+	QUEST_GIVER_ORIENTATION_Y = 135,
 	QUEST_GIVER_ZONE_RADIUS = 10,
+
+	-- Player spawn pad. A solid anchored SpawnLocation dropped in the hub between
+	-- the shop, the gardener, and Sprigman so resets always land players in the
+	-- playable area (never inside the house). MapService builds the pad here and
+	-- forces every player's RespawnLocation to it.
+	SPAWN_POSITION = Vector3.new(-480, 1, -975),
 }
 
 return GameConfig
