@@ -83,6 +83,18 @@ Deploy in its home zone; it passively mows and generates clippings, auto-banking
 gold when it fills (requires the Gardener's "Remote Deposit" perk, unlocked by rescuing
 Farmer Fields). Only one runs at a time until the Multi-Mower upgrade.
 
+> **Implemented (v1).** All 5 auto-mowers are live via `AutoMowerService` (server) and
+> `AutoMowerController` (client), configured in `GameConfig.AUTO_MOWERS`. Open the
+> **🚜 Mowers** panel (bottom-left) to buy one (gold + diamonds, gated by the zone you've
+> reached), then Deploy / Recall it. A little mower model roams the hub, fills its
+> storage bar at `ratePerSec`, and auto-banks the clippings to gold at `storageCap` with
+> a toast. Deploy + auto-bank both feed the `deploy_automower` / `automower_bank` quests.
+> v1 simplifications vs. this table: mowers earn only while you're online, the
+> "Remote Deposit" perk gate and the Multi-Mower one-at-a-time limit are not enforced
+> yet (you can deploy all you own), and every mower deploys at one shared hub anchor
+> until the 5 physical zones are built. Storage caps in the shipped config scale with
+> rate (`rate x 90s`); the cost/rate ladder matches the numbers below.
+
 | Zone | Auto-Mower | Clippings/sec | Storage Cap | Cost | Notes |
 |------|-----------|---------------|-------------|------|-------|
 | Meadow | Push Mower | 2 | 500 | 20 diamonds | Starter automation |
@@ -433,6 +445,7 @@ Tracks how the shipped build diverges from / advances this design doc.
 - **Economy HUD** — gold-coin counter no longer balloons and freezes on deposit; grass clippings drop 2x larger with a green highlight; shop cost coin/number spacing fixed.
 - **Custom currency art** — gold coin, diamond, and backpack icons are wired to `src/shared/Assets.luau`; drop in the uploaded asset IDs to replace the built-in drawn/emoji fallbacks.
 - **Hub polish** — Shop and Gardener models are anchored on spawn; a floating green "GARDENER" sign mirrors the "SHOP" sign; players always respawn on a hub spawn pad (`GameConfig.SPAWN_POSITION`) rather than inside the house.
+- **Auto-Mowers (idle income)** — all 5 mowers are implemented (`AutoMowerService` + `AutoMowerController`, config in `GameConfig.AUTO_MOWERS`). Buy once with gold + diamonds (gated by zone reached), then Deploy/Recall from the 🚜 Mowers panel; a roaming mower fills a storage bar and auto-banks clippings to gold. Profile schema bumped to v3 (`profile.autoMowers = { owned, deployed }`); `PlayerDataService.SpendCurrency` added for combined gold+diamond purchases; `deploy_automower` / `automower_bank` quest kinds are now tracked. v1 is online-only and does not yet enforce the Remote Deposit perk or Multi-Mower limit.
 
 ---
 *Generated design doc. All names, numbers, and costs are the initial design targets and are meant to be tuned during playtesting.*
