@@ -29,6 +29,8 @@ local REMOTE_NAMES = {
 	"PurchaseAutoMower", -- client -> server: buy the mower with this key
 	"ToggleAutoMower", -- client -> server: deploy/recall the mower with this key
 	"AutoMowerBanked", -- server -> client: a deployed mower auto-banked gold (toast)
+	-- Admin panel (testers only)
+	"AdminGrantCurrency", -- client -> server: grant the caller gold/diamonds (whitelist enforced server-side)
 	-- Intro cutscene (client<->server).
 	"CutsceneReady", -- client -> server: my camera/UI is ready, start the intro
 	"CutsceneSkip", -- client -> server: player pressed Skip
