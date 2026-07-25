@@ -188,6 +188,33 @@ local GameConfig = {
 	-- playable area (never inside the house). MapService builds the pad here and
 	-- forces every player's RespawnLocation to it.
 	SPAWN_POSITION = Vector3.new(-480, 1, -975),
+
+	-- Auto-Mowers: deployable idle units bought once with gold + diamonds. Once
+	-- owned, DEPLOY one to send a little mower roaming the hub; it passively makes
+	-- clippings into its own storage and, when that storage fills, AUTO-BANKS the
+	-- clippings straight to gold (no Gardener trip needed). This is the premium idle
+	-- layer from docs/PROGRESSION.md section 6.
+	--   key         = unique id (also the workspace model suffix)
+	--   name        = display name (matches the auto-mower quests in QuestData)
+	--   zone        = grass zone you must have reached to buy it (see ZONES)
+	--   ratePerSec  = clippings generated per second while deployed
+	--   storageCap  = clippings it holds before it auto-banks to gold
+	--   goldCost / diamondCost = one-time purchase price
+	--   bodyColor   = {r,g,b} of the little mower body
+	--   desc        = one-line blurb for the shop panel
+	AUTO_MOWER_TICK = 1, -- seconds between idle-income ticks
+	-- Where deployed mowers appear (a clear patch just west of the hub). Each roams
+	-- a few studs around its slot. Placement will tighten once the 5 physical zones
+	-- are built; for now every mower deploys here in the shared hub.
+	AUTO_MOWER_DEPLOY_ANCHOR = Vector3.new(-505, 2.5, -1000),
+	AUTO_MOWER_SLOT_SPACING = 7, -- studs between each mower's roam slot (along Z)
+	AUTO_MOWERS = {
+		{ key = "push", name = "Push Mower", zone = "Meadow", ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
+		{ key = "reel", name = "Reel Mower", zone = "Wild", ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
+		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Thick", ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Self-rights on Thicket slopes." },
+		{ key = "hover", name = "Hover Mower", zone = "Moss", ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats over Mossmire bog water." },
+		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
+	},
 }
 
 return GameConfig

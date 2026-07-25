@@ -23,6 +23,12 @@ local REMOTE_NAMES = {
 	"QuestState", -- server -> client: full quest list with progress + claimed flags
 	"ClaimQuest", -- client -> server: claim the reward for a completed quest (id)
 	"QuestToast", -- server -> client: a quest was completed/claimed (name, reward) popup
+	-- Auto-Mowers
+	"RequestAutoMowers", -- client -> server: send me my auto-mower panel state
+	"AutoMowerState", -- server -> client: full mower list (owned/deployed/storage) + currency
+	"PurchaseAutoMower", -- client -> server: buy the mower with this key
+	"ToggleAutoMower", -- client -> server: deploy/recall the mower with this key
+	"AutoMowerBanked", -- server -> client: a deployed mower auto-banked gold (toast)
 	-- Intro cutscene (client<->server).
 	"CutsceneReady", -- client -> server: my camera/UI is ready, start the intro
 	"CutsceneSkip", -- client -> server: player pressed Skip
