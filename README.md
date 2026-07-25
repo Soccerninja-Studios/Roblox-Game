@@ -170,7 +170,8 @@ src/
       GardenerService.luau     # spawns the Gardener (anchored) + floating GARDENER sign; deposit pad
       QuestGiverService.luau   # spawns Sprigman The Questgiver (animated R6) + "!" marker
       AutoMowerService.luau    # idle auto-mowers: buy/deploy/recall + passive gold auto-banking
-      MapService.luau          # builds the map + hub spawn pad; forces respawns to it
+      AdminService.luau        # testers-only: grants gold/diamonds on request (GameConfig.ADMINS whitelist)
+      MapService.luau          # builds the map; points respawns at House 2's "Spawn Point" SpawnLocation
   client/
     init.client.luau
     Controllers/
@@ -179,6 +180,7 @@ src/
       UIController.luau         # HUD, right-side buttons, shop modal
       EffectsController.luau    # grass bursts, +N popups, too-tough feedback
       AutoMowerController.luau  # 🚜 Mowers panel: buy/deploy/recall + live storage bars
+      AdminController.luau      # Admin panel (testers only): grant yourself gold/diamonds while testing
   shared/
     GameConfig.luau            # all tunable numbers (grass types, tools, skills)
     StatCalculator.luau        # profile -> gameplay stats
@@ -199,7 +201,11 @@ Until an ID is filled in, the HUD falls back to the built-in drawn coin / emoji,
 ## Recent changes
 
 - **Anchored NPC stalls** — the Shop and Gardener models are fully anchored before they go live, so walking into them no longer knocks them out of place (their animated NPCs keep only the root pinned, so idle animations still play).
-- **Reliable respawns** — a solid spawn pad is built in the hub (`GameConfig.SPAWN_POSITION`) and every player's `RespawnLocation` is forced to it, so resets land next to the shop/gardener/questgiver instead of inside the house.
+- **Reliable respawns** — the runtime-built `PlayerSpawn` pad was removed; the map now ships a real `SpawnLocation` named "Spawn Point" inside the House 2 model, and every player's `RespawnLocation` is pointed at it, so deaths/resets land the player exactly where you placed that spawn.
+- **Admin panel (testers only)** — a small **Admin** button (top-left) opens a panel to grant yourself any amount of gold or diamonds (typed amount or quick-add chips), so you don't have to grind resources to test features. Only usernames in `GameConfig.ADMINS` see it, and the server re-validates every grant.
+- **Backpack HUD icon** — the bag pill now shows a single icon: the uploaded backpack artwork when its asset ID is set, otherwise one emoji fallback (no more doubled image).
+- **Shop purchase button spacing** — the coin and price now sit in a centered group with a fixed gap, so the coin no longer crowds the number.
+- **"SHOP" sign** — removed the shopping-cart emoji from the floating sign above the shop (it wasn't loading correctly), leaving a clean "SHOP".
 - **Sprigman The Questgiver** — the quest NPC (formerly "Sprig the Quartermaster") is an animated R6 character. He was repositioned/reoriented and the old glowing zone cylinder (which showed as a vertical yellow beam) was removed. The quest board's close button now draws an X to match the shop's.
 - **Tool zone-gating** — each tool cuts only its own zone and the easier zones before it.
 - **GARDENER sign** — a floating green "GARDENER" label now hovers over the gardener, mirroring the shop's "SHOP" sign.
