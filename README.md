@@ -169,6 +169,7 @@ src/
       ShopService.luau         # spawns the Shop model (anchored); makes ShopZone a visible circle
       GardenerService.luau     # spawns the Gardener (anchored) + floating GARDENER sign; deposit pad
       QuestGiverService.luau   # spawns Sprigman The Questgiver (animated R6) + "!" marker
+      AutoMowerService.luau    # idle auto-mowers: buy/deploy/recall + passive gold auto-banking
       MapService.luau          # builds the map + hub spawn pad; forces respawns to it
   client/
     init.client.luau
@@ -177,6 +178,7 @@ src/
       ToolController.luau       # equip state + swing/snip animation
       UIController.luau         # HUD, right-side buttons, shop modal
       EffectsController.luau    # grass bursts, +N popups, too-tough feedback
+      AutoMowerController.luau  # 🚜 Mowers panel: buy/deploy/recall + live storage bars
   shared/
     GameConfig.luau            # all tunable numbers (grass types, tools, skills)
     StatCalculator.luau        # profile -> gameplay stats
@@ -201,3 +203,4 @@ Until an ID is filled in, the HUD falls back to the built-in drawn coin / emoji,
 - **Sprigman The Questgiver** — the quest NPC (formerly "Sprig the Quartermaster") is an animated R6 character. He was repositioned/reoriented and the old glowing zone cylinder (which showed as a vertical yellow beam) was removed. The quest board's close button now draws an X to match the shop's.
 - **Tool zone-gating** — each tool cuts only its own zone and the easier zones before it.
 - **GARDENER sign** — a floating green "GARDENER" label now hovers over the gardener, mirroring the shop's "SHOP" sign.
+- **Auto-Mowers (idle income)** — the 🚜 Mowers panel (bottom-left) lets you buy one of 5 auto-mowers with gold + diamonds once you've reached its zone, then Deploy/Recall it. A little mower roams the hub, fills a storage bar, and auto-banks its clippings to gold on its own. Balance lives in `GameConfig.AUTO_MOWERS`; ownership persists on your profile (schema v3).
