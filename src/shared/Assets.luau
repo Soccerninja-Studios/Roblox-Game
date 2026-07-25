@@ -20,9 +20,9 @@
 
 local Assets = {
 	-- HUD currency + bag icons. Leave as "" to use the built-in fallback.
-	GoldCoin = "", -- e.g. "rbxassetid://94643887905219"
-	Diamond = "", -- e.g. "rbxassetid://136845340016196"
-	Backpack = "", -- e.g. "rbxassetid://115805650328465"
+	GoldCoin = "rbxassetid://94643887905219", -- e.g. "rbxassetid://94643887905219"
+	Diamond = "rbxassetid://136845340016196", -- e.g. "rbxassetid://136845340016196"
+	Backpack = "rbxassetid://115805650328465", -- e.g. "rbxassetid://115805650328465"
 }
 
 return Assets
