@@ -28,6 +28,8 @@ local LIVE_KINDS: { [string]: boolean } = {
 	purchase_upgrades = true,
 	skill_level = true,
 	buy_equip_tool = true,
+	deploy_automower = true,
+	automower_bank = true,
 }
 
 -- grass key -> the tool tier whose favored grass matches (the zone "specialist"

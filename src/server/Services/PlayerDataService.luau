@@ -36,6 +36,10 @@ export type Profile = {
 		claimed: { [string]: boolean }, -- questId (as string) -> reward claimed
 		reached: { [string]: boolean }, -- grass type -> has the player mown it (zone unlock)
 	},
+	autoMowers: {
+		owned: { [string]: boolean }, -- mower key -> purchased
+		deployed: { [string]: boolean }, -- mower key -> currently out working
+	},
 }
 
 -- What we actually store: the profile plus a lightweight session lock.
@@ -45,7 +49,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 2
+local PROFILE_VERSION = 3
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -76,6 +80,7 @@ local function defaultProfile(): Profile
 		zones = {},
 		prestige = 0,
 		quests = { progress = {}, claimed = {}, reached = {} },
+		autoMowers = { owned = {}, deployed = {} },
 	}
 end
 
@@ -96,6 +101,8 @@ local function reconcile(profile: Profile): Profile
 		profile.gold = (profile.gold or 0) + (profile.clippings or 0)
 		profile.clippings = 0
 	end
+	-- v2 -> v3: added the autoMowers block. No data conversion is needed -- the
+	-- field-fill loop above already grafts the empty default onto older saves.
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -313,6 +320,23 @@ function PlayerDataService.SpendGold(player: Player, amount: number): boolean
 		return false
 	end
 	profile.gold -= amount
+	return true
+end
+
+-- Atomically spend gold AND diamonds together (used for premium purchases like
+-- auto-mowers). Deducts both and returns true only if the player can afford both.
+function PlayerDataService.SpendCurrency(player: Player, gold: number, diamonds: number): boolean
+	local profile = profiles[player]
+	if not profile then
+		return false
+	end
+	gold = gold or 0
+	diamonds = diamonds or 0
+	if profile.gold < gold or profile.diamonds < diamonds then
+		return false
+	end
+	profile.gold -= gold
+	profile.diamonds -= diamonds
 	return true
 end
 
