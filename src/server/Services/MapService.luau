@@ -27,9 +27,10 @@ local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local MapService = {}
 
--- The one authoritative spawn pad (built by buildSpawn). Every player's
--- RespawnLocation is forced to this so resets always land in the hub.
-local spawnPart: BasePart? = nil
+-- The authored spawn point is a SpawnLocation named "Spawn Point" that ships
+-- inside the House 2 model. We locate it at runtime and force every player's
+-- RespawnLocation to it, so deaths/resets land the player there.
+local houseSpawn: SpawnLocation? = nil
 
 ----------------------------------------------------------------------
 -- Layout
@@ -138,27 +139,18 @@ local function buildRings(cx: number, cz: number, gy: number)
 	end
 end
 
-local function buildSpawn(_cx: number, _cz: number, _gy: number)
-	-- The spawn pad lives at a fixed hub position (GameConfig.SPAWN_POSITION),
-	-- NOT relative to the map center, so players always land next to the shop,
-	-- gardener, and Sprigman regardless of where the plains is centered. The pad
-	-- is solid + anchored, so players stand on it even if terrain shifts.
-	if spawnPart then
-		spawnPart:Destroy()
-		spawnPart = nil
+-- Find the authored "Spawn Point" SpawnLocation that ships inside the House 2
+-- model. We search the house first (cheap) and fall back to a Workspace-wide
+-- scan. Returns the first SpawnLocation found (the house ships exactly one).
+local function findHouseSpawn(): SpawnLocation?
+	local house = Workspace:FindFirstChild("House2") or Workspace:FindFirstChild("House 2")
+	local scope: Instance = house or Workspace
+	for _, d in scope:GetDescendants() do
+		if d:IsA("SpawnLocation") then
+			return d
+		end
 	end
-	local sp = Instance.new("SpawnLocation")
-	sp.Name = "PlayerSpawn"
-	sp.Anchored = true
-	sp.Neutral = true
-	sp.Duration = 0
-	sp.Size = Vector3.new(12, 1, 12)
-	sp.CFrame = CFrame.new(GameConfig.SPAWN_POSITION)
-	sp.Color = PAL.YARD
-	sp.Material = Enum.Material.Ground
-	sp.TopSurface = Enum.SurfaceType.Smooth
-	sp.Parent = mapRoot
-	spawnPart = sp
+	return nil
 end
 
 ----------------------------------------------------------------------
@@ -348,7 +340,6 @@ function MapService.BuildPlains(center: Vector3?)
 	end
 	buildBase(c.X, c.Z, c.Y)
 	buildRings(c.X, c.Z, c.Y)
-	buildSpawn(c.X, c.Z, c.Y)
 	local ok, err = pcall(buildScatter, c.X, c.Z, c.Y)
 	if not ok then
 		warn("[MapService] scenery scatter failed: " .. tostring(err))
@@ -374,31 +365,24 @@ function MapService.Init(_services: any)
 	end
 end
 
--- Force every player to (re)spawn on the hub pad, never inside the house. We set
--- RespawnLocation so Roblox uses our pad, and also snap the character onto it on
--- spawn as a belt-and-suspenders guarantee against any stray SpawnLocations that
--- may exist in the authored place.
-local function pinToSpawn(character: Model)
-	if not spawnPart then
-		return
-	end
-	local hrp = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if not hrp then
-		hrp = character:WaitForChild("HumanoidRootPart", 5) :: BasePart?
-	end
-	if hrp and spawnPart then
-		character:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
+-- Point every player's RespawnLocation at the authored "Spawn Point" SpawnLocation
+-- inside House 2, so deaths/resets land the player there. The SpawnLocation itself
+-- handles the actual placement, so we no longer force a pivot onto a pad.
+local function applySpawn(plr: Player)
+	if houseSpawn then
+		plr.RespawnLocation = houseSpawn
 	end
 end
 
 local function onPlayer(plr: Player)
-	if spawnPart then
-		plr.RespawnLocation = spawnPart
-	end
-	plr.CharacterAdded:Connect(pinToSpawn)
-	if plr.Character then
-		task.defer(pinToSpawn, plr.Character)
-	end
+	applySpawn(plr)
+	plr.CharacterAdded:Connect(function()
+		-- Re-assert in case the SpawnLocation only streamed in after the player joined.
+		if not houseSpawn then
+			houseSpawn = findHouseSpawn()
+		end
+		applySpawn(plr)
+	end)
 end
 
 function MapService.Start()
@@ -410,6 +394,23 @@ function MapService.Start()
 	for _, plr in Players:GetPlayers() do
 		onPlayer(plr)
 	end
+	-- Locate the House 2 spawn without blocking startup; retry briefly in case the
+	-- place is still streaming in, then (re)apply it to everyone already here.
+	task.spawn(function()
+		for _ = 1, 20 do
+			houseSpawn = findHouseSpawn()
+			if houseSpawn then
+				break
+			end
+			task.wait(0.5)
+		end
+		if not houseSpawn then
+			warn("[MapService] No 'Spawn Point' SpawnLocation found in House 2 - using Roblox's default spawn.")
+		end
+		for _, plr in Players:GetPlayers() do
+			applySpawn(plr)
+		end
+	end)
 end
 
 return MapService
