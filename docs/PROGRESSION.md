@@ -423,5 +423,16 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 - Costs climb ~x4-6 per zone so each ring is a meaningful gate; diamonds gate the "convenience + ultimate" layer (auto-mowers, abilities, top gear).
 - Suggested new GameConfig blocks: ZONES, TOOL_TIERS (expand to 10), SWORDS, AUTO_MOWERS, ABILITIES, UPGRADES, PETS, VILLAGERS, MONSTERS, QUESTS.
 
+## 14. Implementation changelog (living notes)
+
+Tracks how the shipped build diverges from / advances this design doc.
+
+- **Quest system** — 150 quests across 5 zones are live (8 objective kinds tracked now; the rest show "Coming soon" until their systems land). Handed out by **Sprigman The Questgiver** (renamed from "Sprig the Quartermaster"), an animated R6 NPC.
+- **Tool zone-gating** — a tool can cut only its own grass zone and the easier zones before it (`StatCalculator.CanCutGrass` / `GetToolMaxZone`), so grass toughness now also gates by progression, not just cut power.
+- **Rusty Shears** — now clears Meadow grass in 3 cuts (was 2).
+- **Economy HUD** — gold-coin counter no longer balloons and freezes on deposit; grass clippings drop 2x larger with a green highlight; shop cost coin/number spacing fixed.
+- **Custom currency art** — gold coin, diamond, and backpack icons are wired to `src/shared/Assets.luau`; drop in the uploaded asset IDs to replace the built-in drawn/emoji fallbacks.
+- **Hub polish** — Shop and Gardener models are anchored on spawn; a floating green "GARDENER" sign mirrors the "SHOP" sign; players always respawn on a hub spawn pad (`GameConfig.SPAWN_POSITION`) rather than inside the house.
+
 ---
 *Generated design doc. All names, numbers, and costs are the initial design targets and are meant to be tuned during playtesting.*
