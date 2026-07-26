@@ -945,8 +945,8 @@ local function buildShopModal(gui: ScreenGui)
 		mowersPage,
 		1,
 		"\u{1F69C}",
-		"Out for repairs",
-		"Mowers are being rebuilt to drive out on their own, cut the nearest grass, and haul the clippings back to the Gardener."
+		"Open the Mower panel",
+		"Mowers now drive out on their own, cut the nearest grass they are rated for, and haul the clippings back to the Gardener for gold. Buy and deploy them from the Auto-Mower panel."
 	)
 
 	-- BACKPACKS -------------------------------------------------------------
