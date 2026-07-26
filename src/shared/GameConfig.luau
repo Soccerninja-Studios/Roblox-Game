@@ -207,9 +207,15 @@ local GameConfig = {
 	-- layer from docs/PROGRESSION.md section 6.
 	--   key         = unique id (also the workspace model suffix)
 	--   name        = display name (matches the auto-mower quests in QuestData)
-	--   zone        = grass zone you must have reached to buy it (see ZONES). This
-	--                 also caps which grass the mower is allowed to cut: it can cut
-	--                 its own zone and every easier one, same rule as tools.
+	--   zone        = grass zone you must have reached to buy it (see ZONES). This is
+	--                 also the ONLY grass this mower will ever cut. Unlike the
+	--                 player's tools, a mower does NOT fall back to easier zones --
+	--                 each zone gets its own dedicated mower.
+	--   modelName   = name of the model under ReplicatedStorage.Assets to spawn.
+	--                 Falls back to a built-from-scratch box mower if it is missing.
+	--   modelLength = the model is rescaled so its longest horizontal axis is about
+	--                 this many studs, since the source models range from a small
+	--                 bot to a full-size drivable vehicle.
 	--   moveSpeed   = studs per second it drives while seeking grass or hauling
 	--   cutPower    = health removed per cut swing (armor is subtracted from this)
 	--   cutInterval = seconds between its cut swings
@@ -228,8 +234,11 @@ local GameConfig = {
 	-- How far a mower looks for its next tile. It sweeps outward from its own
 	-- position in STEP increments up to MAX so a mower in a cleared patch will still
 	-- find work further out instead of idling.
-	AUTO_MOWER_SEARCH_STEP = 60,
-	AUTO_MOWER_SEARCH_MAX = 420,
+	AUTO_MOWER_SEARCH_STEP = 80,
+	-- Reaches the outer Ironweed ring (~1145 studs from the plains centre) from the
+	-- shared hub anchor. Mowers only cut their own zone now, so this MUST stay large
+	-- enough for a late-zone mower to see its ring or it would park forever.
+	AUTO_MOWER_SEARCH_MAX = 1600,
 	-- Studs from a tile before the mower is considered "on" it and starts cutting.
 	AUTO_MOWER_ARRIVE_DIST = 4,
 	-- Studs from the Gardener before a hauling mower can unload.
@@ -239,11 +248,11 @@ local GameConfig = {
 	-- Hover height above a tile's base so mowers sit on the ground, not inside it.
 	AUTO_MOWER_HOVER = 1.6,
 	AUTO_MOWERS = {
-		{ key = "push", name = "Push Mower", zone = "Meadow", moveSpeed = 14, cutPower = 4, cutInterval = 0.50, ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
-		{ key = "reel", name = "Reel Mower", zone = "Wild", moveSpeed = 18, cutPower = 9, cutInterval = 0.45, ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
-		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Thick", moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Self-rights on Thicket slopes." },
-		{ key = "hover", name = "Hover Mower", zone = "Moss", moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats over Mossmire bog water." },
-		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
+		{ key = "push", name = "Push Mower", zone = "Meadow", modelName = "PushMower", modelLength = 5.0, moveSpeed = 14, cutPower = 4, cutInterval = 0.50, ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
+		{ key = "reel", name = "Reel Mower", zone = "Wild", modelName = "ReelMower", modelLength = 6.0, moveSpeed = 18, cutPower = 9, cutInterval = 0.45, ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
+		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Thick", modelName = "BrushcutterBot", modelLength = 4.0, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Self-rights on Thicket slopes." },
+		{ key = "hover", name = "Hover Mower", zone = "Moss", modelName = "HoverMower", modelLength = 6.0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats over Mossmire bog water." },
+		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", modelName = "PlasmaHarvester", modelLength = 7.0, moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
 	},
 }
 
