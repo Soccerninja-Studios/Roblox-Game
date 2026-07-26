@@ -227,16 +227,39 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	card.Parent = listFrame
 end
 
+-- Shown instead of an empty page while we wait for the server's first snapshot.
+local function notice(host: Frame, text: string)
+	local label = Instance.new("TextLabel")
+	label.Name = "Notice"
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, 0, 0, 60)
+	label.Font = Enum.Font.GothamMedium
+	label.Text = text
+	label.TextColor3 = SUBTLE
+	label.TextSize = 15
+	label.TextWrapped = true
+	label.Parent = host
+end
+
 local function render()
 	local host = listFrame
-	if not latest or not host then
-		return -- no snapshot yet, or not mounted: Mount() paints on arrival
+	if not host then
+		return -- not mounted into the Shop yet; Mount() paints as soon as it is
 	end
+
+	-- Clear every GuiObject, not just Frames, so the waiting notice cannot survive
+	-- underneath the cards. The UIListLayout is not a GuiObject and is kept.
 	for _, child in host:GetChildren() do
-		if child:IsA("Frame") then
+		if child:IsA("GuiObject") then
 			child:Destroy()
 		end
 	end
+
+	if not latest or not latest.mowers then
+		notice(host, "Loading mowers\u{2026}")
+		return
+	end
+
 	local currency = { gold = latest.gold or 0, diamonds = latest.diamonds or 0 }
 	for i, mower in ipairs(latest.mowers) do
 		buildCard(mower, i, currency)
@@ -245,6 +268,9 @@ end
 
 -- Toast when a mower banks -----------------------------------------------------
 local function showToast(text: string)
+	if not toastHolder then
+		return -- build() has not run yet; a missed toast is better than an error
+	end
 	local toast = Instance.new("Frame")
 	toast.Size = UDim2.new(1, 0, 0, 40)
 	toast.BackgroundColor3 = GREEN_DARK
@@ -267,6 +293,27 @@ local function showToast(text: string)
 end
 
 -- Public API ------------------------------------------------------------------
+-- Remote wiring, done once. This used to live in Init(), which created a race: the
+-- Shop modal is built during UIController.Init(), so its first request could be
+-- sent BEFORE this controller's Init() had connected AutoMowerState. The reply was
+-- then dropped and nothing ever repainted the tab. Mount() now wires up first.
+local wired = false
+local function ensureWired()
+	if wired then
+		return
+	end
+	wired = true
+
+	Remotes.Get("AutoMowerState").OnClientEvent:Connect(function(state)
+		latest = state
+		render() -- no-op until the Shop tab is mounted
+	end)
+
+	Remotes.Get("AutoMowerBanked").OnClientEvent:Connect(function(payload)
+		showToast("\u{1F69C} " .. tostring(payload.name) .. " banked +" .. formatNumber(payload.gold or 0) .. "g")
+	end)
+end
+
 -- Ask the server for a fresh snapshot. UIController calls this whenever the Shop
 -- opens on the Mowers tab, so prices and storage bars are never stale.
 function AutoMowerController.Refresh()
@@ -290,21 +337,29 @@ function AutoMowerController.Mount(host: Instance)
 	layout.Parent = holder
 
 	listFrame = holder
-	render() -- paint at once if a snapshot already landed
-	AutoMowerController.Refresh()
+	ensureWired() -- connect BEFORE asking, so the reply cannot be missed
+	render() -- paints the waiting notice, or cards if a snapshot already landed
+
+	-- The server makes us wait while it loads the profile (up to 10s on a cold
+	-- join), and it only answers a request -- it does not broadcast to idle players.
+	-- So keep asking until a snapshot arrives instead of trusting one attempt.
+	task.spawn(function()
+		for _ = 1, 12 do
+			if latest then
+				return
+			end
+			AutoMowerController.Refresh()
+			task.wait(1)
+		end
+		if not latest then
+			warn("[AutoMowerController] no mower state after 12 requests - is AutoMowerService running?")
+		end
+	end)
 end
 
 function AutoMowerController.Init()
 	build()
-
-	Remotes.Get("AutoMowerState").OnClientEvent:Connect(function(state)
-		latest = state
-		render() -- no-op until the Shop tab is mounted
-	end)
-
-	Remotes.Get("AutoMowerBanked").OnClientEvent:Connect(function(payload)
-		showToast("\u{1F69C} " .. tostring(payload.name) .. " banked +" .. formatNumber(payload.gold or 0) .. "g")
-	end)
+	ensureWired() -- harmless if Mount() already did it
 end
 
 function AutoMowerController.Start()
