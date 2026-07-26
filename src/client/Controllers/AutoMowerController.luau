@@ -106,6 +106,34 @@ local function zoneLabel(zone: string): string
 	return zone
 end
 
+-- The 5 mowers straight from config. This lets the tab paint BEFORE, or entirely
+-- WITHOUT, any server reply. Ownership is unknowable client-side, so these render
+-- in a neutral "pending" state and the real snapshot replaces them on arrival.
+local function configSnapshot(): any
+	local list = {}
+	for _, def in ipairs(GameConfig.AUTO_MOWERS) do
+		table.insert(list, {
+			key = def.key,
+			name = def.name,
+			zone = def.zone,
+			desc = def.desc,
+			ratePerSec = def.ratePerSec,
+			storageCap = def.storageCap,
+			goldCost = def.goldCost,
+			diamondCost = def.diamondCost,
+			bodyColorR = def.bodyColor[1],
+			bodyColorG = def.bodyColor[2],
+			bodyColorB = def.bodyColor[3],
+			owned = false,
+			deployed = false,
+			unlocked = false,
+			storage = 0,
+			pending = true,
+		})
+	end
+	return { mowers = list, gold = 0, diamonds = 0 }
+end
+
 -- Card builder ----------------------------------------------------------------
 local function buildCard(mower: any, order: number, currency: { gold: number, diamonds: number })
 	local card = Instance.new("Frame")
@@ -197,7 +225,14 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	actionPad.PaddingBottom = UDim.new(0, 8)
 	actionPad.Parent = action
 
-	if not mower.unlocked then
+	if mower.pending then
+		-- Config-only card: ownership and unlock state are still unknown, so show the
+		-- price but promise nothing and stay unclickable.
+		action.BackgroundColor3 = LOCKED
+		action.Text = formatNumber(mower.goldCost) .. "g\n\u{2026}"
+		action.AutoButtonColor = false
+		action.Active = false
+	elseif not mower.unlocked then
 		action.BackgroundColor3 = LOCKED
 		action.Text = "Locked\n(reach " .. zoneLabel(mower.zone) .. ")"
 		action.AutoButtonColor = false
@@ -255,14 +290,16 @@ local function render()
 		end
 	end
 
-	if not latest or not latest.mowers then
-		notice(host, "Loading mowers\u{2026}")
-		return
+	-- Fall back to config so the tab is NEVER blank, even if the server never
+	-- answers at all. A real snapshot swaps these cards out the moment it lands.
+	local snapshot = if latest and latest.mowers then latest else configSnapshot()
+	local currency = { gold = snapshot.gold or 0, diamonds = snapshot.diamonds or 0 }
+	for i, mower in ipairs(snapshot.mowers) do
+		buildCard(mower, i, currency)
 	end
 
-	local currency = { gold = latest.gold or 0, diamonds = latest.diamonds or 0 }
-	for i, mower in ipairs(latest.mowers) do
-		buildCard(mower, i, currency)
+	if snapshot ~= latest then
+		notice(host, "Syncing your mowers\u{2026}")
 	end
 end
 
@@ -337,13 +374,19 @@ function AutoMowerController.Mount(host: Instance)
 	layout.Parent = holder
 
 	listFrame = holder
-	ensureWired() -- connect BEFORE asking, so the reply cannot be missed
-	render() -- paints the waiting notice, or cards if a snapshot already landed
 
-	-- The server makes us wait while it loads the profile (up to 10s on a cold
-	-- join), and it only answers a request -- it does not broadcast to idle players.
-	-- So keep asking until a snapshot arrives instead of trusting one attempt.
+	-- Paint FIRST, straight from config. Remotes.Get uses WaitForChild, which
+	-- YIELDS, and Mount runs inside UIController.Init() -- so touching a remote
+	-- before painting can stall the first paint and leave the tab empty. Nothing
+	-- below this line is allowed to block the cards.
+	render()
+
+	-- Wiring and requesting both happen off the Init thread. The server makes us
+	-- wait while it loads the profile (up to 10s on a cold join) and only answers a
+	-- request -- it never broadcasts to a player with nothing deployed -- so keep
+	-- asking until a snapshot lands rather than trusting a single attempt.
 	task.spawn(function()
+		ensureWired() -- connect before asking, so the reply cannot be missed
 		for _ = 1, 12 do
 			if latest then
 				return

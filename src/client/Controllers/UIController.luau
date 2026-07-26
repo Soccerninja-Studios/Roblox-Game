@@ -957,7 +957,13 @@ local function buildShopModal(gui: ScreenGui)
 	-- AutoMowerController owns these cards (buy / deploy / recall + live storage
 	-- bars), so it renders them straight into this page. This replaces the separate
 	-- corner panel it used to open.
-	AutoMowerController.Mount(mowersPage)
+	-- Isolated on purpose: everything after this point (the Packs tab, the default
+	-- tab selection, the HUD wiring in Init) is still to be built, and a throw in
+	-- here would silently take all of it down with it.
+	local mowersOk, mowersErr = pcall(AutoMowerController.Mount, mowersPage)
+	if not mowersOk then
+		warn("[UIController] mower list failed to mount: " .. tostring(mowersErr))
+	end
 
 	-- BACKPACKS -------------------------------------------------------------
 	-- The five zone packs are not in yet, so the working bag upgrade stays here
