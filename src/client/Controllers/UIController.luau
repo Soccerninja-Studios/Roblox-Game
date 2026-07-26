@@ -50,6 +50,11 @@ local bagCountLabel: TextLabel
 local bagFill: Frame
 local goldLabel: TextLabel
 local diamondLabel: TextLabel
+
+-- Counters currently mid "count-up". While a label is in here it owns its own text:
+-- it climbs coin by coin as the deposit chips land (see spawnDepositChips) instead
+-- of snapping straight to the new total the moment server state arrives.
+local countingUp: { [TextLabel]: boolean } = {}
 local modal: Frame
 local backdrop: TextButton
 local lastShown = -1
@@ -797,10 +802,12 @@ local function updateUI(state: any)
 		local full = capacity > 0 and clippings >= capacity
 		bagFill.BackgroundColor3 = full and Color3.fromRGB(255, 120, 96) or Color3.fromRGB(180, 240, 150)
 	end
-	if goldLabel then
+	-- Don't stomp a counter that's mid count-up; it'll land on the right total
+	-- itself once the last coin arrives.
+	if goldLabel and not countingUp[goldLabel] then
 		goldLabel.Text = formatNumber(state.gold or 0)
 	end
-	if diamondLabel then
+	if diamondLabel and not countingUp[diamondLabel] then
 		diamondLabel.Text = formatNumber(state.diamonds or 0)
 	end
 	if bagPill and lastShown >= 0 and clippings ~= lastShown then
@@ -1030,7 +1037,7 @@ local function clippingPopup(amount: number, isCrit: boolean)
 end
 
 -- One "+N <emoji>" chip that flies from `startAbs` (pixels) into the given counter.
-local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, color: Color3, startAbs: Vector2, delay: number, showCoin: boolean?)
+local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, color: Color3, startAbs: Vector2, delay: number, showCoin: boolean?, onArrive: (() -> ())?)
 	local chip = Instance.new("TextLabel")
 	chip.AnchorPoint = Vector2.new(0.5, 0.5)
 	chip.BackgroundTransparency = 1
@@ -1073,6 +1080,10 @@ local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, col
 				chip:Destroy()
 			end
 			bumpCounter(target)
+			-- The coin has landed: let the caller tick the counter up by its value.
+			if onArrive then
+				onArrive()
+			end
 		end)
 		move:Play()
 		task.delay(flyTime - 0.12, function()
@@ -1084,25 +1095,69 @@ local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, col
 	end)
 end
 
--- Spawn a burst of counter-bound chips for a banked amount. One chip per unit up
--- to a cap; past the cap the chips are batched so huge deposits stay readable.
-local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3, useCoin: boolean?)
+-- Spawn a burst of counter-bound chips for a banked amount, and make the counter
+-- COUNT UP with them instead of jumping straight to the new total.
+--
+-- The counter is rolled back to its pre-deposit value the instant the deposit
+-- lands, then each arriving coin adds its own share -- so the number rattles
+-- upward in time with the coins flying into it. `getTotal` is read live (rather
+-- than captured) so the final snap always lands on the server's real number, even
+-- if the StateChanged packet arrives after this one.
+local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3, useCoin: boolean?, getTotal: (() -> number)?)
 	if amount <= 0 or not targetLabel then
 		return
 	end
 	local vp = gui.AbsoluteSize
-	local MAX_CHIPS = 16
+	local MAX_CHIPS = 20
 	local chips = math.min(amount, MAX_CHIPS)
-	local per = amount / chips
+
+	-- Split the banked amount into one chunk per coin, spreading the remainder over
+	-- the first few, so the ticking total adds up to exactly `amount`.
+	local chunks: { number } = {}
+	local share = math.floor(amount / chips)
+	local remainder = amount - share * chips
 	for i = 1, chips do
-		local shown = if amount <= MAX_CHIPS then 1 else math.max(1, math.floor(per + 0.5))
+		chunks[i] = share + (if i <= remainder then 1 else 0)
+	end
+
+	local final = if getTotal then getTotal() else amount
+	local running = math.max(0, final - amount)
+	countingUp[targetLabel] = true
+	targetLabel.Text = formatNumber(running)
+
+	local STAGGER = 0.035
+	local landed = 0
+
+	local function settle()
+		if not countingUp[targetLabel] then
+			return
+		end
+		countingUp[targetLabel] = nil
+		targetLabel.Text = formatNumber(if getTotal then getTotal() else running)
+	end
+
+	for i = 1, chips do
+		local chunk = chunks[i]
 		local startAbs = Vector2.new(
 			vp.X * (0.40 + math.random() * 0.20),
 			vp.Y * (0.30 + math.random() * 0.16)
 		)
-		local label = if useCoin then "+" .. shown else "+" .. shown .. " " .. emoji
-		flyChip(gui, targetLabel, label, color, startAbs, (i - 1) * 0.05, useCoin)
+		local label = if useCoin then "+" .. chunk else "+" .. chunk .. " " .. emoji
+		flyChip(gui, targetLabel, label, color, startAbs, (i - 1) * STAGGER, useCoin, function()
+			running += chunk
+			if countingUp[targetLabel] then
+				targetLabel.Text = formatNumber(running)
+			end
+			landed += 1
+			if landed >= chips then
+				settle()
+			end
+		end)
 	end
+
+	-- Safety net: if a coin is ever destroyed before it lands (HUD rebuilt, player
+	-- respawned) the counter must not get stuck showing a stale, rolled-back number.
+	task.delay(chips * STAGGER + 2, settle)
 end
 
 function UIController.Start()
@@ -1122,8 +1177,12 @@ function UIController.Start()
 		end
 		-- Instead of a single summary banner, fly a chip to the gold counter for each
 		-- gold banked and to the diamond counter for each diamond.
-		spawnDepositChips(gui, summary.gold or 0, goldLabel, "", GOLD, true)
-		spawnDepositChips(gui, summary.diamonds or 0, diamondLabel, "\u{1F48E}", DIAMOND)
+		spawnDepositChips(gui, summary.gold or 0, goldLabel, "", GOLD, true, function()
+			return latestState.gold or 0
+		end)
+		spawnDepositChips(gui, summary.diamonds or 0, diamondLabel, "\u{1F48E}", DIAMOND, false, function()
+			return latestState.diamonds or 0
+		end)
 	end)
 	Remotes.Get("RequestState"):FireServer()
 	startZoneWatch()
