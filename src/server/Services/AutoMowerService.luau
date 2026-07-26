@@ -1,15 +1,23 @@
 --!strict
--- AutoMowerService: the idle-income layer. Players buy an auto-mower once (gold +
--- diamonds), then DEPLOY it to send a little mower roaming the hub. While deployed
--- it passively generates clippings into its own storage; when that storage fills,
--- it AUTO-BANKS the clippings straight to gold -- no trip to the Gardener needed.
+-- AutoMowerService: the automation layer. Players buy an auto-mower once (gold +
+-- diamonds), then DEPLOY it to send a real little mower out into the field.
 --
--- All balance lives in GameConfig.AUTO_MOWERS. Ownership + deployed state persist
--- on the player's profile (profile.autoMowers); each mower's live storage is kept
--- in memory for the session (it banks often, so nothing meaningful is lost on
--- rejoin). Deploy/auto-bank both report to the quest system via the generic
--- QuestService.Report, which already matches the deploy_automower / automower_bank
--- quests defined in QuestData.
+-- A deployed mower is not an idle gold faucet -- it actually works the map:
+--
+--   SEEKING  drive from wherever it stands to the nearest grass tile it is rated
+--            to cut (its own zone and every easier one, same gating as tools)
+--   CUTTING  swing at that tile on its own interval until the tile is felled,
+--            banking the clippings into its OWN storage
+--   HAULING  once storage is full, drive back to the Gardener and unload, which
+--            pays the owning player gold -- then straight back to SEEKING
+--
+-- So mowers clear the field alongside the player instead of replacing them, and
+-- the payout still flows through the Gardener the way manual deposits do.
+--
+-- Cutting itself lives in GrassService.MowerCut so mowers and players share the
+-- exact same shrink/clear behaviour. All balance lives in GameConfig.AUTO_MOWERS.
+-- Ownership + deployed state persist on the profile (profile.autoMowers); each
+-- mower's live storage is session-only, which is fine because it unloads often.
 
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
@@ -23,13 +31,18 @@ local AutoMowerService = {}
 
 local PlayerDataService: any
 local QuestService: any
+local GrassService: any
 
 local MOWERS: { any } = GameConfig.AUTO_MOWERS
-local TICK: number = GameConfig.AUTO_MOWER_TICK or 1
 local ANCHOR: Vector3 = GameConfig.AUTO_MOWER_DEPLOY_ANCHOR
 local SLOT_SPACING: number = GameConfig.AUTO_MOWER_SLOT_SPACING or 7
+local BRAIN_TICK: number = GameConfig.AUTO_MOWER_BRAIN_TICK or 0.25
+local ARRIVE_DIST: number = GameConfig.AUTO_MOWER_ARRIVE_DIST or 4
+local DEPOSIT_DIST: number = GameConfig.AUTO_MOWER_DEPOSIT_DIST or 8
+local HOVER: number = GameConfig.AUTO_MOWER_HOVER or 1.6
+local GARDENER: Vector3 = GameConfig.GARDENER_POSITION
 
--- key -> config, and key -> slot index (for a stable roam position).
+-- key -> config, and key -> slot index (for a stable parking position).
 local mowerByKey: { [string]: any } = {}
 local slotIndex: { [string]: number } = {}
 for i, def in ipairs(MOWERS) do
@@ -37,9 +50,21 @@ for i, def in ipairs(MOWERS) do
 	slotIndex[def.key] = i
 end
 
--- Runtime, per-player state.
-local models: { [Player]: { [string]: Model } } = {}
-local storage: { [Player]: { [string]: number } } = {}
+-- One live mower.
+type Runtime = {
+	model: Model,
+	body: BasePart,
+	def: any,
+	home: Vector3,
+	state: string, -- "seeking" | "cutting" | "hauling" | "idle"
+	storage: number,
+	target: BasePart?,
+	nextCutAt: number,
+	zoneIndex: number,
+}
+
+-- Runtime, per-player state: player -> mower key -> Runtime
+local live: { [Player]: { [string]: Runtime } } = {}
 
 local function color(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
@@ -67,8 +92,10 @@ local function slotPosition(key: string): Vector3
 	return ANCHOR + Vector3.new(0, 0, (i - mid) * SLOT_SPACING)
 end
 
--- Build a small visible mower that roams a few studs around its slot.
-local function buildMowerModel(def: any, home: Vector3): Model
+-- Build a small visible mower. The body is anchored (we drive it by tween); the
+-- catcher and blade are UNANCHORED and welded, so they ride along with the body
+-- instead of being left behind at the spawn point.
+local function buildMowerModel(def: any, home: Vector3): (Model, BasePart)
 	local model = Instance.new("Model")
 	model.Name = "AutoMower_" .. def.key
 
@@ -79,33 +106,45 @@ local function buildMowerModel(def: any, home: Vector3): Model
 	body.Material = Enum.Material.SmoothPlastic
 	body.Anchored = true
 	body.CanCollide = false
+	body.CanQuery = false
 	body.CFrame = CFrame.new(home)
 	body.Parent = model
 	model.PrimaryPart = body
 
-	local corner = Instance.new("SpecialMesh")
-	corner.MeshType = Enum.MeshType.Brick
-	corner.Parent = body
+	local function attach(part: BasePart, offset: CFrame)
+		part.Material = Enum.Material.SmoothPlastic
+		part.Anchored = false
+		part.CanCollide = false
+		part.CanQuery = false
+		part.Massless = true
+		part.CFrame = body.CFrame * offset
+		part.Parent = model
+		local weld = Instance.new("Weld")
+		weld.Part0 = body
+		weld.Part1 = part
+		weld.C0 = offset
+		weld.Parent = body
+	end
 
-	-- A little grass-catcher box on the back.
+	-- Grass-catcher box on the back.
 	local catcher = Instance.new("Part")
 	catcher.Name = "Catcher"
 	catcher.Size = Vector3.new(2.4, 1.6, 1.4)
 	catcher.Color = color(def.bodyColor):Lerp(Color3.new(0, 0, 0), 0.25)
-	catcher.Material = Enum.Material.SmoothPlastic
-	catcher.Anchored = true
-	catcher.CanCollide = false
-	catcher.Parent = model
-	local catcherWeld = Instance.new("Weld")
-	catcherWeld.Part0 = body
-	catcherWeld.Part1 = catcher
-	catcherWeld.C0 = CFrame.new(0, 0.1, 2.4)
-	catcherWeld.Parent = body
+	attach(catcher, CFrame.new(0, 0.1, 2.4))
 
-	-- Floating label with the name + a live storage readout.
+	-- Cutting deck out front, so you can see which end does the work.
+	local blade = Instance.new("Part")
+	blade.Name = "Blade"
+	blade.Size = Vector3.new(3.2, 0.3, 1.2)
+	blade.Color = Color3.fromRGB(206, 210, 214)
+	blade.Material = Enum.Material.Metal
+	attach(blade, CFrame.new(0, -0.55, -2.2))
+
+	-- Floating label with the name + a live status readout.
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "MowerTag"
-	gui.Size = UDim2.new(0, 150, 0, 44)
+	gui.Size = UDim2.new(0, 160, 0, 44)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, 3.2, 0)
 	gui.AlwaysOnTop = true
 	gui.MaxDistance = 220
@@ -130,36 +169,165 @@ local function buildMowerModel(def: any, home: Vector3): Model
 	status.Position = UDim2.new(0, 0, 0.55, 0)
 	status.Size = UDim2.new(1, 0, 0.45, 0)
 	status.Font = Enum.Font.GothamMedium
-	status.Text = "0%"
+	status.Text = "Waking up"
 	status.TextColor3 = Color3.fromRGB(226, 244, 210)
 	status.TextStrokeColor3 = Color3.fromRGB(30, 46, 28)
 	status.TextStrokeTransparency = 0.4
 	status.TextScaled = true
 	status.Parent = gui
 
-	-- Gentle roam: drift around the home slot so the mower looks like it's working.
-	task.spawn(function()
-		local angle = 0
-		while model.Parent do
-			angle += math.rad(36)
-			local target = CFrame.new(home + Vector3.new(math.cos(angle) * 4, math.sin(angle * 2) * 0.25, math.sin(angle) * 4))
-				* CFrame.Angles(0, -angle + math.rad(90), 0)
-			TweenService:Create(body, TweenInfo.new(TICK, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { CFrame = target }):Play()
-			task.wait(TICK)
-		end
-	end)
+	return model, body
+end
 
-	return model
+local STATE_TEXT: { [string]: string } = {
+	seeking = "Looking for grass",
+	cutting = "Mowing",
+	hauling = "Hauling to Gardener",
+	idle = "Nothing to mow",
+}
+
+local function updateLabel(rt: Runtime)
+	local status = rt.body:FindFirstChild("MowerTag")
+	status = status and status:FindFirstChild("Status")
+	if not status or not status:IsA("TextLabel") then
+		return
+	end
+	local pct = math.clamp(math.floor((rt.storage / rt.def.storageCap) * 100), 0, 100)
+	status.Text = string.format("%s  %d%%", STATE_TEXT[rt.state] or rt.state, pct)
+end
+
+-- Drive the mower toward a world position. Returns true once it has arrived.
+local function driveToward(rt: Runtime, goal: Vector3, arriveDist: number): boolean
+	local here = rt.body.Position
+	local flatHere = Vector3.new(here.X, 0, here.Z)
+	local flatGoal = Vector3.new(goal.X, 0, goal.Z)
+	local delta = flatGoal - flatHere
+	local dist = delta.Magnitude
+
+	if dist <= arriveDist then
+		return true
+	end
+
+	local dir = delta.Unit
+	local stepDist = math.min(dist - arriveDist * 0.5, rt.def.moveSpeed * BRAIN_TICK)
+	local nextPos = here + dir * stepDist
+	-- Ease toward the goal's height so the mower rides up onto tiles smoothly.
+	nextPos = Vector3.new(nextPos.X, here.Y + (goal.Y - here.Y) * 0.35, nextPos.Z)
+
+	local goalCF = CFrame.lookAt(nextPos, nextPos + dir)
+	TweenService:Create(
+		rt.body,
+		TweenInfo.new(BRAIN_TICK, Enum.EasingStyle.Linear),
+		{ CFrame = goalCF }
+	):Play()
+
+	return false
+end
+
+-- Where a mower should stand to cut a tile: on the tile's footprint, at hover height.
+local function tileStandPosition(tile: BasePart): Vector3
+	local baseCF = tile:GetAttribute("BaseCFrame") :: CFrame?
+	local base = if baseCF then baseCF.Position else tile.Position
+	return base + Vector3.new(0, HOVER, 0)
+end
+
+local function targetIsValid(rt: Runtime): boolean
+	local tile = rt.target
+	if not tile or not tile.Parent then
+		return false
+	end
+	return GrassService.IsCuttableTile(tile)
+end
+
+-- Unload a full mower at the Gardener: clippings become gold for the owner.
+local function unload(player: Player, rt: Runtime)
+	local banked = math.floor(rt.storage)
+	rt.storage = 0
+	if banked <= 0 then
+		return
+	end
+
+	local gold = math.floor(banked * GameConfig.CLIPPING_TO_GOLD)
+	PlayerDataService.GrantCurrency(player, gold, 0)
+	Remotes.Get("AutoMowerBanked"):FireClient(player, {
+		key = rt.def.key,
+		name = rt.def.name,
+		gold = gold,
+		clippings = banked,
+	})
+	if QuestService then
+		QuestService.Report(player, "automower_bank", gold, { mower = rt.def.name })
+	end
+end
+
+-- One brain tick for one mower.
+local function stepMower(player: Player, rt: Runtime)
+	local def = rt.def
+
+	-- Full? Haul it in, whatever else we were doing.
+	if rt.state ~= "hauling" and rt.storage >= def.storageCap then
+		rt.state = "hauling"
+		rt.target = nil
+	end
+
+	if rt.state == "hauling" then
+		if driveToward(rt, GARDENER + Vector3.new(0, HOVER, 0), DEPOSIT_DIST) then
+			unload(player, rt)
+			rt.state = "seeking"
+		end
+
+	elseif rt.state == "cutting" then
+		if not targetIsValid(rt) then
+			rt.target = nil
+			rt.state = "seeking"
+		elseif os.clock() >= rt.nextCutAt then
+			rt.nextCutAt = os.clock() + def.cutInterval
+			local tile = rt.target :: BasePart
+			local cleared, reward = GrassService.MowerCut(tile, def.cutPower)
+			if cleared then
+				rt.storage = math.min(def.storageCap, rt.storage + reward)
+				rt.target = nil
+				rt.state = "seeking"
+			elseif reward == 0 and not GrassService.IsCuttableTile(tile) then
+				-- Could not dent it (shouldn't happen given zone gating) -- move on
+				-- rather than sitting on it forever.
+				rt.target = nil
+				rt.state = "seeking"
+			end
+		end
+
+	else -- "seeking" / "idle"
+		if not targetIsValid(rt) then
+			rt.target = GrassService.FindNearestCuttableTile(rt.body.Position, rt.zoneIndex)
+		end
+
+		local tile = rt.target
+		if tile then
+			rt.state = "seeking"
+			if driveToward(rt, tileStandPosition(tile), ARRIVE_DIST) then
+				rt.state = "cutting"
+				rt.nextCutAt = 0 -- swing immediately on arrival
+			end
+		else
+			-- Nothing in range it is rated to cut. Park at its slot and wait; grass
+			-- regrows / new districts open, and the next tick will look again.
+			rt.state = "idle"
+			driveToward(rt, rt.home, 2)
+			if rt.storage > 0 then
+				-- Don't sit on a part-full load forever with no work left.
+				rt.state = "hauling"
+			end
+		end
+	end
+
+	updateLabel(rt)
 end
 
 local function despawn(player: Player, key: string)
-	local perPlayer = models[player]
+	local perPlayer = live[player]
 	if perPlayer and perPlayer[key] then
-		perPlayer[key]:Destroy()
+		perPlayer[key].model:Destroy()
 		perPlayer[key] = nil
-	end
-	if storage[player] then
-		storage[player][key] = nil
 	end
 end
 
@@ -168,30 +336,26 @@ local function spawnDeployed(player: Player, key: string)
 	if not def then
 		return
 	end
-	models[player] = models[player] or {}
-	storage[player] = storage[player] or {}
-	if models[player][key] then
+	live[player] = live[player] or {}
+	if live[player][key] then
 		return -- already out
 	end
-	local model = buildMowerModel(def, slotPosition(key))
-	model.Parent = Workspace
-	models[player][key] = model
-	storage[player][key] = storage[player][key] or 0
-end
 
-local function updateLabel(player: Player, key: string)
-	local perPlayer = models[player]
-	local model = perPlayer and perPlayer[key]
-	if not model then
-		return
-	end
-	local def = mowerByKey[key]
-	local cur = (storage[player] and storage[player][key]) or 0
-	local pct = math.clamp(math.floor((cur / def.storageCap) * 100), 0, 100)
-	local status = model:FindFirstChild("Status", true)
-	if status and status:IsA("TextLabel") then
-		status.Text = pct .. "%"
-	end
+	local home = slotPosition(key) + Vector3.new(0, HOVER, 0)
+	local model, body = buildMowerModel(def, home)
+	model.Parent = Workspace
+
+	live[player][key] = {
+		model = model,
+		body = body,
+		def = def,
+		home = home,
+		state = "seeking",
+		storage = 0,
+		target = nil,
+		nextCutAt = 0,
+		zoneIndex = GrassService.GetGrassZoneIndex(def.zone),
+	}
 end
 
 -- Build the client-facing state snapshot.
@@ -201,14 +365,18 @@ local function buildState(player: Player): any
 		return nil
 	end
 	local s = ensureState(profile)
+	local perPlayer = live[player]
 	local list = {}
 	for _, def in ipairs(MOWERS) do
-		local cur = (storage[player] and storage[player][def.key]) or 0
+		local rt = perPlayer and perPlayer[def.key]
 		table.insert(list, {
 			key = def.key,
 			name = def.name,
 			zone = def.zone,
 			ratePerSec = def.ratePerSec,
+			moveSpeed = def.moveSpeed,
+			cutPower = def.cutPower,
+			cutInterval = def.cutInterval,
 			storageCap = def.storageCap,
 			goldCost = def.goldCost,
 			diamondCost = def.diamondCost,
@@ -219,7 +387,8 @@ local function buildState(player: Player): any
 			owned = s.owned[def.key] == true,
 			deployed = s.deployed[def.key] == true,
 			unlocked = isZoneUnlocked(profile, def.zone),
-			storage = cur,
+			storage = if rt then rt.storage else 0,
+			activity = if rt then rt.state else "parked",
 		})
 	end
 	return { mowers = list, gold = profile.gold, diamonds = profile.diamonds }
@@ -307,14 +476,16 @@ local function onToggle(player: Player, rawKey: unknown)
 		return -- must own it first
 	end
 	if s.deployed[def.key] then
-		-- Recall it.
+		-- Recall it. Any clippings still aboard are paid out rather than voided.
+		local rt = live[player] and live[player][def.key]
+		if rt then
+			unload(player, rt)
+		end
 		s.deployed[def.key] = nil
 		despawn(player, def.key)
 	else
 		-- Deploy it.
 		s.deployed[def.key] = true
-		storage[player] = storage[player] or {}
-		storage[player][def.key] = 0
 		spawnDeployed(player, def.key)
 		if QuestService then
 			QuestService.Report(player, "deploy_automower", 1, { mower = def.name })
@@ -324,19 +495,19 @@ local function onToggle(player: Player, rawKey: unknown)
 end
 
 local function onRemoving(player: Player)
-	local perPlayer = models[player]
+	local perPlayer = live[player]
 	if perPlayer then
-		for _, model in pairs(perPlayer) do
-			model:Destroy()
+		for _, rt in pairs(perPlayer) do
+			rt.model:Destroy()
 		end
 	end
-	models[player] = nil
-	storage[player] = nil
+	live[player] = nil
 end
 
 function AutoMowerService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
 	QuestService = services.QuestService
+	GrassService = services.GrassService
 
 	Remotes.Get("RequestAutoMowers").OnServerEvent:Connect(function(player)
 		task.spawn(onRequest, player)
@@ -347,36 +518,41 @@ function AutoMowerService.Init(services: any)
 end
 
 function AutoMowerService.Start()
-	-- Idle-income loop: grow each deployed mower's storage and auto-bank when full.
+	if not GrassService then
+		warn("[AutoMowerService] GrassService missing - mowers cannot cut. Aborting loop.")
+		return
+	end
+
+	-- Brain loop: every deployed mower gets one tick. Pushing state to the client
+	-- is throttled to once a second so the HUD stays live without spamming the
+	-- network at the brain tick rate.
+	local lastPush = 0
 	while true do
-		task.wait(TICK)
-		for player, perMower in pairs(storage) do
-			local profile = PlayerDataService.Get(player)
-			if profile then
-				local s = ensureState(profile)
-				local touched = false
-				for key in pairs(s.deployed) do
-					local def = mowerByKey[key]
-					if def then
-						touched = true
-						local cur = (perMower[key] or 0) + def.ratePerSec * TICK
-						if cur >= def.storageCap then
-							local banked = math.floor(cur)
-							local gold = math.floor(banked * GameConfig.CLIPPING_TO_GOLD)
-							PlayerDataService.GrantCurrency(player, gold, 0)
-							perMower[key] = 0
-							Remotes.Get("AutoMowerBanked"):FireClient(player, { key = key, name = def.name, gold = gold })
-							if QuestService then
-								QuestService.Report(player, "automower_bank", gold, { mower = def.name })
-							end
-						else
-							perMower[key] = cur
+		task.wait(BRAIN_TICK)
+
+		local now = os.clock()
+		local shouldPush = (now - lastPush) >= 1
+		if shouldPush then
+			lastPush = now
+		end
+
+		for player, perPlayer in pairs(live) do
+			if player.Parent == nil then
+				onRemoving(player)
+			else
+				local profile = PlayerDataService.Get(player)
+				if profile then
+					local any = false
+					for _, rt in pairs(perPlayer) do
+						any = true
+						local ok, err = pcall(stepMower, player, rt)
+						if not ok then
+							warn(string.format("[AutoMowerService] %s tick failed: %s", rt.def.key, tostring(err)))
 						end
-						updateLabel(player, key)
 					end
-				end
-				if touched then
-					pushState(player)
+					if any and shouldPush then
+						pushState(player)
+					end
 				end
 			end
 		end

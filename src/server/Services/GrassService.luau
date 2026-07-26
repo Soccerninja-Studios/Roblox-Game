@@ -226,6 +226,108 @@ local function onRequestCut(player: Player, tile: Instance?)
 	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
 end
 
+-- Mower-facing API -----------------------------------------------------------
+-- Auto-mowers cut the same tiles players do, so they reuse the exact shrink and
+-- clear behaviour here instead of reimplementing it. The difference is where the
+-- payout goes: a mower banks clippings into its own storage, so these functions
+-- return the reward rather than dropping pickups for a player.
+
+local GRASS_ZONE_INDEX: { [string]: number } = {
+	Meadow = 1,
+	Wild = 2,
+	Moss = 3,
+	Thick = 4,
+	Ironweed = 5,
+}
+
+-- Zone index of a grass type (1 = easiest). Unknown types read as the easiest.
+function GrassService.GetGrassZoneIndex(typeName: string): number
+	return GRASS_ZONE_INDEX[typeName] or 1
+end
+
+-- Is this instance a grass tile that still has health left to cut?
+function GrassService.IsCuttableTile(inst: Instance?): boolean
+	if not inst or not inst:IsA("BasePart") or inst.Name ~= "GrassTile" then
+		return false
+	end
+	return (inst:GetAttribute("Health") or 0) > 0
+end
+
+-- Find the closest cuttable tile to `origin` that a cutter of `maxZoneIndex` is
+-- allowed to cut. Sweeps outward in steps so a mower standing in a cleared patch
+-- still finds work further afield without scanning the whole map every tick.
+function GrassService.FindNearestCuttableTile(origin: Vector3, maxZoneIndex: number): BasePart?
+	local step = GameConfig.AUTO_MOWER_SEARCH_STEP or 60
+	local maxRadius = GameConfig.AUTO_MOWER_SEARCH_MAX or 420
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = { grassRoot }
+	params.MaxParts = 0
+
+	local radius = step
+	while radius <= maxRadius do
+		local parts = Workspace:GetPartBoundsInRadius(origin, radius, params)
+		local best: BasePart? = nil
+		local bestDist = math.huge
+		for _, part in parts do
+			if GrassService.IsCuttableTile(part) then
+				local typeName = part:GetAttribute("GrassType") or GameConfig.DEFAULT_GRASS_TYPE
+				if GrassService.GetGrassZoneIndex(typeName) <= maxZoneIndex then
+					local d = (part.Position - origin).Magnitude
+					if d < bestDist then
+						bestDist = d
+						best = part
+					end
+				end
+			end
+		end
+		if best then
+			return best
+		end
+		radius += step
+	end
+	return nil
+end
+
+-- Apply one mower swing to a tile.
+-- Returns (cleared, reward): `cleared` is true when this swing felled the tile,
+-- and `reward` is the clippings it yielded (0 unless it was cleared).
+function GrassService.MowerCut(tile: BasePart, cutPower: number): (boolean, number)
+	if not GrassService.IsCuttableTile(tile) then
+		return false, 0
+	end
+
+	local typeName = tile:GetAttribute("GrassType") or GameConfig.DEFAULT_GRASS_TYPE
+	local def = grassDef(typeName)
+
+	local damage = cutPower - def.armor
+	if damage < GameConfig.MIN_CUT_DAMAGE then
+		-- This mower is not strong enough to dent this grass type.
+		return false, 0
+	end
+
+	local health = tile:GetAttribute("Health") or 0
+	local applied = math.min(health, damage)
+	local newHealth = health - applied
+	tile:SetAttribute("Health", newHealth)
+	refreshTileHeight(tile)
+
+	if newHealth > 0 then
+		return false, 0
+	end
+
+	-- Fully cut down. Mowers get the grass type's flat base reward with no player
+	-- skill multipliers or crits -- those belong to hand-cutting, which keeps manual
+	-- mowing worth doing even once the field is automated.
+	local reward = def.clipReward or 1
+
+	tile.CanQuery = false
+	tile.CanCollide = false
+	Debris:AddItem(tile, GameConfig.GRASS_SHRINK_TWEEN + 0.05)
+
+	return true, reward
+end
+
 -- Demo: only runs if the builder hasn't tagged anything yet, so there's always
 -- something to test. Delete/ignore once you've tagged your own map.
 local function buildDemo()
