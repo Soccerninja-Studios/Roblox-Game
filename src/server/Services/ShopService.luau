@@ -5,12 +5,20 @@
 -- the stall feels alive. The model already ships with a "SHOP" sign, a ShopZone +
 -- ShopZoneRing pad, and an R6 shopkeeper, so this service is mostly placement +
 -- polish. The client watches the ShopZone position to auto-open the shop menu.
+--
+-- INTRO CUTSCENE: the stall must not be standing in the plains while the intro is
+-- still playing. When GameConfig.INTRO_CUTSCENE is on we build the model but park it
+-- in ServerStorage, where no client can see it, and only move it into the Workspace
+-- when CutsceneService calls Reveal() -- which it does while the screen is faded to
+-- black, so the stall is simply "already there" when the picture comes back.
 
 local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
+local NpcRig = require(ReplicatedStorage.Shared.NpcRig)
 
 local ShopService = {}
 
@@ -18,9 +26,9 @@ local ShopService = {}
 local ZONE_FILL = Color3.fromRGB(255, 224, 92)
 local ZONE_EDGE = Color3.fromRGB(240, 190, 55)
 
--- Looping catalog idles, picked to match the NPC's rig.
-local IDLE_R6 = "rbxassetid://180435571"
-local IDLE_R15 = "rbxassetid://507766388"
+-- The built stall, and whether it's allowed on screen yet.
+local shopModel: Model? = nil
+local revealed = false
 
 local function getTemplate(): Model?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
@@ -29,49 +37,6 @@ local function getTemplate(): Model?
 		return template :: Model
 	end
 	return nil
-end
-
--- Plant the NPC behind the counter and loop a gentle idle animation.
-local function animateNPC(model: Model)
-	local humanoid: Humanoid? = nil
-	for _, d in model:GetDescendants() do
-		if d:IsA("Humanoid") then
-			humanoid = d
-			break
-		end
-	end
-	if not humanoid then
-		warn("[ShopService] No shopkeeper Humanoid found; skipping idle animation.")
-		return
-	end
-
-	humanoid.WalkSpeed = 0
-	humanoid.JumpPower = 0
-	pcall(function()
-		humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-		humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-	end)
-
-	local animator = humanoid:FindFirstChildOfClass("Animator")
-	if not animator then
-		animator = Instance.new("Animator")
-		animator.Parent = humanoid
-	end
-
-	local anim = Instance.new("Animation")
-	anim.AnimationId = if humanoid.RigType == Enum.HumanoidRigType.R15 then IDLE_R15 else IDLE_R6
-
-	local ok, track = pcall(function()
-		return (animator :: Animator):LoadAnimation(anim)
-	end)
-	if ok and track then
-		local t = track :: AnimationTrack
-		t.Looped = true
-		t.Priority = Enum.AnimationPriority.Idle
-		t:Play()
-	else
-		warn("[ShopService] Could not load the shopkeeper idle animation.")
-	end
 end
 
 -- Slow transparency pulse so the walk-in pad reads as interactive.
@@ -118,27 +83,22 @@ local function styleZone(model: Model)
 	end
 end
 
--- Anchor every part before the model is live so walking into the stall can't
--- knock it out of place. Animated NPC characters are the exception: we pin only
--- their HumanoidRootPart and free the limbs so the idle animation still plays.
+-- Anchor the stall geometry so walking into it can't knock it out of place. The
+-- shopkeeper is handled separately by NpcRig.Stabilize, which pins the root and
+-- frees the limbs so the idle animation still plays.
 local function anchorModel(model: Model)
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
 		end
 	end
-	for _, d in model:GetDescendants() do
-		if d:IsA("Humanoid") then
-			local char = d.Parent
-			if char then
-				for _, p in char:GetChildren() do
-					if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
-						p.Anchored = false
-					end
-				end
-			end
-		end
-	end
+end
+
+-- Everything that should only start running once the stall is actually on screen.
+local function activate(model: Model)
+	NpcRig.Stabilize(model)
+	NpcRig.PlayIdle(model)
+	styleZone(model)
 end
 
 local function spawnShop()
@@ -160,17 +120,43 @@ local function spawnShop()
 	model:PivotTo(CFrame.new(GameConfig.SHOP_POSITION))
 	-- Anchor before it goes live so it can't be shoved around.
 	anchorModel(model)
-	model.Parent = Workspace
+	shopModel = model
 
-	animateNPC(model)
-	styleZone(model)
+	if revealed then
+		model.Parent = Workspace
+		activate(model)
+	else
+		-- Held off-screen until the intro fades to black. ServerStorage never
+		-- replicates, so the stall is genuinely invisible rather than just transparent.
+		model.Parent = ServerStorage
+	end
+end
+
+-- Called by CutsceneService behind the fade to black (and harmlessly again on the
+-- skip / error path). Safe to call before Start(): the flag makes the eventual
+-- spawn go straight into the Workspace.
+function ShopService.Reveal()
+	if revealed then
+		return
+	end
+	revealed = true
+
+	local model = shopModel
+	if model and model.Parent ~= Workspace then
+		model.Parent = Workspace
+		activate(model)
+	end
 end
 
 function ShopService.Init() end
 
 function ShopService.Start()
+	-- No intro means nothing to hide behind, so the stall is live immediately.
+	if not GameConfig.INTRO_CUTSCENE then
+		revealed = true
+	end
 	spawnShop()
-	print("[ShopService] Shop ready.")
+	print("[ShopService] Shop ready." .. (if revealed then "" else " (hidden until the intro fades out)"))
 end
 
 return ShopService

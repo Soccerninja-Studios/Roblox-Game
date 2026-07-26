@@ -34,6 +34,8 @@ local CutsceneService = {}
 
 local MapService: any
 local ToolService: any
+-- Services owning the hub props that stay hidden until the intro fades to black.
+local hubPropServices: { any } = {}
 
 -- Where the teddy bear comes to rest after its fall (position + orientation, read
 -- from Studio). The fall animation plays out, then a static duplicate is placed
@@ -297,6 +299,20 @@ local function swapHouse()
 	end
 end
 
+-- Move the hub props (shop, gardener, Sprigman) into the world. Each service
+-- ignores repeat calls, so this is safe to fire from both the normal end of the
+-- sequence and the skip / error recovery path.
+local function revealHubProps()
+	for _, service in hubPropServices do
+		if service and typeof(service.Reveal) == "function" then
+			local ok, err = pcall(service.Reveal)
+			if not ok then
+				warn(`[CutsceneService] a hub prop failed to reveal: {err}`)
+			end
+		end
+	end
+end
+
 local function spawnPoint(): CFrame
 	if houseSpawnCF then
 		return houseSpawnCF
@@ -446,6 +462,10 @@ local function runSequence(player: Player)
 	fade(player, "out", 0.6)
 	task.wait(0.75)
 	swapHouse()
+	-- Screen is fully black here, so this is the moment to drop the shop, the
+	-- gardener, and Sprigman into the world. When we fade back in they're simply
+	-- already standing there, with no pop-in for the player to catch.
+	revealHubProps()
 	releaseActor(character, spawnPoint())
 	cut(player, "Custom")
 	fade(player, "in", 0.6)
@@ -474,6 +494,10 @@ local function finish(player: Player, coverFirst: boolean)
 	if houseClone then
 		swapHouse()
 	end
+	-- Safety net for the skip / error path, where the sequence never reached its own
+	-- reveal. We're behind the coverFirst fade here, so it's still unseen. A clean
+	-- run already revealed them and this call does nothing.
+	revealHubProps()
 	local character = player.Character
 	if character then
 		releaseActor(character, spawnPoint())
@@ -535,6 +559,15 @@ end
 function CutsceneService.Init(services)
 	MapService = services.MapService
 	ToolService = services.ToolService
+	-- The hub props (shop stall, gardener stall, Sprigman) stay parked in
+	-- ServerStorage while the intro plays so they're never seen standing in the
+	-- plains mid-cutscene. We hand them over during a fade to black -- see
+	-- revealHubProps below.
+	hubPropServices = {
+		services.ShopService,
+		services.GardenerService,
+		services.QuestGiverService,
+	}
 end
 
 -- True while the given player still needs to finish the intro. ToolService reads

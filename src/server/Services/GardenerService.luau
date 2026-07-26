@@ -8,13 +8,26 @@
 -- sign, a GardenerZone + GardenerZoneRing pad, and an R6 farmer. All deposit math
 -- lives in PlayerDataService.Deposit; this service validates that the player is
 -- actually standing on the pad before banking.
+--
+-- THE SAGGING TORSO: the Farmer's torso used to droop out of the stall. The old
+-- code pinned the NPC by anchoring its HumanoidRootPart and unanchoring everything
+-- else, which left a live Humanoid state machine attached to a body hanging in mid
+-- air -- it fell into Freefall/Ragdoll and dragged the torso down. Shared/NpcRig now
+-- handles that properly (rebuilds a missing RootJoint, disables the state machine,
+-- pins only the root), so the Farmer holds his pose while still playing his idle.
+--
+-- INTRO CUTSCENE: while the intro is playing the stall is parked in ServerStorage
+-- so no client can see it, and CutsceneService calls Reveal() during the fade to
+-- black -- so it's simply already standing there when the picture returns.
 
 local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local NpcRig = require(ReplicatedStorage.Shared.NpcRig)
 
 local GardenerService = {}
 
@@ -25,9 +38,9 @@ local QuestService: any
 local ZONE_FILL = Color3.fromRGB(150, 235, 130)
 local ZONE_EDGE = Color3.fromRGB(96, 200, 110)
 
--- Looping catalog idles, picked to match the NPC's rig.
-local IDLE_R6 = "rbxassetid://180435571"
-local IDLE_R15 = "rbxassetid://507766388"
+-- The built stall, and whether it's allowed on screen yet.
+local gardenerModel: Model? = nil
+local revealed = false
 
 local function getTemplate(): Model?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
@@ -36,49 +49,6 @@ local function getTemplate(): Model?
 		return template :: Model
 	end
 	return nil
-end
-
--- Plant the Farmer NPC and loop a gentle idle animation.
-local function animateNPC(model: Model)
-	local humanoid: Humanoid? = nil
-	for _, d in model:GetDescendants() do
-		if d:IsA("Humanoid") then
-			humanoid = d
-			break
-		end
-	end
-	if not humanoid then
-		warn("[GardenerService] No Farmer Humanoid found; skipping idle animation.")
-		return
-	end
-
-	humanoid.WalkSpeed = 0
-	humanoid.JumpPower = 0
-	pcall(function()
-		humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-		humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-	end)
-
-	local animator = humanoid:FindFirstChildOfClass("Animator")
-	if not animator then
-		animator = Instance.new("Animator")
-		animator.Parent = humanoid
-	end
-
-	local anim = Instance.new("Animation")
-	anim.AnimationId = if humanoid.RigType == Enum.HumanoidRigType.R15 then IDLE_R15 else IDLE_R6
-
-	local ok, track = pcall(function()
-		return (animator :: Animator):LoadAnimation(anim)
-	end)
-	if ok and track then
-		local t = track :: AnimationTrack
-		t.Looped = true
-		t.Priority = Enum.AnimationPriority.Idle
-		t:Play()
-	else
-		warn("[GardenerService] Could not load the Farmer idle animation.")
-	end
 end
 
 -- Slow transparency pulse so the walk-in pad reads as interactive.
@@ -124,25 +94,13 @@ local function styleZone(model: Model)
 	end
 end
 
--- Anchor every part before the stand is live so walking into it can't knock it
--- out of place. Animated NPC characters are the exception: we pin only their
--- HumanoidRootPart and free the limbs so the idle animation still plays.
+-- Anchor the stall geometry so walking into it can't knock it out of place. The
+-- Farmer is handled separately by NpcRig.Stabilize, which pins the root and frees
+-- the limbs so the idle animation still plays.
 local function anchorModel(model: Model)
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
-		end
-	end
-	for _, d in model:GetDescendants() do
-		if d:IsA("Humanoid") then
-			local char = d.Parent
-			if char then
-				for _, p in char:GetChildren() do
-					if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
-						p.Anchored = false
-					end
-				end
-			end
 		end
 	end
 end
@@ -189,6 +147,13 @@ local function floatLabel(model: Model)
 	grad.Parent = label
 end
 
+-- Everything that should only start running once the stall is actually on screen.
+local function activate(model: Model)
+	NpcRig.Stabilize(model)
+	NpcRig.PlayIdle(model)
+	styleZone(model)
+end
+
 local function spawnGardener()
 	local template = getTemplate()
 	if not template then
@@ -208,11 +173,33 @@ local function spawnGardener()
 	model:PivotTo(CFrame.new(GameConfig.GARDENER_POSITION))
 	-- Anchor before it goes live so it can't be shoved around.
 	anchorModel(model)
-	model.Parent = Workspace
-
-	animateNPC(model)
-	styleZone(model)
 	floatLabel(model)
+	gardenerModel = model
+
+	if revealed then
+		model.Parent = Workspace
+		activate(model)
+	else
+		-- Held off-screen until the intro fades to black. ServerStorage never
+		-- replicates, so the stall is genuinely invisible rather than just transparent.
+		model.Parent = ServerStorage
+	end
+end
+
+-- Called by CutsceneService behind the fade to black (and harmlessly again on the
+-- skip / error path). Safe to call before Start(): the flag makes the eventual
+-- spawn go straight into the Workspace.
+function GardenerService.Reveal()
+	if revealed then
+		return
+	end
+	revealed = true
+
+	local model = gardenerModel
+	if model and model.Parent ~= Workspace then
+		model.Parent = Workspace
+		activate(model)
+	end
 end
 
 local function onRequestDeposit(player: Player)
@@ -246,8 +233,12 @@ function GardenerService.Init(services: any)
 end
 
 function GardenerService.Start()
+	-- No intro means nothing to hide behind, so the stall is live immediately.
+	if not GameConfig.INTRO_CUTSCENE then
+		revealed = true
+	end
 	spawnGardener()
-	print("[GardenerService] Deposit stall ready.")
+	print("[GardenerService] Deposit stall ready." .. (if revealed then "" else " (hidden until the intro fades out)"))
 end
 
 return GardenerService

@@ -5,14 +5,26 @@
 -- breathes and sways in place, not just a static prop. He has a floating "!"
 -- marker and a ProximityPrompt named "QuestPrompt" that the client hooks to open
 -- the quest board.
+--
+-- INTRO CUTSCENE: Sprigman must not already be standing in the plains while the
+-- intro is playing. When GameConfig.INTRO_CUTSCENE is on we build him but park him
+-- in ServerStorage, where no client can see him, and only move him into the
+-- Workspace when CutsceneService calls Reveal() -- which it does while the screen is
+-- faded to black, so he's simply already there when the picture comes back.
 
 local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
+local NpcRig = require(ReplicatedStorage.Shared.NpcRig)
 
 local QuestGiverService = {}
+
+-- The built NPC, and whether he's allowed on screen yet.
+local sprigModel: Model? = nil
+local revealed = false
 
 -- Look --------------------------------------------------------------------
 local SKIN = Color3.fromRGB(232, 190, 150)
@@ -176,25 +188,12 @@ local function buildSprig(): Model
 	return model
 end
 
-local function playIdle(model: Model)
-	local humanoid = model:FindFirstChildOfClass("Humanoid")
-	if not humanoid then
-		return
-	end
-	local animator = humanoid:FindFirstChildOfClass("Animator")
-	if not animator then
-		return
-	end
-	local anim = Instance.new("Animation")
-	anim.AnimationId = IDLE_ANIM_ID
-	local ok, track = pcall(function()
-		return animator:LoadAnimation(anim)
-	end)
-	if ok and track then
-		track.Looped = true
-		track.Priority = Enum.AnimationPriority.Idle
-		track:Play()
-	end
+-- Everything that should only start running once Sprigman is actually on screen.
+-- Stabilize pins his root and silences the Humanoid state machine so his body can't
+-- sag or ragdoll out of the pose, while leaving the limbs free to animate.
+local function activate(model: Model)
+	NpcRig.Stabilize(model)
+	NpcRig.PlayIdle(model, IDLE_ANIM_ID)
 end
 
 local function spawnQuestGiver()
@@ -202,16 +201,45 @@ local function spawnQuestGiver()
 	if existing then
 		existing:Destroy()
 	end
+
 	local model = buildSprig()
-	model.Parent = Workspace
-	playIdle(model)
+	sprigModel = model
+
+	if revealed then
+		model.Parent = Workspace
+		activate(model)
+	else
+		-- Held off-screen until the intro fades to black. ServerStorage never
+		-- replicates, so he's genuinely invisible rather than just transparent.
+		model.Parent = ServerStorage
+	end
+end
+
+-- Called by CutsceneService behind the fade to black (and harmlessly again on the
+-- skip / error path). Safe to call before Start(): the flag makes the eventual
+-- spawn go straight into the Workspace.
+function QuestGiverService.Reveal()
+	if revealed then
+		return
+	end
+	revealed = true
+
+	local model = sprigModel
+	if model and model.Parent ~= Workspace then
+		model.Parent = Workspace
+		activate(model)
+	end
 end
 
 function QuestGiverService.Init(_services: any) end
 
 function QuestGiverService.Start()
+	-- No intro means nothing to hide behind, so he's live immediately.
+	if not GameConfig.INTRO_CUTSCENE then
+		revealed = true
+	end
 	spawnQuestGiver()
-	print("[QuestGiverService] Sprigman The Questgiver is ready.")
+	print("[QuestGiverService] Sprigman The Questgiver is ready." .. (if revealed then "" else " (hidden until the intro fades out)"))
 end
 
 return QuestGiverService
