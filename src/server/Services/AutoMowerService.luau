@@ -40,7 +40,6 @@ local SLOT_SPACING: number = GameConfig.AUTO_MOWER_SLOT_SPACING or 7
 local BRAIN_TICK: number = GameConfig.AUTO_MOWER_BRAIN_TICK or 0.25
 local ARRIVE_DIST: number = GameConfig.AUTO_MOWER_ARRIVE_DIST or 4
 local DEPOSIT_DIST: number = GameConfig.AUTO_MOWER_DEPOSIT_DIST or 8
-local HOVER: number = GameConfig.AUTO_MOWER_HOVER or 1.6
 local GARDENER: Vector3 = GameConfig.GARDENER_POSITION
 
 -- key -> config, and key -> slot index (for a stable parking position).
@@ -62,6 +61,11 @@ type Runtime = {
 	target: BasePart?,
 	nextCutAt: number,
 	zoneIndex: number,
+	-- Height from the model's bottom up to its driver part's origin, so we can seat
+	-- it on the ground instead of a stud above it.
+	groundOffset: number,
+	-- Yaw correction in degrees, for models that weren't built facing -Z.
+	yaw: number,
 }
 
 -- Runtime, per-player state: player -> mower key -> Runtime
@@ -185,6 +189,12 @@ local function buildFallbackModel(def: any, home: Vector3): (Model, BasePart)
 
 	attachTag(body, def)
 
+	-- This one is built facing -Z already, and its blade hangs 0.7 studs below the
+	-- body's origin, so that is how high off the ground the body needs to sit.
+	model:SetAttribute("GroundOffset", 0.7)
+	model:SetAttribute("DriveYaw", 0)
+	body.CFrame = CFrame.new(home + Vector3.new(0, 0.7, 0))
+
 	return model, body
 end
 
@@ -213,7 +223,10 @@ local function loadMowerModel(def: any, home: Vector3): (Model, BasePart)
 		local driver = MowerRig.Prepare(model, def.modelLength)
 		if driver then
 			model.Name = "AutoMower_" .. def.key
-			model:PivotTo(CFrame.new(home))
+			-- `home` is a GROUND position. Lift the driver by the model's own ground
+			-- offset so the mower rests on the ground instead of floating above it.
+			local offset = (model:GetAttribute("GroundOffset") :: number?) or 0
+			model:PivotTo(CFrame.new(home + Vector3.new(0, offset, 0)))
 			attachTag(driver, def)
 			return model, driver
 		end
@@ -268,7 +281,9 @@ local function driveToward(rt: Runtime, goal: Vector3, arriveDist: number): bool
 	-- Ease toward the goal's height so the mower rides up onto tiles smoothly.
 	nextPos = Vector3.new(nextPos.X, here.Y + (goal.Y - here.Y) * 0.35, nextPos.Z)
 
-	local goalCF = CFrame.lookAt(nextPos, nextPos + dir)
+	-- lookAt aims the part's -Z at the target; the yaw correction then swings the
+	-- MODEL's own front to lead, instead of driving sideways.
+	local goalCF = CFrame.lookAt(nextPos, nextPos + dir) * CFrame.Angles(0, math.rad(rt.yaw), 0)
 	TweenService:Create(
 		rt.body,
 		TweenInfo.new(BRAIN_TICK, Enum.EasingStyle.Linear),
@@ -278,11 +293,12 @@ local function driveToward(rt: Runtime, goal: Vector3, arriveDist: number): bool
 	return false
 end
 
--- Where a mower should stand to cut a tile: on the tile's footprint, at hover height.
-local function tileStandPosition(tile: BasePart): Vector3
+-- Where a mower should stand to cut a tile. BaseCFrame is the tile's ground plane,
+-- so the mower's own ground offset is the only lift we add.
+local function tileStandPosition(tile: BasePart, groundOffset: number): Vector3
 	local baseCF = tile:GetAttribute("BaseCFrame") :: CFrame?
 	local base = if baseCF then baseCF.Position else tile.Position
-	return base + Vector3.new(0, HOVER, 0)
+	return base + Vector3.new(0, groundOffset, 0)
 end
 
 local function targetIsValid(rt: Runtime): boolean
@@ -325,7 +341,7 @@ local function stepMower(player: Player, rt: Runtime)
 	end
 
 	if rt.state == "hauling" then
-		if driveToward(rt, GARDENER + Vector3.new(0, HOVER, 0), DEPOSIT_DIST) then
+		if driveToward(rt, GARDENER + Vector3.new(0, rt.groundOffset, 0), DEPOSIT_DIST) then
 			unload(player, rt)
 			rt.state = "seeking"
 		end
@@ -358,7 +374,7 @@ local function stepMower(player: Player, rt: Runtime)
 		local tile = rt.target
 		if tile then
 			rt.state = "seeking"
-			if driveToward(rt, tileStandPosition(tile), ARRIVE_DIST) then
+			if driveToward(rt, tileStandPosition(tile, rt.groundOffset), ARRIVE_DIST) then
 				rt.state = "cutting"
 				rt.nextCutAt = 0 -- swing immediately on arrival
 			end
@@ -395,20 +411,28 @@ local function spawnDeployed(player: Player, key: string)
 		return -- already out
 	end
 
-	local home = slotPosition(key) + Vector3.new(0, HOVER, 0)
+	-- Ground-level parking spot; loadMowerModel seats the model on top of it.
+	local home = slotPosition(key)
 	local model, body = loadMowerModel(def, home)
 	model.Parent = Workspace
+
+	local groundOffset = (model:GetAttribute("GroundOffset") :: number?) or 0
+	local autoYaw = (model:GetAttribute("DriveYaw") :: number?) or 0
 
 	live[player][key] = {
 		model = model,
 		body = body,
 		def = def,
-		home = home,
+		-- Stored as the DRIVER's parked position, ground offset included.
+		home = home + Vector3.new(0, groundOffset, 0),
 		state = "seeking",
 		storage = 0,
 		target = nil,
 		nextCutAt = 0,
 		zoneIndex = GrassService.GetGrassZoneIndex(def.zone),
+		groundOffset = groundOffset,
+		-- Measured correction, plus any manual nudge from GameConfig.
+		yaw = autoYaw + (def.modelYaw or 0),
 	}
 end
 

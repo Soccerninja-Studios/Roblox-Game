@@ -49,6 +49,9 @@ local houseClone: Model? = nil
 -- cleanup in finish() keeps THIS and destroys everything else, so it can never
 -- accidentally delete the freshly-built House 2.
 local currentHouse: Model? = nil
+-- The authored SpawnLocation inside House 2. Every respawn after the intro uses
+-- this, so the player never wakes up back in the cutscene chair.
+local houseSpawnLocation: SpawnLocation? = nil
 local housePivot: CFrame? = nil
 local houseSpawnCF: CFrame? = nil
 local teddyClone: Model? = nil
@@ -288,6 +291,17 @@ local function swapHouse()
 				local n = normalizeName(d.Name)
 				if n == "spawnpoint" or n == "spawnlocation" or n == "spawn" then
 					houseSpawnCF = d.CFrame + Vector3.new(0, 3, 0)
+					-- If the authored part is a real SpawnLocation, hand it to Roblox
+					-- too, so respawns land there even independently of our own
+					-- placement code below.
+					if d:IsA("SpawnLocation") then
+						houseSpawnLocation = d
+						d.Enabled = true
+						d.Neutral = true
+						for _, plr in Players:GetPlayers() do
+							plr.RespawnLocation = d
+						end
+					end
 					break
 				end
 			end
@@ -540,6 +554,18 @@ end
 
 local function onCharacter(player: Player, character: Model)
 	task.wait(0.1)
+
+	-- Only the FIRST character load belongs to the cutscene. Every later one is a
+	-- respawn, and parking those at Rig 1 is what left the player frozen inside the
+	-- chair, so send them to the house spawn instead.
+	if finishedByPlayer[player] or not GameConfig.INTRO_CUTSCENE then
+		if houseSpawnLocation then
+			player.RespawnLocation = houseSpawnLocation
+		end
+		releaseActor(character, spawnPoint())
+		return
+	end
+
 	prepActor(character)
 	placeActor(character, "Rig1")
 	if readyByPlayer[player] then
