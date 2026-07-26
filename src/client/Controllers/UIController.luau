@@ -50,10 +50,8 @@ local bagCountLabel: TextLabel
 local bagFill: Frame
 local goldLabel: TextLabel
 local diamondLabel: TextLabel
-
--- Counters currently mid "count-up". While a label is in here it owns its own text:
--- it climbs coin by coin as the deposit chips land (see spawnDepositChips) instead
--- of snapping straight to the new total the moment server state arrives.
+-- Counters that are mid roll-up. While a label is in here, updateUI leaves its
+-- text alone so the server state push cannot snap it straight to the total.
 local countingUp: { [TextLabel]: boolean } = {}
 local modal: Frame
 local backdrop: TextButton
@@ -531,6 +529,206 @@ local function buildCard(parent: Instance, order: number, icon: string, iconColo
 end
 
 -- Shop modal ------------------------------------------------------------------
+-- The Market is a tabbed modal. Each tab is its own ScrollingFrame page and only
+-- the active page is visible. Adding a future section means adding one entry to
+-- TAB_ORDER plus one builder call - nothing else in here has to change.
+--
+-- Sections whose systems have not shipped yet render an "empty state" card rather
+-- than being hidden, so the shell is walkable end to end while the real content
+-- lands one piece at a time.
+local TAB_ORDER = { "upgrades", "tools", "swords", "mowers", "packs" }
+local TAB_META: { [string]: { label: string, icon: string } } = {
+	upgrades = { label = "Upgrades", icon = "\u{2728}" },
+	tools = { label = "Tools", icon = "\u{2702}\u{FE0F}" },
+	swords = { label = "Swords", icon = "\u{1F5E1}\u{FE0F}" },
+	mowers = { label = "Mowers", icon = "\u{1F69C}" },
+	packs = { label = "Packs", icon = "\u{1F392}" },
+}
+
+local pages: { [string]: ScrollingFrame } = {}
+local tabButtons: { [string]: TextButton } = {}
+
+-- Show one page, dim the rest.
+local function selectTab(id: string)
+	if not pages[id] then
+		return
+	end
+	for tabId, page in pages do
+		local on = tabId == id
+		page.Visible = on
+		local btn = tabButtons[tabId]
+		if btn then
+			TweenService:Create(btn, TweenInfo.new(0.12), {
+				BackgroundColor3 = if on then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(228, 224, 210),
+			}):Play()
+			btn.TextColor3 = if on then GREEN_DARK else Color3.fromRGB(140, 136, 124)
+		end
+	end
+end
+
+-- A scrolling page inside the modal body.
+local function makePage(parent: Instance, id: string): ScrollingFrame
+	local page = Instance.new("ScrollingFrame")
+	page.Name = id .. "Page"
+	page.Size = UDim2.fromScale(1, 1)
+	page.BackgroundTransparency = 1
+	page.BorderSizePixel = 0
+	page.ScrollBarThickness = 6
+	page.ScrollBarImageColor3 = GREEN_DARK
+	page.CanvasSize = UDim2.new(0, 0, 0, 0)
+	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	page.Visible = false
+	page.ZIndex = 11
+	padding(page, 16)
+	page.Parent = parent
+
+	local list = Instance.new("UIListLayout")
+	list.Padding = UDim.new(0, 12)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = page
+
+	pages[id] = page
+	return page
+end
+
+-- Small section label.
+local function sectionHeader(parent: Instance, order: number, text: string)
+	local h = Instance.new("TextLabel")
+	h.BackgroundTransparency = 1
+	h.Size = UDim2.new(1, 0, 0, 24)
+	h.Font = Enum.Font.FredokaOne
+	h.Text = text
+	h.TextColor3 = INK
+	h.TextXAlignment = Enum.TextXAlignment.Left
+	h.TextSize = 18
+	h.LayoutOrder = order
+	h.ZIndex = 11
+	h.Parent = parent
+end
+
+-- Placeholder for a section whose system has not shipped yet.
+local function emptyState(parent: Instance, order: number, icon: string, title: string, body: string)
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, 0, 0, 136)
+	card.BackgroundColor3 = Color3.fromRGB(248, 245, 236)
+	card.LayoutOrder = order
+	card.ZIndex = 11
+	corner(card, 14)
+	stroke(card, 2, Color3.fromRGB(226, 221, 206))
+	card.Parent = parent
+
+	local glyph = Instance.new("TextLabel")
+	glyph.BackgroundTransparency = 1
+	glyph.Position = UDim2.fromOffset(0, 14)
+	glyph.Size = UDim2.new(1, 0, 0, 34)
+	glyph.Font = Enum.Font.FredokaOne
+	glyph.Text = icon
+	glyph.TextSize = 30
+	glyph.ZIndex = 12
+	glyph.Parent = card
+
+	local head = Instance.new("TextLabel")
+	head.BackgroundTransparency = 1
+	head.Position = UDim2.fromOffset(14, 54)
+	head.Size = UDim2.new(1, -28, 0, 24)
+	head.Font = Enum.Font.FredokaOne
+	head.Text = title
+	head.TextColor3 = INK
+	head.TextSize = 18
+	head.ZIndex = 12
+	head.Parent = card
+
+	local sub = Instance.new("TextLabel")
+	sub.BackgroundTransparency = 1
+	sub.Position = UDim2.fromOffset(16, 80)
+	sub.Size = UDim2.new(1, -32, 0, 46)
+	sub.Font = Enum.Font.Gotham
+	sub.Text = body
+	sub.TextColor3 = Color3.fromRGB(132, 128, 118)
+	sub.TextSize = 13
+	sub.TextWrapped = true
+	sub.TextYAlignment = Enum.TextYAlignment.Top
+	sub.ZIndex = 12
+	sub.Parent = card
+end
+
+-- A read-only ladder row: marks an entry as owned, equipped, or locked.
+local function ladderRow(
+	parent: Instance,
+	order: number,
+	index: number,
+	label: string,
+	costText: string,
+	getOwnedTier: (state: any) -> number
+)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 40)
+	row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	row.LayoutOrder = order
+	row.ZIndex = 11
+	corner(row, 10)
+	stroke(row, 2, Color3.fromRGB(230, 226, 212))
+	row.Parent = parent
+
+	local mark = Instance.new("TextLabel")
+	mark.BackgroundTransparency = 1
+	mark.Position = UDim2.fromOffset(12, 0)
+	mark.Size = UDim2.fromOffset(26, 40)
+	mark.Font = Enum.Font.FredokaOne
+	mark.TextSize = 16
+	mark.ZIndex = 12
+	mark.Parent = row
+
+	local name = Instance.new("TextLabel")
+	name.BackgroundTransparency = 1
+	name.Position = UDim2.fromOffset(42, 0)
+	name.Size = UDim2.new(1, -146, 1, 0)
+	name.Font = Enum.Font.FredokaOne
+	name.Text = label
+	name.TextXAlignment = Enum.TextXAlignment.Left
+	name.TextSize = 15
+	name.TextTruncate = Enum.TextTruncate.AtEnd
+	name.ZIndex = 12
+	name.Parent = row
+
+	local cost = Instance.new("TextLabel")
+	cost.BackgroundTransparency = 1
+	cost.AnchorPoint = Vector2.new(1, 0)
+	cost.Position = UDim2.new(1, -12, 0, 0)
+	cost.Size = UDim2.fromOffset(96, 40)
+	cost.Font = Enum.Font.FredokaOne
+	cost.TextXAlignment = Enum.TextXAlignment.Right
+	cost.TextSize = 14
+	cost.ZIndex = 12
+	cost.Parent = row
+
+	local function update(state: any)
+		local owned = getOwnedTier(state)
+		if index < owned then
+			mark.Text = "\u{2713}"
+			mark.TextColor3 = Color3.fromRGB(120, 190, 110)
+			name.TextColor3 = Color3.fromRGB(150, 146, 136)
+			cost.TextColor3 = Color3.fromRGB(180, 176, 166)
+			cost.Text = "Owned"
+		elseif index == owned then
+			mark.Text = "\u{25C6}"
+			mark.TextColor3 = GREEN_DARK
+			name.TextColor3 = INK
+			cost.TextColor3 = GREEN_DARK
+			cost.Text = "Equipped"
+		else
+			mark.Text = "\u{1F512}"
+			mark.TextColor3 = Color3.fromRGB(190, 186, 176)
+			name.TextColor3 = Color3.fromRGB(150, 146, 136)
+			cost.TextColor3 = Color3.fromRGB(150, 146, 136)
+			cost.Text = costText
+		end
+	end
+
+	update(latestState)
+	table.insert(cardUpdaters, update)
+end
+
 local function buildShopModal(gui: ScreenGui)
 	backdrop = Instance.new("TextButton")
 	backdrop.Name = "Backdrop"
@@ -609,40 +807,88 @@ local function buildShopModal(gui: ScreenGui)
 		UIController.CloseShop()
 	end)
 
-	-- Scrolling body
-	local body = Instance.new("ScrollingFrame")
-	body.Position = UDim2.fromOffset(0, 66)
-	body.Size = UDim2.new(1, 0, 1, -66)
-	body.BackgroundTransparency = 1
-	body.BorderSizePixel = 0
-	body.ScrollBarThickness = 6
-	body.ScrollBarImageColor3 = GREEN_DARK
-	body.CanvasSize = UDim2.new(0, 0, 0, 0)
-	body.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	body.ZIndex = 11
-	padding(body, 16)
-	body.Parent = modal
+	-- Tab rail --------------------------------------------------------------
+	-- Tabs are scale-sized (1/N each) so the rail can never overflow no matter how
+	-- many sections we end up adding.
+	local rail = Instance.new("Frame")
+	rail.Name = "TabRail"
+	rail.Position = UDim2.fromOffset(0, 66)
+	rail.Size = UDim2.new(1, 0, 0, 46)
+	rail.BackgroundTransparency = 1
+	rail.ZIndex = 12
+	rail.Parent = modal
 
-	local list = Instance.new("UIListLayout")
-	list.Padding = UDim.new(0, 12)
-	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = body
+	local railPad = Instance.new("UIPadding")
+	railPad.PaddingLeft = UDim.new(0, 12)
+	railPad.PaddingRight = UDim.new(0, 12)
+	railPad.PaddingTop = UDim.new(0, 7)
+	railPad.PaddingBottom = UDim.new(0, 5)
+	railPad.Parent = rail
 
-	-- Section label: Tools
-	local toolsHeader = Instance.new("TextLabel")
-	toolsHeader.BackgroundTransparency = 1
-	toolsHeader.Size = UDim2.new(1, 0, 0, 24)
-	toolsHeader.Font = Enum.Font.FredokaOne
-	toolsHeader.Text = "Tools"
-	toolsHeader.TextColor3 = INK
-	toolsHeader.TextXAlignment = Enum.TextXAlignment.Left
-	toolsHeader.TextSize = 18
-	toolsHeader.LayoutOrder = 0
-	toolsHeader.ZIndex = 11
-	toolsHeader.Parent = body
+	local railList = Instance.new("UIListLayout")
+	railList.FillDirection = Enum.FillDirection.Horizontal
+	railList.Padding = UDim.new(0, 5)
+	railList.SortOrder = Enum.SortOrder.LayoutOrder
+	railList.Parent = rail
 
-	-- Tool upgrade card
-	buildCard(body, 1, "\u{2702}\u{FE0F}", Color3.fromRGB(210, 235, 205), function(state)
+	local tabCount = #TAB_ORDER
+	for i, id in TAB_ORDER do
+		local meta = TAB_META[id]
+		local btn = Instance.new("TextButton")
+		btn.Name = id .. "Tab"
+		-- 1/N of the rail, minus the gap this tab contributes.
+		btn.Size = UDim2.new(1 / tabCount, -5, 1, 0)
+		btn.BackgroundColor3 = Color3.fromRGB(228, 224, 210)
+		btn.AutoButtonColor = false
+		btn.Font = Enum.Font.FredokaOne
+		btn.Text = meta.icon .. " " .. meta.label
+		btn.TextColor3 = Color3.fromRGB(140, 136, 124)
+		btn.TextSize = 12
+		btn.TextTruncate = Enum.TextTruncate.AtEnd
+		btn.LayoutOrder = i
+		btn.ZIndex = 13
+		corner(btn, 9)
+		btn.Parent = rail
+		tabButtons[id] = btn
+		btn.Activated:Connect(function()
+			selectTab(id)
+		end)
+	end
+
+	-- Body: one page per tab, stacked and toggled ---------------------------
+	local bodyHost = Instance.new("Frame")
+	bodyHost.Name = "Body"
+	bodyHost.Position = UDim2.fromOffset(0, 112)
+	bodyHost.Size = UDim2.new(1, 0, 1, -112)
+	bodyHost.BackgroundTransparency = 1
+	bodyHost.ZIndex = 11
+	bodyHost.Parent = modal
+
+	-- UPGRADES: the Kingdom Skills ------------------------------------------
+	local upgradesPage = makePage(bodyHost, "upgrades")
+	sectionHeader(upgradesPage, 0, "Kingdom Skills")
+	for i, skillName in SKILL_ORDER do
+		local meta = SKILL_META[skillName]
+		local def = GameConfig.SKILLS[skillName]
+		buildCard(upgradesPage, i, meta.icon, Color3.fromRGB(224, 240, 210), function(state)
+			local level = (state.skills and state.skills[skillName]) or 0
+			local maxed = level >= def.maxLevel
+			return {
+				name = meta.name,
+				desc = meta.desc,
+				level = "Level " .. level .. " / " .. def.maxLevel,
+				cost = maxed and nil or StatCalculator.GetSkillCost(skillName, level),
+				maxed = maxed,
+			}
+		end, function()
+			Remotes.Get("PurchaseUpgrade"):FireServer("skill", skillName)
+		end)
+	end
+
+	-- TOOLS: buy the next tier, plus the full ladder for context ------------
+	local toolsPage = makePage(bodyHost, "tools")
+	sectionHeader(toolsPage, 0, "Next Tool")
+	buildCard(toolsPage, 1, "\u{2702}\u{FE0F}", Color3.fromRGB(210, 235, 205), function(state)
 		local tier = state.toolTier or 1
 		local current = GameConfig.TOOL_TIERS[tier]
 		local nextDef = GameConfig.TOOL_TIERS[tier + 1]
@@ -674,51 +920,41 @@ local function buildShopModal(gui: ScreenGui)
 		Remotes.Get("PurchaseUpgrade"):FireServer("tool")
 	end)
 
-	-- Section label: Skills
-	local skillsHeader = Instance.new("TextLabel")
-	skillsHeader.BackgroundTransparency = 1
-	skillsHeader.Size = UDim2.new(1, 0, 0, 24)
-	skillsHeader.Font = Enum.Font.FredokaOne
-	skillsHeader.Text = "Kingdom Skills"
-	skillsHeader.TextColor3 = INK
-	skillsHeader.TextXAlignment = Enum.TextXAlignment.Left
-	skillsHeader.TextSize = 18
-	skillsHeader.LayoutOrder = 2
-	skillsHeader.ZIndex = 11
-	skillsHeader.Parent = body
-
-	for i, skillName in SKILL_ORDER do
-		local meta = SKILL_META[skillName]
-		local def = GameConfig.SKILLS[skillName]
-		buildCard(body, 2 + i, meta.icon, Color3.fromRGB(224, 240, 210), function(state)
-			local level = (state.skills and state.skills[skillName]) or 0
-			local maxed = level >= def.maxLevel
-			return {
-				name = meta.name,
-				desc = meta.desc,
-				level = "Level " .. level .. " / " .. def.maxLevel,
-				cost = maxed and nil or StatCalculator.GetSkillCost(skillName, level),
-				maxed = maxed,
-			}
-		end, function()
-			Remotes.Get("PurchaseUpgrade"):FireServer("skill", skillName)
+	sectionHeader(toolsPage, 2, "The Full Ladder")
+	for i, def in GameConfig.TOOL_TIERS do
+		ladderRow(toolsPage, 2 + i, i, def.name, formatNumber(def.cost) .. "g", function(state)
+			return state.toolTier or 1
 		end)
 	end
 
-	-- Section: Storage (bag upgrades) -----------------------------------------
-	local storageHeader = Instance.new("TextLabel")
-	storageHeader.BackgroundTransparency = 1
-	storageHeader.Size = UDim2.new(1, 0, 0, 24)
-	storageHeader.Font = Enum.Font.FredokaOne
-	storageHeader.Text = "Storage"
-	storageHeader.TextColor3 = INK
-	storageHeader.TextXAlignment = Enum.TextXAlignment.Left
-	storageHeader.TextSize = 18
-	storageHeader.LayoutOrder = 20
-	storageHeader.ZIndex = 11
-	storageHeader.Parent = body
+	-- SWORDS ----------------------------------------------------------------
+	local swordsPage = makePage(bodyHost, "swords")
+	sectionHeader(swordsPage, 0, "Swords")
+	emptyState(
+		swordsPage,
+		1,
+		"\u{1F5E1}\u{FE0F}",
+		"The forge is cold",
+		"Swords arrive alongside the monsters worth swinging them at. Eleven blades are planned, one per boss tier."
+	)
 
-	buildCard(body, 21, "\u{1F392}", Color3.fromRGB(214, 232, 244), function(state)
+	-- AUTO-MOWERS -----------------------------------------------------------
+	local mowersPage = makePage(bodyHost, "mowers")
+	sectionHeader(mowersPage, 0, "Auto-Mowers")
+	emptyState(
+		mowersPage,
+		1,
+		"\u{1F69C}",
+		"Out for repairs",
+		"Mowers are being rebuilt to drive out on their own, cut the nearest grass, and haul the clippings back to the Gardener."
+	)
+
+	-- BACKPACKS -------------------------------------------------------------
+	-- The five zone packs are not in yet, so the working bag upgrade stays here
+	-- until they replace it. Nothing purchasable is taken away in the meantime.
+	local packsPage = makePage(bodyHost, "packs")
+	sectionHeader(packsPage, 0, "Storage")
+	buildCard(packsPage, 1, "\u{1F392}", Color3.fromRGB(214, 232, 244), function(state)
 		local tier = state.bagTier or 1
 		local current = GameConfig.BAG_TIERS[tier]
 		local nextDef = GameConfig.BAG_TIERS[tier + 1]
@@ -740,6 +976,17 @@ local function buildShopModal(gui: ScreenGui)
 	end, function()
 		Remotes.Get("PurchaseUpgrade"):FireServer("bag")
 	end)
+
+	sectionHeader(packsPage, 2, "Zone Packs")
+	emptyState(
+		packsPage,
+		3,
+		"\u{1F9F5}",
+		"Five packs on the way",
+		"One backpack per zone, each with its own model on your back and its own upgrade track. These will replace the single bag above."
+	)
+
+	selectTab("upgrades")
 end
 
 -- Open / close ----------------------------------------------------------------
@@ -802,8 +1049,6 @@ local function updateUI(state: any)
 		local full = capacity > 0 and clippings >= capacity
 		bagFill.BackgroundColor3 = full and Color3.fromRGB(255, 120, 96) or Color3.fromRGB(180, 240, 150)
 	end
-	-- Don't stomp a counter that's mid count-up; it'll land on the right total
-	-- itself once the last coin arrives.
 	if goldLabel and not countingUp[goldLabel] then
 		goldLabel.Text = formatNumber(state.gold or 0)
 	end
@@ -1080,7 +1325,6 @@ local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, col
 				chip:Destroy()
 			end
 			bumpCounter(target)
-			-- The coin has landed: let the caller tick the counter up by its value.
 			if onArrive then
 				onArrive()
 			end
@@ -1095,24 +1339,28 @@ local function flyChip(gui: ScreenGui, targetLabel: TextLabel, text: string, col
 	end)
 end
 
--- Spawn a burst of counter-bound chips for a banked amount, and make the counter
--- COUNT UP with them instead of jumping straight to the new total.
---
--- The counter is rolled back to its pre-deposit value the instant the deposit
--- lands, then each arriving coin adds its own share -- so the number rattles
--- upward in time with the coins flying into it. `getTotal` is read live (rather
--- than captured) so the final snap always lands on the server's real number, even
--- if the StateChanged packet arrives after this one.
-local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: TextLabel, emoji: string, color: Color3, useCoin: boolean?, getTotal: (() -> number)?)
+-- Spawn a burst of counter-bound chips for a banked amount and roll the counter up
+-- in step with them, instead of snapping to the new total the moment the deposit
+-- lands. Each chip carries a share of the amount and adds it on arrival.
+local function spawnDepositChips(
+	gui: ScreenGui,
+	amount: number,
+	targetLabel: TextLabel,
+	emoji: string,
+	color: Color3,
+	useCoin: boolean?,
+	getTotal: (() -> number)?
+)
 	if amount <= 0 or not targetLabel then
 		return
 	end
 	local vp = gui.AbsoluteSize
 	local MAX_CHIPS = 20
+	local STAGGER = 0.035
 	local chips = math.min(amount, MAX_CHIPS)
 
-	-- Split the banked amount into one chunk per coin, spreading the remainder over
-	-- the first few, so the ticking total adds up to exactly `amount`.
+	-- Split the amount into per-chip shares that sum to exactly `amount`, so the
+	-- ticking counter can never drift away from the real total.
 	local chunks: { number } = {}
 	local share = math.floor(amount / chips)
 	local remainder = amount - share * chips
@@ -1120,43 +1368,46 @@ local function spawnDepositChips(gui: ScreenGui, amount: number, targetLabel: Te
 		chunks[i] = share + (if i <= remainder then 1 else 0)
 	end
 
+	-- Roll the counter back to its pre-deposit value, then climb as chips land.
 	local final = if getTotal then getTotal() else amount
-	local running = math.max(0, final - amount)
+	local running = final - amount
 	countingUp[targetLabel] = true
 	targetLabel.Text = formatNumber(running)
 
-	local STAGGER = 0.035
 	local landed = 0
-
+	local settled = false
 	local function settle()
-		if not countingUp[targetLabel] then
+		if settled then
 			return
 		end
+		settled = true
 		countingUp[targetLabel] = nil
-		targetLabel.Text = formatNumber(if getTotal then getTotal() else running)
+		-- Snap to the authoritative total in case rounding or an early-destroyed chip
+		-- left the running tally short.
+		targetLabel.Text = formatNumber(if getTotal then getTotal() else final)
 	end
 
 	for i = 1, chips do
-		local chunk = chunks[i]
+		local shown = chunks[i]
 		local startAbs = Vector2.new(
 			vp.X * (0.40 + math.random() * 0.20),
 			vp.Y * (0.30 + math.random() * 0.16)
 		)
-		local label = if useCoin then "+" .. chunk else "+" .. chunk .. " " .. emoji
+		local label = if useCoin then "+" .. shown else "+" .. shown .. " " .. emoji
 		flyChip(gui, targetLabel, label, color, startAbs, (i - 1) * STAGGER, useCoin, function()
-			running += chunk
-			if countingUp[targetLabel] then
+			running += shown
+			landed += 1
+			if not settled then
 				targetLabel.Text = formatNumber(running)
 			end
-			landed += 1
 			if landed >= chips then
 				settle()
 			end
 		end)
 	end
 
-	-- Safety net: if a coin is ever destroyed before it lands (HUD rebuilt, player
-	-- respawned) the counter must not get stuck showing a stale, rolled-back number.
+	-- Safety net: never leave the counter stuck on a rolled-back number if a chip
+	-- gets destroyed before it can report in.
 	task.delay(chips * STAGGER + 2, settle)
 end
 
