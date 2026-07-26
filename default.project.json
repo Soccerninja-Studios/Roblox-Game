@@ -28,6 +28,21 @@
         },
         "Gardener": {
           "$path": "assets/Gardener.rbxmx"
+        },
+        "PushMower": {
+          "$path": "assets/Push Mower.rbxmx"
+        },
+        "ReelMower": {
+          "$path": "assets/Reel Mower.rbxmx"
+        },
+        "BrushcutterBot": {
+          "$path": "assets/Brushcutter Bot.rbxmx"
+        },
+        "HoverMower": {
+          "$path": "assets/Hover Mower.rbxmx"
+        },
+        "PlasmaHarvester": {
+          "$path": "assets/Plasma Harvester.rbxmx"
         }
       }
     },
