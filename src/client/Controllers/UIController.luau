@@ -2,7 +2,9 @@
 -- UIController: builds and drives the game HUD.
 --   * Top-center clippings counter (animated pill)
 --   * Right-side action buttons (always-on Shop toggle)
---   * A centered Shop modal with upgrade cards for the tool + every Kingdom Skill
+--   * A centered Shop modal with tabs: upgrades, tools, swords, auto-mowers and
+--     backpacks. Every purchase in the game happens here -- the auto-mowers used
+--     to have their own corner panel and are now just the "Mowers" tab.
 --   * Walk-in shop zone: the menu auto-opens when you step into the stall and
 --     auto-closes when you leave (manual toggling still works anywhere)
 
@@ -16,6 +18,11 @@ local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local StatCalculator = require(ReplicatedStorage.Shared.StatCalculator)
 local Assets = require(ReplicatedStorage.Shared.Assets)
+
+-- Sibling controller. It draws the mower cards into our Shop modal now that
+-- its corner panel is gone. Safe to require directly: it never requires us
+-- back, so there is no cycle.
+local AutoMowerController = require(script.Parent.AutoMowerController)
 
 local UIController = {}
 
@@ -564,6 +571,12 @@ local function selectTab(id: string)
 			btn.TextColor3 = if on then GREEN_DARK else Color3.fromRGB(140, 136, 124)
 		end
 	end
+
+	if id == "mowers" then
+		-- Gold totals and storage bars go stale quickly, so pull a fresh snapshot
+		-- every time the tab is opened rather than trusting the last broadcast.
+		AutoMowerController.Refresh()
+	end
 end
 
 -- A scrolling page inside the modal body.
@@ -941,13 +954,10 @@ local function buildShopModal(gui: ScreenGui)
 	-- AUTO-MOWERS -----------------------------------------------------------
 	local mowersPage = makePage(bodyHost, "mowers")
 	sectionHeader(mowersPage, 0, "Auto-Mowers")
-	emptyState(
-		mowersPage,
-		1,
-		"\u{1F69C}",
-		"Open the Mower panel",
-		"Mowers now drive out on their own, cut the nearest grass they are rated for, and haul the clippings back to the Gardener for gold. Buy and deploy them from the Auto-Mower panel."
-	)
+	-- AutoMowerController owns these cards (buy / deploy / recall + live storage
+	-- bars), so it renders them straight into this page. This replaces the separate
+	-- corner panel it used to open.
+	AutoMowerController.Mount(mowersPage)
 
 	-- BACKPACKS -------------------------------------------------------------
 	-- The five zone packs are not in yet, so the working bag upgrade stays here

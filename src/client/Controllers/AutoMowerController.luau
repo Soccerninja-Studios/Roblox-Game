@@ -1,13 +1,15 @@
 --!strict
--- AutoMowerController: the client-side Auto-Mowers panel. A bottom-left button
--- opens a board listing the 5 auto-mowers; each card lets you BUY it (gold +
--- diamonds) once your zone is unlocked, then DEPLOY / RECALL it. Deployed mowers
--- show a live storage bar that fills until the server auto-banks it to gold. A
--- small toast pops whenever a mower banks.
+-- AutoMowerController: the client-side Auto-Mowers list. It no longer owns a
+-- window or a corner button -- UIController hands it the Shop modal's "Mowers"
+-- tab and it draws the 5 cards straight into it, so the Shop is the single place
+-- to buy anything. Each card lets you BUY a mower (gold + diamonds) once its ring
+-- is unlocked, then DEPLOY / RECALL it. Deployed mowers show a live storage bar
+-- that fills until the server auto-banks it to gold, and a toast pops when it does.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local AutoMowerController = {}
@@ -29,11 +31,10 @@ local RED = Color3.fromRGB(226, 92, 84)
 
 -- State -----------------------------------------------------------------------
 local gui: ScreenGui
-local backdrop: TextButton
-local board: Frame
-local listFrame: ScrollingFrame
 local toastHolder: Frame
-local isOpen = false
+-- The card list lives inside the Shop modal now, so UIController hands us a host
+-- frame to draw into. nil until it does, which render() treats as "not ready".
+local listFrame: Frame? = nil
 local latest: any = nil
 
 -- Helpers ---------------------------------------------------------------------
@@ -69,150 +70,16 @@ local function formatNumber(n: number): string
 	return out
 end
 
-local function drawCloseX(button: TextButton)
-	local xIcon = Instance.new("Frame")
-	xIcon.Name = "XIcon"
-	xIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-	xIcon.Position = UDim2.fromScale(0.5, 0.5)
-	xIcon.Size = UDim2.fromScale(0.44, 0.44)
-	xIcon.BackgroundTransparency = 1
-	xIcon.ZIndex = button.ZIndex + 1
-	xIcon.Parent = button
-	for _, rot in { 45, -45 } do
-		local bar = Instance.new("Frame")
-		bar.AnchorPoint = Vector2.new(0.5, 0.5)
-		bar.Position = UDim2.fromScale(0.5, 0.5)
-		bar.Size = UDim2.new(1, 0, 0, 4)
-		bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		bar.BorderSizePixel = 0
-		bar.Rotation = rot
-		bar.ZIndex = xIcon.ZIndex
-		local bc = Instance.new("UICorner")
-		bc.CornerRadius = UDim.new(1, 0)
-		bc.Parent = bar
-		bar.Parent = xIcon
-	end
-end
-
--- Build the static shell once -------------------------------------------------
 local function build()
+	-- Toast-only ScreenGui. There is no button and no board any more: the list is
+	-- rendered into the Shop by Mount().
 	gui = Instance.new("ScreenGui")
-	gui.Name = "AutoMowers"
+	gui.Name = "AutoMowerToasts"
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
 	gui.DisplayOrder = 19
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
-
-	-- Open button (bottom-left, clear of the right-side shop button).
-	local openBtn = Instance.new("TextButton")
-	openBtn.Name = "OpenButton"
-	openBtn.AnchorPoint = Vector2.new(0, 1)
-	openBtn.Position = UDim2.new(0, 20, 1, -20)
-	openBtn.Size = UDim2.new(0, 158, 0, 46)
-	openBtn.BackgroundColor3 = GREEN
-	openBtn.Font = Enum.Font.FredokaOne
-	openBtn.Text = "\u{1F69C} Mowers"
-	openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	openBtn.TextSize = 22
-	openBtn.Parent = gui
-	corner(openBtn, 12)
-	stroke(openBtn, 2, GREEN_DARK)
-	openBtn.Activated:Connect(function()
-		AutoMowerController.Toggle()
-	end)
-
-	backdrop = Instance.new("TextButton")
-	backdrop.Name = "Backdrop"
-	backdrop.Size = UDim2.new(1, 0, 1, 0)
-	backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	backdrop.BackgroundTransparency = 0.45
-	backdrop.Text = ""
-	backdrop.AutoButtonColor = false
-	backdrop.Visible = false
-	backdrop.Parent = gui
-	backdrop.Activated:Connect(function()
-		AutoMowerController.Close()
-	end)
-
-	board = Instance.new("Frame")
-	board.Name = "Board"
-	board.AnchorPoint = Vector2.new(0.5, 0.5)
-	board.Position = UDim2.new(0.5, 0, 0.5, 0)
-	board.Size = UDim2.new(0, 560, 0, 560)
-	board.BackgroundColor3 = CREAM
-	board.Visible = false
-	board.Parent = gui
-	corner(board, 20)
-	stroke(board, 3, Color3.fromRGB(214, 208, 190))
-
-	local header = Instance.new("Frame")
-	header.Size = UDim2.new(1, 0, 0, 78)
-	header.BackgroundColor3 = HEADER
-	header.Parent = board
-	corner(header, 20)
-	local headerFix = Instance.new("Frame")
-	headerFix.Size = UDim2.new(1, 0, 0.5, 0)
-	headerFix.Position = UDim2.new(0, 0, 0.5, 0)
-	headerFix.BackgroundColor3 = HEADER
-	headerFix.BorderSizePixel = 0
-	headerFix.Parent = header
-
-	local title = Instance.new("TextLabel")
-	title.BackgroundTransparency = 1
-	title.Position = UDim2.new(0, 22, 0, 12)
-	title.Size = UDim2.new(1, -90, 0, 34)
-	title.Font = Enum.Font.FredokaOne
-	title.Text = "Auto-Mowers"
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextScaled = true
-	title.Parent = header
-
-	local subtitle = Instance.new("TextLabel")
-	subtitle.BackgroundTransparency = 1
-	subtitle.Position = UDim2.new(0, 24, 0, 46)
-	subtitle.Size = UDim2.new(1, -90, 0, 20)
-	subtitle.Font = Enum.Font.GothamMedium
-	subtitle.Text = "Deploy a mower to earn gold while you play"
-	subtitle.TextColor3 = Color3.fromRGB(210, 226, 200)
-	subtitle.TextXAlignment = Enum.TextXAlignment.Left
-	subtitle.TextScaled = true
-	subtitle.Parent = header
-
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Name = "Close"
-	closeBtn.AnchorPoint = Vector2.new(1, 0.5)
-	closeBtn.Position = UDim2.new(1, -18, 0, 39)
-	closeBtn.Size = UDim2.new(0, 40, 0, 40)
-	closeBtn.BackgroundColor3 = RED
-	closeBtn.Text = ""
-	closeBtn.Parent = header
-	corner(closeBtn, 12)
-	drawCloseX(closeBtn)
-	closeBtn.Activated:Connect(function()
-		AutoMowerController.Close()
-	end)
-
-	listFrame = Instance.new("ScrollingFrame")
-	listFrame.Name = "List"
-	listFrame.Position = UDim2.new(0, 14, 0, 90)
-	listFrame.Size = UDim2.new(1, -28, 1, -104)
-	listFrame.BackgroundTransparency = 1
-	listFrame.BorderSizePixel = 0
-	listFrame.ScrollBarThickness = 8
-	listFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-	listFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	listFrame.Parent = board
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 10)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = listFrame
-	local pad = Instance.new("UIPadding")
-	pad.PaddingRight = UDim.new(0, 6)
-	pad.PaddingBottom = UDim.new(0, 6)
-	pad.Parent = listFrame
 
 	toastHolder = Instance.new("Frame")
 	toastHolder.Name = "Toasts"
@@ -227,6 +94,16 @@ local function build()
 	toastLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
 	toastLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	toastLayout.Parent = toastHolder
+end
+
+-- Zone keys like "Moss" are internal bookkeeping; players know the grass by its
+-- display name, so lock messages use that instead.
+local function zoneLabel(zone: string): string
+	local def = GameConfig.GRASS_TYPES[zone]
+	if def and def.displayName then
+		return def.displayName
+	end
+	return zone
 end
 
 -- Card builder ----------------------------------------------------------------
@@ -322,7 +199,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 
 	if not mower.unlocked then
 		action.BackgroundColor3 = LOCKED
-		action.Text = "Locked\n(reach " .. mower.zone .. ")"
+		action.Text = "Locked\n(reach " .. zoneLabel(mower.zone) .. ")"
 		action.AutoButtonColor = false
 		action.Active = false
 	elseif not mower.owned then
@@ -351,10 +228,11 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 end
 
 local function render()
-	if not latest then
-		return
+	local host = listFrame
+	if not latest or not host then
+		return -- no snapshot yet, or not mounted: Mount() paints on arrival
 	end
-	for _, child in listFrame:GetChildren() do
+	for _, child in host:GetChildren() do
 		if child:IsA("Frame") then
 			child:Destroy()
 		end
@@ -389,25 +267,31 @@ local function showToast(text: string)
 end
 
 -- Public API ------------------------------------------------------------------
-function AutoMowerController.Open()
-	isOpen = true
-	backdrop.Visible = true
-	board.Visible = true
+-- Ask the server for a fresh snapshot. UIController calls this whenever the Shop
+-- opens on the Mowers tab, so prices and storage bars are never stale.
+function AutoMowerController.Refresh()
 	Remotes.Get("RequestAutoMowers"):FireServer()
 end
 
-function AutoMowerController.Close()
-	isOpen = false
-	backdrop.Visible = false
-	board.Visible = false
-end
+-- Called once by UIController with the Shop modal's Mowers page. We draw the
+-- cards into a holder inside it instead of opening a window of our own.
+function AutoMowerController.Mount(host: Instance)
+	local holder = Instance.new("Frame")
+	holder.Name = "MowerList"
+	holder.BackgroundTransparency = 1
+	holder.Size = UDim2.new(1, 0, 0, 0)
+	holder.AutomaticSize = Enum.AutomaticSize.Y
+	holder.LayoutOrder = 1
+	holder.Parent = host
 
-function AutoMowerController.Toggle()
-	if isOpen then
-		AutoMowerController.Close()
-	else
-		AutoMowerController.Open()
-	end
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 10)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = holder
+
+	listFrame = holder
+	render() -- paint at once if a snapshot already landed
+	AutoMowerController.Refresh()
 end
 
 function AutoMowerController.Init()
@@ -415,9 +299,7 @@ function AutoMowerController.Init()
 
 	Remotes.Get("AutoMowerState").OnClientEvent:Connect(function(state)
 		latest = state
-		if isOpen then
-			render()
-		end
+		render() -- no-op until the Shop tab is mounted
 	end)
 
 	Remotes.Get("AutoMowerBanked").OnClientEvent:Connect(function(payload)
