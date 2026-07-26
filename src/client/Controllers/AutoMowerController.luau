@@ -149,6 +149,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	swatch.BackgroundColor3 = Color3.fromRGB(mower.bodyColorR or 120, mower.bodyColorG or 196, mower.bodyColorB or 92)
 	swatch.BorderSizePixel = 0
 	corner(swatch, 4)
+	swatch.ZIndex = 12
 	swatch.Parent = card
 
 	local name = Instance.new("TextLabel")
@@ -160,6 +161,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	name.TextColor3 = INK
 	name.TextXAlignment = Enum.TextXAlignment.Left
 	name.TextScaled = true
+	name.ZIndex = 12
 	name.Parent = card
 
 	local info = Instance.new("TextLabel")
@@ -171,6 +173,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	info.TextColor3 = SUBTLE
 	info.TextXAlignment = Enum.TextXAlignment.Left
 	info.TextScaled = true
+	info.ZIndex = 12
 	info.Parent = card
 
 	-- Storage bar (only meaningful when deployed).
@@ -180,6 +183,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	barBg.BackgroundColor3 = Color3.fromRGB(232, 230, 220)
 	barBg.BorderSizePixel = 0
 	corner(barBg, 7)
+	barBg.ZIndex = 12
 	barBg.Parent = card
 
 	local pct = math.clamp(mower.storage / math.max(1, mower.storageCap), 0, 1)
@@ -188,6 +192,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	fill.BackgroundColor3 = GREEN
 	fill.BorderSizePixel = 0
 	corner(fill, 7)
+	fill.ZIndex = 13
 	fill.Parent = barBg
 
 	local barText = Instance.new("TextLabel")
@@ -204,6 +209,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 		barBg.Visible = false
 		barText.Text = "Not deployed"
 	end
+	barText.ZIndex = 13
 	barText.Parent = card
 
 	-- Action button (Buy / Deploy / Recall / Locked).
@@ -216,6 +222,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 	action.TextScaled = true
 	action.AutoButtonColor = true
 	corner(action, 12)
+	action.ZIndex = 12
 	action.Parent = card
 
 	local actionPad = Instance.new("UIPadding")
@@ -259,6 +266,7 @@ local function buildCard(mower: any, order: number, currency: { gold: number, di
 		end)
 	end
 
+	card.ZIndex = 11
 	card.Parent = listFrame
 end
 
@@ -273,6 +281,7 @@ local function notice(host: Frame, text: string)
 	label.TextColor3 = SUBTLE
 	label.TextSize = 15
 	label.TextWrapped = true
+	label.ZIndex = 11
 	label.Parent = host
 end
 
@@ -359,6 +368,11 @@ end
 
 -- Called once by UIController with the Shop modal's Mowers page. We draw the
 -- cards into a holder inside it instead of opening a window of our own.
+-- NOTE ON ZINDEX: the Shop's ScreenGui uses ZIndexBehavior.Global, so a child is
+-- NOT automatically drawn above its parent -- every element is sorted by its raw
+-- ZIndex across the whole GUI. The modal sits at 10 behind an opaque background,
+-- so anything left at the default 1 is hidden by it. These values mirror
+-- UIController's helpers: 11 for cards, 12 for their contents, 13 for overlays.
 function AutoMowerController.Mount(host: Instance)
 	local holder = Instance.new("Frame")
 	holder.Name = "MowerList"
@@ -366,6 +380,7 @@ function AutoMowerController.Mount(host: Instance)
 	holder.Size = UDim2.new(1, 0, 0, 0)
 	holder.AutomaticSize = Enum.AutomaticSize.Y
 	holder.LayoutOrder = 1
+	holder.ZIndex = 11
 	holder.Parent = host
 
 	local layout = Instance.new("UIListLayout")
