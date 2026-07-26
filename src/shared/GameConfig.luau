@@ -119,6 +119,17 @@ local GameConfig = {
 	BASE_SWING_COOLDOWN = 0.5, -- seconds between swings before QuickHands
 	CUT_RANGE = 16, -- max studs between player and a tile to cut it
 
+	-- Dash: tap the dash key to burst a short distance in the direction you are
+	-- moving (standing still dashes whichever way you are facing). The distance is
+	-- measured in CHARACTER HEIGHTS so it scales with the avatar instead of being a
+	-- magic stud count -- an R6 body is ~5 studs tall, so 2 heights is a ~10-stud hop.
+	DASH = {
+		key = Enum.KeyCode.Q,
+		distanceInHeights = 2, -- how far one dash travels, in character heights
+		duration = 0.18, -- seconds the burst lasts (shorter = snappier)
+		cooldown = 1, -- seconds before you can dash again
+	},
+
 	-- Clipping pickups (drop on the ground, collected by walking near them)
 	BASE_COLLECT_RANGE = 8, -- studs; grown by the Clipping Magnet skill
 	PICKUP_LIFETIME = 45, -- seconds a dropped clipping lasts before vanishing
