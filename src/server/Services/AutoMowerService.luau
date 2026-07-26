@@ -416,7 +416,10 @@ local function spawnDeployed(player: Player, key: string)
 	local model, body = loadMowerModel(def, home)
 	model.Parent = Workspace
 
-	local groundOffset = (model:GetAttribute("GroundOffset") :: number?) or 0
+	-- Measured seating, PLUS any deliberate lift from GameConfig. Some meshes hang
+	-- below their own bounding box, so sitting them flush digs them into the dirt.
+	local groundOffset = ((model:GetAttribute("GroundOffset") :: number?) or 0)
+		+ (def.hoverOffset or 0)
 	local autoYaw = (model:GetAttribute("DriveYaw") :: number?) or 0
 
 	live[player][key] = {
