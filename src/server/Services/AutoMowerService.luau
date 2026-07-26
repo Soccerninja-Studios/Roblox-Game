@@ -26,6 +26,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local MowerRig = require(ReplicatedStorage.Shared.MowerRig)
 
 local AutoMowerService = {}
 
@@ -92,10 +93,51 @@ local function slotPosition(key: string): Vector3
 	return ANCHOR + Vector3.new(0, 0, (i - mid) * SLOT_SPACING)
 end
 
--- Build a small visible mower. The body is anchored (we drive it by tween); the
--- catcher and blade are UNANCHORED and welded, so they ride along with the body
--- instead of being left behind at the spawn point.
-local function buildMowerModel(def: any, home: Vector3): (Model, BasePart)
+-- Floating label with the name + a live status readout. Shared by the real models
+-- and the fallback box, so every mower reports what it is currently doing.
+local function attachTag(body: BasePart, def: any)
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "MowerTag"
+	gui.Size = UDim2.new(0, 160, 0, 44)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, 3.2, 0)
+	gui.AlwaysOnTop = true
+	gui.MaxDistance = 220
+	gui.Adornee = body
+	gui.Parent = body
+
+	local name = Instance.new("TextLabel")
+	name.Name = "Name"
+	name.BackgroundTransparency = 1
+	name.Size = UDim2.new(1, 0, 0.55, 0)
+	name.Font = Enum.Font.FredokaOne
+	name.Text = def.name
+	name.TextColor3 = Color3.fromRGB(255, 255, 255)
+	name.TextStrokeColor3 = Color3.fromRGB(30, 46, 28)
+	name.TextStrokeTransparency = 0.3
+	name.TextScaled = true
+	name.Parent = gui
+
+	local status = Instance.new("TextLabel")
+	status.Name = "Status"
+	status.BackgroundTransparency = 1
+	status.Position = UDim2.new(0, 0, 0.55, 0)
+	status.Size = UDim2.new(1, 0, 0.45, 0)
+	status.Font = Enum.Font.GothamMedium
+	status.Text = "Waking up"
+	status.TextColor3 = Color3.fromRGB(226, 244, 210)
+	status.TextStrokeColor3 = Color3.fromRGB(30, 46, 28)
+	status.TextStrokeTransparency = 0.4
+	status.TextScaled = true
+	status.Parent = gui
+end
+
+-- Fallback mower, built from scratch. This is ONLY used when a mower's model is
+-- missing from ReplicatedStorage.Assets -- a missing asset shouldn't stop
+-- automation dead, it should just look plain and warn.
+--
+-- The body is anchored (we drive it by tween); the catcher and blade are
+-- UNANCHORED and welded, so they ride along instead of being left behind.
+local function buildFallbackModel(def: any, home: Vector3): (Model, BasePart)
 	local model = Instance.new("Model")
 	model.Name = "AutoMower_" .. def.key
 
@@ -141,42 +183,54 @@ local function buildMowerModel(def: any, home: Vector3): (Model, BasePart)
 	blade.Material = Enum.Material.Metal
 	attach(blade, CFrame.new(0, -0.55, -2.2))
 
-	-- Floating label with the name + a live status readout.
-	local gui = Instance.new("BillboardGui")
-	gui.Name = "MowerTag"
-	gui.Size = UDim2.new(0, 160, 0, 44)
-	gui.StudsOffsetWorldSpace = Vector3.new(0, 3.2, 0)
-	gui.AlwaysOnTop = true
-	gui.MaxDistance = 220
-	gui.Adornee = body
-	gui.Parent = body
-
-	local name = Instance.new("TextLabel")
-	name.Name = "Name"
-	name.BackgroundTransparency = 1
-	name.Size = UDim2.new(1, 0, 0.55, 0)
-	name.Font = Enum.Font.FredokaOne
-	name.Text = def.name
-	name.TextColor3 = Color3.fromRGB(255, 255, 255)
-	name.TextStrokeColor3 = Color3.fromRGB(30, 46, 28)
-	name.TextStrokeTransparency = 0.3
-	name.TextScaled = true
-	name.Parent = gui
-
-	local status = Instance.new("TextLabel")
-	status.Name = "Status"
-	status.BackgroundTransparency = 1
-	status.Position = UDim2.new(0, 0, 0.55, 0)
-	status.Size = UDim2.new(1, 0, 0.45, 0)
-	status.Font = Enum.Font.GothamMedium
-	status.Text = "Waking up"
-	status.TextColor3 = Color3.fromRGB(226, 244, 210)
-	status.TextStrokeColor3 = Color3.fromRGB(30, 46, 28)
-	status.TextStrokeTransparency = 0.4
-	status.TextScaled = true
-	status.Parent = gui
+	attachTag(body, def)
 
 	return model, body
+end
+
+-- Spawn a mower from its real model under ReplicatedStorage.Assets.
+--
+-- The imported models are toolbox freebies -- one is a scripted drivable vehicle,
+-- one is a humanoid rig, one is ~200 loose parts around a seat -- so MowerRig
+-- strips and rigidifies them into a single drivable assembly first. If the asset
+-- is missing (not synced yet, or renamed) we warn with the exact name it looked
+-- for and fall back to the box mower.
+local function loadMowerModel(def: any, home: Vector3): (Model, BasePart)
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local template = if assets and def.modelName then assets:FindFirstChild(def.modelName) else nil
+
+	if template then
+		local clone = template:Clone()
+		local model: Model
+		if clone:IsA("Model") then
+			model = clone
+		else
+			-- Some assets export as a bare part; wrap it so we always have a Model.
+			model = Instance.new("Model")
+			clone.Parent = model
+		end
+
+		local driver = MowerRig.Prepare(model, def.modelLength)
+		if driver then
+			model.Name = "AutoMower_" .. def.key
+			model:PivotTo(CFrame.new(home))
+			attachTag(driver, def)
+			return model, driver
+		end
+
+		warn(string.format(
+			"[AutoMowerService] Assets.%s had no parts after prep - using the fallback mower.",
+			tostring(def.modelName)
+		))
+		model:Destroy()
+	else
+		warn(string.format(
+			"[AutoMowerService] Assets.%s not found - using the fallback mower.",
+			tostring(def.modelName)
+		))
+	end
+
+	return buildFallbackModel(def, home)
 end
 
 local STATE_TEXT: { [string]: string } = {
@@ -342,7 +396,7 @@ local function spawnDeployed(player: Player, key: string)
 	end
 
 	local home = slotPosition(key) + Vector3.new(0, HOVER, 0)
-	local model, body = buildMowerModel(def, home)
+	local model, body = loadMowerModel(def, home)
 	model.Parent = Workspace
 
 	live[player][key] = {

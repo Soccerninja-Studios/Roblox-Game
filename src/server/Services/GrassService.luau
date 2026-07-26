@@ -253,10 +253,14 @@ function GrassService.IsCuttableTile(inst: Instance?): boolean
 	return (inst:GetAttribute("Health") or 0) > 0
 end
 
--- Find the closest cuttable tile to `origin` that a cutter of `maxZoneIndex` is
--- allowed to cut. Sweeps outward in steps so a mower standing in a cleared patch
--- still finds work further afield without scanning the whole map every tick.
-function GrassService.FindNearestCuttableTile(origin: Vector3, maxZoneIndex: number): BasePart?
+-- Find the closest cuttable tile to `origin` belonging to EXACTLY `zoneIndex`.
+--
+-- Note this is deliberately stricter than the player's tool rule: a tool can cut
+-- its own zone and every easier one, but each mower is dedicated to a single zone
+-- so mowers don't pile onto the Meadow and trivialise the early game. Sweeps
+-- outward in steps so a mower in a cleared patch still finds work further afield
+-- without scanning the whole map every tick.
+function GrassService.FindNearestCuttableTile(origin: Vector3, zoneIndex: number): BasePart?
 	local step = GameConfig.AUTO_MOWER_SEARCH_STEP or 60
 	local maxRadius = GameConfig.AUTO_MOWER_SEARCH_MAX or 420
 	local params = OverlapParams.new()
@@ -272,7 +276,7 @@ function GrassService.FindNearestCuttableTile(origin: Vector3, maxZoneIndex: num
 		for _, part in parts do
 			if GrassService.IsCuttableTile(part) then
 				local typeName = part:GetAttribute("GrassType") or GameConfig.DEFAULT_GRASS_TYPE
-				if GrassService.GetGrassZoneIndex(typeName) <= maxZoneIndex then
+				if GrassService.GetGrassZoneIndex(typeName) == zoneIndex then
 					local d = (part.Position - origin).Magnitude
 					if d < bestDist then
 						bestDist = d
