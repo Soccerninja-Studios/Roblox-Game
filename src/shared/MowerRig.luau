@@ -247,7 +247,10 @@ end
 -- (in which case the caller should fall back to a built-from-scratch mower).
 function MowerRig.Prepare(model: Model, targetLength: number?): BasePart?
 	MowerRig.Strip(model)
-	if targetLength then
+	-- Only rescale when explicitly asked to. 0 or nil means "keep the size the model
+	-- was authored at in ReplicatedStorage", which is the default: forcing every
+	-- mower to one uniform length made the humanoid bot tiny and the harvester huge.
+	if targetLength and targetLength > 0 then
 		MowerRig.ScaleToLength(model, targetLength)
 	end
 

@@ -213,14 +213,16 @@ local GameConfig = {
 	--                 each zone gets its own dedicated mower.
 	--   modelName   = name of the model under ReplicatedStorage.Assets to spawn.
 	--                 Falls back to a built-from-scratch box mower if it is missing.
-	--   modelLength = the model is rescaled so its longest horizontal axis is about
-	--                 this many studs, since the source models range from a small
-	--                 bot to a full-size drivable vehicle.
+	--   modelLength = 0 keeps the model at the exact size it was authored at in
+	--                 ReplicatedStorage, which is what every mower uses. Set it to a
+	--                 stud length ONLY to force a rescale of that one mower; a
+	--                 uniform length made the bot tiny and the harvester enormous.
 	--   modelYaw    = manual steering correction in DEGREES, added on top of the
 	--                 automatic one. MowerRig measures each model and fixes the
 	--                 90-degree "driving sideways" case on its own, but it cannot
 	--                 tell front from back. If a mower drives in reverse, set this
-	--                 to 180. Other useful values: 90 and -90.
+	--                 to 180. Other useful values: 90 and -90. The values below were
+	--                 each confirmed in-game.
 	--   moveSpeed   = studs per second it drives while seeking grass or hauling
 	--   cutPower    = health removed per cut swing (armor is subtracted from this)
 	--   cutInterval = seconds between its cut swings
@@ -253,11 +255,11 @@ local GameConfig = {
 	-- Hover height above a tile's base so mowers sit on the ground, not inside it.
 	AUTO_MOWER_HOVER = 1.6,
 	AUTO_MOWERS = {
-		{ key = "push", name = "Push Mower", zone = "Meadow", modelName = "PushMower", modelLength = 5.0, modelYaw = 0, moveSpeed = 14, cutPower = 4, cutInterval = 0.50, ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
-		{ key = "reel", name = "Reel Mower", zone = "Wild", modelName = "ReelMower", modelLength = 6.0, modelYaw = 0, moveSpeed = 18, cutPower = 9, cutInterval = 0.45, ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
-		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Thick", modelName = "BrushcutterBot", modelLength = 4.0, modelYaw = 0, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Self-rights on Thicket slopes." },
-		{ key = "hover", name = "Hover Mower", zone = "Moss", modelName = "HoverMower", modelLength = 6.0, modelYaw = 0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats over Mossmire bog water." },
-		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", modelName = "PlasmaHarvester", modelLength = 7.0, modelYaw = 0, moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
+		{ key = "push", name = "Push Mower", zone = "Meadow", modelName = "PushMower", modelLength = 0, modelYaw = 180, moveSpeed = 14, cutPower = 4, cutInterval = 0.50, ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
+		{ key = "reel", name = "Reel Mower", zone = "Wild", modelName = "ReelMower", modelLength = 0, modelYaw = 180, moveSpeed = 18, cutPower = 9, cutInterval = 0.45, ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
+		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Thick", modelName = "BrushcutterBot", modelLength = 0, modelYaw = 90, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Self-rights on Thicket slopes." },
+		{ key = "hover", name = "Hover Mower", zone = "Moss", modelName = "HoverMower", modelLength = 0, modelYaw = 0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats over Mossmire bog water." },
+		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", modelName = "PlasmaHarvester", modelLength = 0, modelYaw = 0, moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
 	},
 }
 
