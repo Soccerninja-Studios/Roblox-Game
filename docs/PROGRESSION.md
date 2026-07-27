@@ -14,7 +14,7 @@
 > - **5 zones total.** Ring 3 is **Mossmire**, ring 4 is **Thicket**. These are canonical
 >   and match the code keys.
 > - **Zones are gated by capability, not gold.** The old unlock costs are cut.
-> - **11 tools.** Favored-grass multiplier is **x2.0** (was x2.5); off-type **x0.7**.
+> - **11 tools.** Favored-grass multiplier is **x2.6**; off-type **x0.7**. The ultimate favors *all* grass at **x1.6**.
 > - **Backpacks allow slight overflow** - a cut that would exceed capacity is granted in
 >   full rather than truncated. Clippings are never destroyed by bag arithmetic.
 > - **Pets and Neighbors are two separate systems.** "Neighbors" are renamed
@@ -65,23 +65,29 @@ gold cost to unlock a ring.
 
 ## 4. Tools (Mowers) - 11 total
 
-Every specialist tool has a **favored grass** it shreds (x2.0 cut power) and is **weaker
-off-type** (x0.7). The two mid "combo" tools favor two grasses at x2.2. The **ultimate**
-ignores specialties and cuts everything at a flat, very high power. "Cut power" is damage
-per swing; a tuft is cut when damage >= its Grass HP.
+This list is the **source of truth** and mirrors `GameConfig.TOOL_TIERS` exactly (11 tools,
+in shop / upgrade order). Tools alternate between **specialists** - which shred one **favored
+grass** at **x2.6** cut power and are **weaker off-type** at **x0.7** - and **all-rounder**
+tools, which cut every grass at their flat base power (no bonus or penalty). The **ultimate**
+Verdant Kingcutter favors *all* grass at **x1.6**. "Base Cut" is the tool's `bladesPerSwing`
+before skills; "On Favored" / "Off-Type" apply the multipliers above. Swing cadence is a global
+**0.50s** for every tool (reduced by the Quick Hands skill), and each tool is hard zone-gated:
+it can cut its own zone plus every easier zone, opening a new zone every two tiers
+(`StatCalculator.GetToolMaxZone` = ceil(tier / 2)).
 
-| # | Tool | Tier | Favored Grass | Base Cut | On Favored | Off-Type | Swing CD | Cost |
-|---|------|------|---------------|----------|------------|----------|----------|------|
-| 1 | Rusty Shears | 0 | none (all-rounder) | 2 | 2 | 2 | 0.50s | Free (starter) |
-| 2 | Meadow Trimmer | 1 | Meadow | 4 | 10 | 3.2 | 0.50s | 150 gold |
-| 3 | Bramble Sickle | 2 | Wild | 8 | 20 | 6.4 | 0.45s | 900 gold |
-| 4 | Thornbite Machete | 3 | Thicket | 16 | 40 | 12.8 | 0.45s | 4,500 gold |
-| 5 | Bogblade | 3 | Mossmire | 30 | 75 | 24 | 0.40s | 14,000 gold (shipped) |
-| 6 | Ironfang Scythe | 5 | Ironweed | 55 | 137 | 44 | 0.40s | 70,000 gold |
-| 7 | Greenwarden Mower | 3 | Meadow + Wild | 24 | 53 (both) | 20 | 0.40s | 12,000 gold |
-| 8 | Marsh Reaver | 4 | Thicket + Mossmire | 45 | 99 (both) | 38 | 0.38s | 40,000 gold |
-| 9 | Stormcutter | 5 | Ironweed | 80 | 176 | 72 | 0.35s | 25 diamonds |
-| 10 | **Verdant Kingcutter** (ULTIMATE) *[RENAME PENDING]* | 6 | **ALL** | 120 | 180 (all) | 180 (all) | 0.30s | 150 diamonds + defeat the Ironweed King |
+| Tier | Tool | Style | Favored Grass | Base Cut | On Favored | Off-Type | Cost |
+|------|------|-------|---------------|----------|------------|----------|------|
+| 1 | Rusty Shears | Shears | none (all-rounder) | 1 | n/a | n/a | Free (starter) |
+| 2 | Meadow Trimmer | Shears | Meadow | 8 | 20.8 | 5.6 | 300 gold |
+| 3 | Steel Shears | Shears | none (all-rounder) | 7 | n/a | n/a | 900 gold |
+| 4 | Bramble Sickle | Sickle | Wild | 13 | 33.8 | 9.1 | 2,500 gold |
+| 5 | Garden Sickle | Sickle | none (all-rounder) | 15 | n/a | n/a | 6,000 gold |
+| 6 | Bogblade | Scythe | Mossmire | 20 | 52 | 14 | 14,000 gold |
+| 7 | Keen Scythe | Scythe | none (all-rounder) | 26 | n/a | n/a | 32,000 gold |
+| 8 | Thornbite Machete | Scythe | Thicket | 30 | 78 | 21 | 70,000 gold |
+| 9 | Royal Reaper | Scythe | none (all-rounder) | 44 | n/a | n/a | 150,000 gold |
+| 10 | Ironfang Scythe | Scythe | Ironweed | 40 | 104 | 28 | 320,000 gold |
+| 11 | **Verdant Kingcutter** (ULTIMATE) *[RENAME PENDING]* | Scythe | **ALL** | 70 | 112 (all grass) | n/a | 900,000 gold |
 
 ## 5. Swords - 11 total (2 per zone + 1 ultimate)
 
@@ -470,16 +476,16 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 | Opening | 0-10 min | Cutscene, first mows with Rusty Shears, first deposit | Meadow Trimmer, Bag Tier 2, first pet |
 | Meadow mastery | 10-60 min | Clearing Meadow, first swords, Dandelion Titan | Push Mower, Wildwood unlock (2,500g) |
 | Wildwood | 1-3 hrs | Wild grass + combat ramps, essence economy begins | Bramble Sickle, Reel Mower, rescue Ranger Rowan |
-| Thicket | 3-8 hrs | Combo tools, harder bosses, upgrade sinks | Greenwarden Mower, Brushcutter Bot, abilities |
-| Mossmire | 8-20 hrs | Deep combat, potion crafting, idle income matters | Marsh Reaver, Hover Mower, most upgrades maxing |
-| Ironweed | 20-40+ hrs | Endgame grind, boss rushes, forging | Stormcutter, Plasma Harvester, ultimate gear |
+| Mossmire | 3-8 hrs | Ring 3 bog grass, combat ramps, upgrade sinks | Bogblade, Brushcutter Bot, abilities |
+| Thicket | 8-20 hrs | Ring 4 tangle, harder bosses, potion crafting, idle income matters | Thornbite Machete, Hover Mower, most upgrades maxing |
+| Ironweed | 20-40+ hrs | Endgame grind, boss rushes, forging | Ironfang Scythe, Plasma Harvester, ultimate gear |
 | Endgame | 40+ hrs | Verdant Kingcutter + Kingsedge, 100% pets, all 150 quests | Prestige (future) |
 
 ## 13. Economy Tuning Notes (for GameConfig)
 
 - **Clipping -> gold** base is 1:1, multiplied by the zone's Gold/clipping (x1.0 -> x4.5).
 - **Diamond roll**: 5% chance per 50 clippings deposited (existing DIAMOND_CHANCE / DIAMOND_ROLL_PER_CLIPPINGS), before Diamond Luck upgrades.
-- Each zone's grass HP (3/7/15/28/50) is what tool cut power is balanced against - a favored specialist one-shots its grass; an off-type tool needs 2-3 swings.
+- Each zone's grass HP (3/6/12/16/40) is what tool cut power is balanced against - a favored specialist one-shots its grass; an off-type tool needs 2-3 swings.
 - Sword damage vs. monster HP is tuned so the matching-zone A-blade kills a common monster in ~3-5 hits and the B-blade in ~2-3; bosses are multi-minute fights.
 - Costs climb ~x4-6 per zone so each ring is a meaningful gate; diamonds gate the "convenience + ultimate" layer (auto-mowers, abilities, top gear).
 - Suggested new GameConfig blocks: ZONES, TOOL_TIERS (11 tools), SWORDS, AUTO_MOWERS, ABILITIES, UPGRADES, PETS, NEIGHBORS, MONSTERS, QUESTS.
@@ -525,7 +531,7 @@ modern suburban-neighborhood-overtaken-by-plains premise. See `docs/SCRAPPED.md`
 
 **Still to do (not yet applied to code):**
 
-- Favored-grass multiplier x2.6 -> **x2.0**, off-type 0.7 confirmed, in `TOOL_TIERS`.
+- Favored-grass multiplier stays **x2.6** favored / **x0.7** off-type as shipped in `TOOL_TIERS`; this doc's tool table was synced to match the shop (the earlier x2.0 proposal was dropped).
 - Backpack **slight overflow** behaviour in `BackpackService`.
 - **4 auto-mower deploy anchors per zone.**
 - Rename `workspace.Kingdom`; rename "Verdant Kingcutter" and "Kingsedge".
