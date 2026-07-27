@@ -23,6 +23,8 @@ local Assets = require(ReplicatedStorage.Shared.Assets)
 -- its corner panel is gone. Safe to require directly: it never requires us
 -- back, so there is no cycle.
 local AutoMowerController = require(script.Parent.AutoMowerController)
+-- Sibling controller. It draws the five zone backpacks into our Packs tab.
+local BackpackController = require(script.Parent.BackpackController)
 
 local UIController = {}
 
@@ -243,8 +245,8 @@ local function buildCurrency(gui: ScreenGui)
 
 	bagCountLabel = Instance.new("TextLabel")
 	bagCountLabel.BackgroundTransparency = 1
-	bagCountLabel.Size = UDim2.new(1, -78, 0, 34)
-	bagCountLabel.Position = UDim2.fromOffset(70, 3)
+	bagCountLabel.Size = UDim2.new(1, -78, 0, 27)
+	bagCountLabel.Position = UDim2.fromOffset(70, 1)
 	bagCountLabel.Font = Enum.Font.FredokaOne
 	bagCountLabel.Text = "0 / 25"
 	bagCountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -258,6 +260,23 @@ local function buildCurrency(gui: ScreenGui)
 	bcp.PaddingRight = UDim.new(0, 14)
 	bcp.Parent = bagCountLabel
 	bagCountLabel.Parent = pill
+
+	-- Which pack is filling up, and how far up its ladder it is. Looked up by name
+	-- in updateUI rather than held in an upvalue, so the meter keeps working even if
+	-- the pill is ever rebuilt. Doubles as the "go deposit" warning when full.
+	local packLabel = Instance.new("TextLabel")
+	packLabel.Name = "PackLabel"
+	packLabel.BackgroundTransparency = 1
+	packLabel.Size = UDim2.new(1, -86, 0, 15)
+	packLabel.Position = UDim2.fromOffset(78, 28)
+	packLabel.Font = Enum.Font.GothamBold
+	packLabel.Text = ""
+	packLabel.TextColor3 = Color3.fromRGB(214, 240, 200)
+	packLabel.TextSize = 11
+	packLabel.TextXAlignment = Enum.TextXAlignment.Left
+	packLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	packLabel.ZIndex = 6
+	packLabel.Parent = pill
 
 	-- Fill-bar track along the bottom edge.
 	local track = Instance.new("Frame")
@@ -576,6 +595,11 @@ local function selectTab(id: string)
 		-- Gold totals and storage bars go stale quickly, so pull a fresh snapshot
 		-- every time the tab is opened rather than trusting the last broadcast.
 		AutoMowerController.Refresh()
+	end
+	if id == "packs" then
+		-- Prices are compared against live gold, so re-pull rather than trusting
+		-- the last broadcast.
+		BackpackController.Refresh()
 	end
 end
 
@@ -966,41 +990,15 @@ local function buildShopModal(gui: ScreenGui)
 	end
 
 	-- BACKPACKS -------------------------------------------------------------
-	-- The five zone packs are not in yet, so the working bag upgrade stays here
-	-- until they replace it. Nothing purchasable is taken away in the meantime.
+	-- One pack per zone, each bought once and then upgraded on its own track. This
+	-- replaced the old single "bag" upgrade outright: the equipped pack is what sets
+	-- carry capacity now, so BackpackController owns this whole page.
 	local packsPage = makePage(bodyHost, "packs")
-	sectionHeader(packsPage, 0, "Storage")
-	buildCard(packsPage, 1, "\u{1F392}", Color3.fromRGB(214, 232, 244), function(state)
-		local tier = state.bagTier or 1
-		local current = GameConfig.BAG_TIERS[tier]
-		local nextDef = GameConfig.BAG_TIERS[tier + 1]
-		if not nextDef then
-			return {
-				name = "Clipping Bag",
-				desc = "The biggest bag in the kingdom!",
-				level = "Capacity: " .. (current and current.capacity or 0),
-				maxed = true,
-			}
-		end
-		return {
-			name = "Bigger Bag",
-			desc = "Carry " .. current.capacity .. " \u{2192} " .. nextDef.capacity .. " clippings",
-			level = "Tier " .. tier .. " / " .. #GameConfig.BAG_TIERS,
-			cost = nextDef.cost,
-			maxed = false,
-		}
-	end, function()
-		Remotes.Get("PurchaseUpgrade"):FireServer("bag")
-	end)
-
-	sectionHeader(packsPage, 2, "Zone Packs")
-	emptyState(
-		packsPage,
-		3,
-		"\u{1F9F5}",
-		"Five packs on the way",
-		"One backpack per zone, each with its own model on your back and its own upgrade track. These will replace the single bag above."
-	)
+	sectionHeader(packsPage, 0, "Backpacks")
+	local packsOk, packsErr = pcall(BackpackController.Mount, packsPage)
+	if not packsOk then
+		warn("[UIController] pack list failed to mount: " .. tostring(packsErr))
+	end
 
 	selectTab("upgrades")
 end
@@ -1063,7 +1061,33 @@ local function updateUI(state: any)
 			Size = UDim2.new(frac, 0, 1, 0),
 		}):Play()
 		local full = capacity > 0 and clippings >= capacity
-		bagFill.BackgroundColor3 = full and Color3.fromRGB(255, 120, 96) or Color3.fromRGB(180, 240, 150)
+		-- Amber warning shade before it is quite full, so running out of room is
+		-- something you see coming rather than discover.
+		if full then
+			bagFill.BackgroundColor3 = Color3.fromRGB(255, 120, 96)
+		elseif frac >= 0.8 then
+			bagFill.BackgroundColor3 = Color3.fromRGB(250, 214, 120)
+		else
+			bagFill.BackgroundColor3 = Color3.fromRGB(180, 240, 150)
+		end
+	end
+	local packLabel = if bagPill then bagPill:FindFirstChild("PackLabel") else nil
+	if packLabel and packLabel:IsA("TextLabel") then
+		local full = capacity > 0 and clippings >= capacity
+		if full then
+			packLabel.Text = if state.packAutoDeposit then "FULL \u{2022} auto-banking" else "FULL \u{2022} go deposit!"
+			packLabel.TextColor3 = Color3.fromRGB(255, 206, 196)
+		else
+			local name = state.packName or "Backpack"
+			local level = state.packLevel or 1
+			local maxLevel = state.packMaxLevel or 1
+			local text = name .. "  \u{2022}  Lv " .. level .. "/" .. maxLevel
+			if state.packAutoDeposit then
+				text = text .. "  \u{26A1}" -- auto-banking is on
+			end
+			packLabel.Text = text
+			packLabel.TextColor3 = Color3.fromRGB(214, 240, 200)
+		end
 	end
 	if goldLabel and not countingUp[goldLabel] then
 		goldLabel.Text = formatNumber(state.gold or 0)
