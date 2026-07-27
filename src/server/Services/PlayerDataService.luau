@@ -25,7 +25,13 @@ export type Profile = {
 	clippings: number, -- what's currently in the carry BAG (unbanked)
 	gold: number, -- banked, spendable currency
 	diamonds: number, -- rare premium currency
-	bagTier: number, -- index into GameConfig.BAG_TIERS
+	bagTier: number, -- LEGACY (pre-v4 bag ladder); superseded by `backpacks`
+	backpacks: {
+		owned: { [string]: boolean }, -- pack key -> purchased
+		level: { [string]: number }, -- pack key -> capacity level (1-based)
+		autoDeposit: { [string]: boolean }, -- pack key -> banks itself when full
+		equipped: string, -- pack key currently worn; decides carry capacity
+	},
 	totalBladesCut: number,
 	toolTier: number,
 	skills: { [string]: number },
@@ -49,7 +55,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 3
+local PROFILE_VERSION = 4
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -67,6 +73,13 @@ local profiles: { [Player]: Profile } = {}
 local canSave: { [Player]: boolean } = {} -- false if the load failed (protects real data)
 local loading: { [Player]: boolean } = {}
 
+-- The first pack in config is the one everybody starts with, so this never drifts
+-- out of step with GameConfig.
+local function startingPackKey(): string
+	local first = GameConfig.BACKPACKS and GameConfig.BACKPACKS[1]
+	return if first then first.key else "basket"
+end
+
 local function defaultProfile(): Profile
 	return {
 		version = PROFILE_VERSION,
@@ -74,6 +87,12 @@ local function defaultProfile(): Profile
 		gold = 0,
 		diamonds = 0,
 		bagTier = 1,
+		backpacks = {
+			owned = { [startingPackKey()] = true },
+			level = { [startingPackKey()] = 1 },
+			autoDeposit = {},
+			equipped = startingPackKey(),
+		},
 		totalBladesCut = 0,
 		toolTier = 1,
 		skills = {},
@@ -103,6 +122,26 @@ local function reconcile(profile: Profile): Profile
 	end
 	-- v2 -> v3: added the autoMowers block. No data conversion is needed -- the
 	-- field-fill loop above already grafts the empty default onto older saves.
+	--
+	-- v3 -> v4: the single upgradeable bag became five per-zone backpacks. An old
+	-- save carries a bagTier of 1-5, which we honour by granting that many packs at
+	-- level 1 and equipping the best of them. That is generous -- the packs cost far
+	-- more gold than the old tiers did -- but the alternative is cutting a tier-5
+	-- player from 1,000 capacity down to 25, and silently shrinking someone's bag is
+	-- much worse than handing out a head start. bagTier itself is left untouched.
+	if incoming < 4 then
+		local packs = GameConfig.BACKPACKS or {}
+		local b = profile.backpacks
+		local earned = math.clamp(profile.bagTier or 1, 1, #packs)
+		for i = 1, earned do
+			local def = packs[i]
+			if def then
+				b.owned[def.key] = true
+				b.level[def.key] = b.level[def.key] or 1
+				b.equipped = def.key
+			end
+		end
+	end
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -232,22 +271,58 @@ function PlayerDataService.PushState(player: Player)
 	if not profile then
 		return
 	end
+	local packDef, packLevel = PlayerDataService.GetEquippedBackpack(profile)
 	Remotes.Get("StateChanged"):FireClient(player, {
 		clippings = profile.clippings,
 		gold = profile.gold,
 		diamonds = profile.diamonds,
 		bagTier = profile.bagTier,
 		bagCapacity = PlayerDataService.GetBagCapacity(profile),
+		packKey = profile.backpacks.equipped,
+		packName = if packDef then packDef.name else "Backpack",
+		packLevel = packLevel,
+		packMaxLevel = if packDef then #packDef.levels else 1,
+		packAutoDeposit = PlayerDataService.HasAutoDeposit(profile),
 		totalBladesCut = profile.totalBladesCut,
 		toolTier = profile.toolTier,
 		skills = profile.skills,
 	})
 end
 
--- Clipping bag capacity for the player's current bag tier.
+-- The definition of the pack a player is wearing, plus its clamped level.
+function PlayerDataService.GetEquippedBackpack(profile: Profile): (any?, number)
+	local packs = GameConfig.BACKPACKS
+	local b = profile.backpacks
+	if not packs or not b then
+		return nil, 1
+	end
+	for _, def in ipairs(packs) do
+		if def.key == b.equipped then
+			local level = math.clamp(b.level[def.key] or 1, 1, #def.levels)
+			return def, level
+		end
+	end
+	return nil, 1
+end
+
+-- Clipping capacity of the equipped pack at its current level.
 function PlayerDataService.GetBagCapacity(profile: Profile): number
+	local def, level = PlayerDataService.GetEquippedBackpack(profile)
+	if def then
+		return def.levels[level].capacity
+	end
+	-- Pre-v4 fallback, only reachable if the equipped key is missing from config.
 	local tier = GameConfig.BAG_TIERS[profile.bagTier] or GameConfig.BAG_TIERS[1]
 	return tier.capacity
+end
+
+-- Does the worn pack bank a full bag by itself?
+function PlayerDataService.HasAutoDeposit(profile: Profile): boolean
+	local def = PlayerDataService.GetEquippedBackpack(profile)
+	if not def then
+		return false
+	end
+	return profile.backpacks.autoDeposit[def.key] == true
 end
 
 function PlayerDataService.IsBagFull(player: Player): boolean
