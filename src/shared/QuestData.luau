@@ -8,8 +8,8 @@ local QuestData = {}
 QuestData.ZONES = {
 	{ key = "Meadow", ring = "Meadow Ring", grass = "Meadow", essence = "Meadow Pollen" },
 	{ key = "Wild", ring = "Wildwood Ring", grass = "Wild", essence = "Wild Burr" },
-	{ key = "Thicket", ring = "Thicket Ring", grass = "Thicket", essence = "Thicket Sap" },
 	{ key = "Mossmire", ring = "Mossmire Ring", grass = "Mossmire", essence = "Mire Spore" },
+	{ key = "Thicket", ring = "Thicket Ring", grass = "Thicket", essence = "Thicket Sap" },
 	{ key = "Ironweed", ring = "Ironweed Ring", grass = "Ironweed", essence = "Iron Filament" },
 }
 
@@ -92,8 +92,8 @@ QuestData.QUESTS = {
 	{ id = 76, zone = "Thicket", name = "Loyal Companion: Owl", desc = "Recruit the Owl.", objective = { kind = "recruit_pet", pet = "Owl", target = 1 }, reward = { gold = 0, diamonds = 22, essence = 0, essenceType = "", item = "" } },
 	{ id = 77, zone = "Thicket", name = "Rare Tamer: Boar", desc = "Recruit the Boar.", objective = { kind = "recruit_pet", pet = "Boar", target = 1 }, reward = { gold = 0, diamonds = 38, essence = 0, essenceType = "", item = "" } },
 	{ id = 78, zone = "Thicket", name = "Rescue: Woodcutter Wren", desc = "Find and rescue Woodcutter Wren, trapped in the Thicket Ring.", objective = { kind = "rescue_neighbor", neighbor = "Woodcutter Wren", target = 1 }, reward = { gold = 0, diamonds = 38, essence = 0, essenceType = "", item = "permanent perk" } },
-	{ id = 79, zone = "Thicket", name = "Set It & Forget It (Thicket Ring)", desc = "Deploy the Brushcutter Bot in the Thicket Ring.", objective = { kind = "deploy_automower", mower = "Brushcutter Bot", target = 1 }, reward = { gold = 0, diamonds = 38, essence = 0, essenceType = "", item = "" } },
-	{ id = 80, zone = "Thicket", name = "Overtime Wages (Thicket Ring)", desc = "Let the Brushcutter Bot auto-bank 6500 gold.", objective = { kind = "automower_bank", mower = "Brushcutter Bot", target = 6500 }, reward = { gold = 16000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
+	{ id = 79, zone = "Thicket", name = "Set It & Forget It (Thicket Ring)", desc = "Deploy the Hover Mower in the Thicket Ring.", objective = { kind = "deploy_automower", mower = "Hover Mower", target = 1 }, reward = { gold = 0, diamonds = 38, essence = 0, essenceType = "", item = "" } },
+	{ id = 80, zone = "Thicket", name = "Overtime Wages (Thicket Ring)", desc = "Let the Hover Mower auto-bank 6500 gold.", objective = { kind = "automower_bank", mower = "Hover Mower", target = 6500 }, reward = { gold = 16000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
 	{ id = 81, zone = "Thicket", name = "Big Spender (Thicket Ring)", desc = "Spend 15000 gold at the Shop.", objective = { kind = "spend_gold", target = 15000 }, reward = { gold = 0, diamonds = 22, essence = 0, essenceType = "", item = "" } },
 	{ id = 82, zone = "Thicket", name = "Boom Season (Thicket Ring)", desc = "Use a Grass Bomb 30 times in the Thicket Ring.", objective = { kind = "use_grassbomb", target = 30 }, reward = { gold = 7000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
 	{ id = 83, zone = "Thicket", name = "Frenzied Cutter (Thicket Ring)", desc = "Trigger Frenzy 30 times.", objective = { kind = "trigger_frenzy", target = 30 }, reward = { gold = 7000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
@@ -122,8 +122,8 @@ QuestData.QUESTS = {
 	{ id = 106, zone = "Mossmire", name = "Loyal Companion: Firefly", desc = "Recruit the Firefly.", objective = { kind = "recruit_pet", pet = "Firefly", target = 1 }, reward = { gold = 0, diamonds = 10, essence = 0, essenceType = "", item = "" } },
 	{ id = 107, zone = "Mossmire", name = "Rare Tamer: Newt", desc = "Recruit the Newt.", objective = { kind = "recruit_pet", pet = "Newt", target = 1 }, reward = { gold = 0, diamonds = 18, essence = 0, essenceType = "", item = "" } },
 	{ id = 108, zone = "Mossmire", name = "Rescue: Herbalist Hazel", desc = "Find and rescue Herbalist Hazel, trapped in the Mossmire Ring.", objective = { kind = "rescue_neighbor", neighbor = "Herbalist Hazel", target = 1 }, reward = { gold = 0, diamonds = 18, essence = 0, essenceType = "", item = "permanent perk" } },
-	{ id = 109, zone = "Mossmire", name = "Set It & Forget It (Mossmire Ring)", desc = "Deploy the Hover Mower in the Mossmire Ring.", objective = { kind = "deploy_automower", mower = "Hover Mower", target = 1 }, reward = { gold = 0, diamonds = 18, essence = 0, essenceType = "", item = "" } },
-	{ id = 110, zone = "Mossmire", name = "Overtime Wages (Mossmire Ring)", desc = "Let the Hover Mower auto-bank 2000 gold.", objective = { kind = "automower_bank", mower = "Hover Mower", target = 2000 }, reward = { gold = 4500, diamonds = 0, essence = 0, essenceType = "", item = "" } },
+	{ id = 109, zone = "Mossmire", name = "Set It & Forget It (Mossmire Ring)", desc = "Deploy the Brushcutter Bot in the Mossmire Ring.", objective = { kind = "deploy_automower", mower = "Brushcutter Bot", target = 1 }, reward = { gold = 0, diamonds = 18, essence = 0, essenceType = "", item = "" } },
+	{ id = 110, zone = "Mossmire", name = "Overtime Wages (Mossmire Ring)", desc = "Let the Brushcutter Bot auto-bank 2000 gold.", objective = { kind = "automower_bank", mower = "Brushcutter Bot", target = 2000 }, reward = { gold = 4500, diamonds = 0, essence = 0, essenceType = "", item = "" } },
 	{ id = 111, zone = "Mossmire", name = "Big Spender (Mossmire Ring)", desc = "Spend 4000 gold at the Shop.", objective = { kind = "spend_gold", target = 4000 }, reward = { gold = 0, diamonds = 10, essence = 0, essenceType = "", item = "" } },
 	{ id = 112, zone = "Mossmire", name = "Boom Season (Mossmire Ring)", desc = "Use a Grass Bomb 18 times in the Mossmire Ring.", objective = { kind = "use_grassbomb", target = 18 }, reward = { gold = 2000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
 	{ id = 113, zone = "Mossmire", name = "Frenzied Cutter (Mossmire Ring)", desc = "Trigger Frenzy 18 times.", objective = { kind = "trigger_frenzy", target = 18 }, reward = { gold = 2000, diamonds = 0, essence = 0, essenceType = "", item = "" } },
