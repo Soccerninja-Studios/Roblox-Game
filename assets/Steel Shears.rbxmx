@@ -1,0 +1,235 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<Meta name="ExplicitAutoJoints">true</Meta>
+	<Item class="Tool" referent="RBXGEN00000000001">
+		<Properties>
+			<bool name="CanBeDropped">false</bool>
+			<bool name="Enabled">true</bool>
+			<CoordinateFrame name="Grip">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<bool name="RequiresHandle">true</bool>
+			<string name="Name">Steel Shears</string>
+			<string name="ToolTip">Steel Shears</string>
+		</Properties>
+		<Item class="Part" referent="RBXGEN00000000002">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4282796626</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>6.123234e-17</R00>
+					<R01>-1</R01>
+					<R02>0</R02>
+					<R10>1</R10>
+					<R11>6.123234e-17</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">512</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<token name="shape">2</token>
+				<Vector3 name="size"><X>0.35</X><Y>3.52</Y><Z>0.35</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXGEN00000000003">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4282137666</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>-1.76</X>
+					<Y>1.077689e-16</Y>
+					<Z>0</Z>
+					<R00>-1</R00>
+					<R01>-1.224647e-16</R01>
+					<R02>0</R02>
+					<R10>1.224647e-16</R10>
+					<R11>-1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">1088</token>
+				<string name="Name">Bolt</string>
+				<float name="Reflectance">0.2</float>
+				<token name="shape">2</token>
+				<Vector3 name="size"><X>0.4</X><Y>0.4</Y><Z>0.4</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXGEN00000000004">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4291218646</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>-1.64</X>
+					<Y>1.00421e-16</Y>
+					<Z>-1.32</Z>
+					<R00>-0.1045285</R00>
+					<R01>-0.9945219</R01>
+					<R02>0</R02>
+					<R10>0.9945219</R10>
+					<R11>-0.1045285</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">1088</token>
+				<string name="Name">FixedBlade</string>
+				<float name="Reflectance">0.15</float>
+				<token name="shape">1</token>
+				<Vector3 name="size"><X>0.12</X><Y>0.55</Y><Z>2.86</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="WedgePart" referent="RBXGEN00000000005">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4291218646</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>-1.64</X>
+					<Y>1.00421e-16</Y>
+					<Z>-2.805</Z>
+					<R00>-0.1045285</R00>
+					<R01>-0.9945219</R01>
+					<R02>6.123234e-17</R02>
+					<R10>6.729743e-17</R10>
+					<R11>5.449638e-17</R11>
+					<R12>1</R12>
+					<R20>-0.9945219</R20>
+					<R21>0.1045285</R21>
+					<R22>6.123234e-17</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">1088</token>
+				<string name="Name">FixedTip</string>
+				<float name="Reflectance">0.15</float>
+				<Vector3 name="size"><X>0.12</X><Y>0.55</Y><Z>0.77</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXGEN00000000006">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4291218646</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>-1.88</X>
+					<Y>1.151168e-16</Y>
+					<Z>-1.32</Z>
+					<R00>0.1004792</R00>
+					<R01>-0.9559958</R01>
+					<R02>0.2756374</R02>
+					<R10>0.9945219</R10>
+					<R11>0.1045285</R11>
+					<R12>-1.687792e-17</R12>
+					<R20>-0.02881195</R20>
+					<R21>0.2741274</R21>
+					<R22>0.9612617</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">1088</token>
+				<string name="Name">MovingBlade</string>
+				<float name="Reflectance">0.15</float>
+				<token name="shape">1</token>
+				<Vector3 name="size"><X>0.12</X><Y>0.55</Y><Z>2.86</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXGEN00000000007">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4282796626</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>0.33</X>
+					<Y>-0.18</Y>
+					<Z>0.4</Z>
+					<R00>6.123234e-17</R00>
+					<R01>-1</R01>
+					<R02>0</R02>
+					<R10>1</R10>
+					<R11>6.123234e-17</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">512</token>
+				<string name="Name">Grip1</string>
+				<float name="Reflectance">0</float>
+				<token name="shape">1</token>
+				<Vector3 name="size"><X>0.16</X><Y>1.1</Y><Z>0.7</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBXGEN00000000008">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<bool name="CanCollide">false</bool>
+				<bool name="CanQuery">false</bool>
+				<bool name="CanTouch">false</bool>
+				<Color3uint8 name="Color3uint8">4282796626</Color3uint8>
+				<CoordinateFrame name="CFrame">
+					<X>0.33</X>
+					<Y>0.18</Y>
+					<Z>0.4</Z>
+					<R00>6.123234e-17</R00>
+					<R01>-1</R01>
+					<R02>0</R02>
+					<R10>1</R10>
+					<R11>6.123234e-17</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="Massless">true</bool>
+				<token name="Material">512</token>
+				<string name="Name">Grip2</string>
+				<float name="Reflectance">0</float>
+				<token name="shape">1</token>
+				<Vector3 name="size"><X>0.16</X><Y>1.1</Y><Z>0.7</Z></Vector3>
+				<float name="Transparency">0</float>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
