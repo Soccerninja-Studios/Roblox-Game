@@ -29,6 +29,12 @@ local REMOTE_NAMES = {
 	"PurchaseAutoMower", -- client -> server: buy the mower with this key
 	"ToggleAutoMower", -- client -> server: deploy/recall the mower with this key
 	"AutoMowerBanked", -- server -> client: a deployed mower auto-banked gold (toast)
+	-- Backpacks (one per zone)
+	"RequestBackpacks", -- client -> server: send me my backpack list
+	"BackpackState", -- server -> client: all packs (owned/level/autoDeposit) + currency
+	"PurchaseBackpack", -- client -> server: buy the pack with this key
+	"UpgradeBackpack", -- client -> server: buy the next capacity level, or ("key", "autoDeposit")
+	"EquipBackpack", -- client -> server: wear the pack with this key
 	-- Admin panel (testers only)
 	"AdminGrantCurrency", -- client -> server: grant the caller gold/diamonds (whitelist enforced server-side)
 	-- Intro cutscene (client<->server).

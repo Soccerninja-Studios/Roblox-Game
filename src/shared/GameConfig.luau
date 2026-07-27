@@ -22,8 +22,9 @@ local GameConfig = {
 	-- 50 clippings by default -- roughly one diamond per ~1,000 clippings).
 	DIAMOND_ROLL_PER_CLIPPINGS = 50,
 	DIAMOND_CHANCE = 0.05,
-	-- Clipping bag tiers: how many clippings you can carry before the bag is full and
-	-- you must deposit. Tier 1 is free (the starting bag); each later tier costs gold.
+	-- LEGACY. Superseded by BACKPACKS below. Kept only because UpgradeService still
+	-- handles PurchaseUpgrade("bag") against this table; removing it would break that
+	-- path. Nothing in the UI points here any more.
 	BAG_TIERS = {
 		{ capacity = 25, cost = 0 },
 		{ capacity = 60, cost = 150 },
@@ -31,6 +32,123 @@ local GameConfig = {
 		{ capacity = 400, cost = 2500 },
 		{ capacity = 1000, cost = 9000 },
 	},
+
+	-- Backpacks: one per zone, each bought once and then upgraded on its own track.
+	-- The EQUIPPED pack alone decides how many clippings you can carry, so a later
+	-- pack is a straight upgrade rather than a side-grade.
+	--   zone            gate: the grass type you must have cut to buy it (same
+	--                   quests.reached check the auto-mowers use)
+	--   levels          capacity ladder. Level 1 comes with the purchase, so its cost
+	--                   is always 0; later entries are the gold price of that level.
+	--   autoDepositCost one-off unlock, per pack: a full bag banks itself from
+	--                   anywhere instead of making you walk back to the Gardener.
+	--   shape           which procedural model BackpackService builds for the back.
+	--   color / accent  body and trim colours for that model and its shop card.
+	BACKPACKS = {
+		{
+			key = "basket",
+			name = "Woven Basket",
+			zone = "Meadow",
+			desc = "Reed basket the whole kingdom starts with.",
+			shape = "basket",
+			goldCost = 0,
+			diamondCost = 0,
+			autoDepositCost = 1200,
+			autoDepositDiamondCost = 0,
+			color = { 196, 158, 96 },
+			accent = { 232, 210, 148 },
+			levels = {
+				{ capacity = 25, cost = 0 },
+				{ capacity = 45, cost = 150 },
+				{ capacity = 70, cost = 450 },
+				{ capacity = 105, cost = 1100 },
+				{ capacity = 150, cost = 2400 },
+			},
+		},
+		{
+			key = "satchel",
+			name = "Field Satchel",
+			zone = "Wild",
+			desc = "Waxed canvas with room for a real haul.",
+			shape = "satchel",
+			goldCost = 3000,
+			diamondCost = 0,
+			autoDepositCost = 6000,
+			autoDepositDiamondCost = 10,
+			color = { 122, 96, 62 },
+			accent = { 208, 176, 108 },
+			levels = {
+				{ capacity = 240, cost = 0 },
+				{ capacity = 330, cost = 1400 },
+				{ capacity = 450, cost = 3200 },
+				{ capacity = 600, cost = 6400 },
+				{ capacity = 800, cost = 12000 },
+			},
+		},
+		{
+			key = "rucksack",
+			name = "Mire Rucksack",
+			zone = "Moss",
+			desc = "Sealed against bog water and spores.",
+			shape = "rucksack",
+			goldCost = 22000,
+			diamondCost = 20,
+			autoDepositCost = 30000,
+			autoDepositDiamondCost = 25,
+			color = { 74, 108, 84 },
+			accent = { 152, 204, 150 },
+			levels = {
+				{ capacity = 1100, cost = 0 },
+				{ capacity = 1500, cost = 8000 },
+				{ capacity = 2000, cost = 16000 },
+				{ capacity = 2700, cost = 30000 },
+				{ capacity = 3600, cost = 55000 },
+			},
+		},
+		{
+			key = "bramblepack",
+			name = "Bramble Pack",
+			zone = "Thick",
+			desc = "Thorn-proof hide over a hardwood frame.",
+			shape = "frame",
+			goldCost = 120000,
+			diamondCost = 45,
+			autoDepositCost = 150000,
+			autoDepositDiamondCost = 60,
+			color = { 58, 74, 48 },
+			accent = { 176, 148, 92 },
+			levels = {
+				{ capacity = 4800, cost = 0 },
+				{ capacity = 6400, cost = 40000 },
+				{ capacity = 8600, cost = 85000 },
+				{ capacity = 11500, cost = 160000 },
+				{ capacity = 15000, cost = 300000 },
+			},
+		},
+		{
+			key = "hauler",
+			name = "Ironweed Hauler",
+			zone = "Ironweed",
+			desc = "Humming containment field. Holds a field's worth.",
+			shape = "hauler",
+			goldCost = 600000,
+			diamondCost = 120,
+			autoDepositCost = 750000,
+			autoDepositDiamondCost = 150,
+			color = { 46, 92, 74 },
+			accent = { 150, 245, 170 },
+			levels = {
+				{ capacity = 20000, cost = 0 },
+				{ capacity = 27000, cost = 200000 },
+				{ capacity = 36000, cost = 420000 },
+				{ capacity = 48000, cost = 800000 },
+				{ capacity = 65000, cost = 1500000 },
+			},
+		},
+	},
+
+	-- How often BackpackService checks an auto-depositing pack for a full bag.
+	BACKPACK_AUTO_DEPOSIT_TICK = 0.5,
 
 	-- Grass tiles (shared)
 	TILE_SIZE_STUDS = 4, -- footprint of one grass tile
