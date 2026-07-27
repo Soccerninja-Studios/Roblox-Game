@@ -1,5 +1,5 @@
 --!strict
--- UpgradeService: validates and applies purchases of tool tiers and Kingdom Skills.
+-- UpgradeService: validates and applies purchases of tool tiers and upgrades.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -55,19 +55,6 @@ local function onPurchase(player: Player, kind: unknown, id: unknown)
 				QuestService.ReportSpend(player, cost)
 				QuestService.ReportPurchase(player)
 				QuestService.ReportSkill(player, id, level + 1)
-			end
-		end
-	elseif kind == "bag" then
-		local nextTier = (profile.bagTier or 1) + 1
-		local bagDef = GameConfig.BAG_TIERS[nextTier]
-		if not bagDef then
-			return -- already at the biggest bag
-		end
-		if PlayerDataService.SpendGold(player, bagDef.cost) then
-			profile.bagTier = nextTier
-			if QuestService then
-				QuestService.ReportSpend(player, bagDef.cost)
-				QuestService.ReportPurchase(player)
 			end
 		end
 	end

@@ -235,8 +235,8 @@ end
 local GRASS_ZONE_INDEX: { [string]: number } = {
 	Meadow = 1,
 	Wild = 2,
-	Moss = 3,
-	Thick = 4,
+	Mossmire = 3,
+	Thicket = 4,
 	Ironweed = 5,
 }
 
@@ -351,7 +351,7 @@ local function buildDemo()
 	end
 
 	coatedPad(100, 2, Vector3.new(0, 1, 0), Color3.fromRGB(96, 72, 52), "Wild")
-	coatedPad(24, 1, Vector3.new(34, 2, 20), Color3.fromRGB(80, 62, 46), "Thick")
+	coatedPad(24, 1, Vector3.new(34, 2, 20), Color3.fromRGB(80, 62, 46), "Thicket")
 	coatedPad(20, 1, Vector3.new(-32, 2, -18), Color3.fromRGB(66, 54, 44), "Ironweed")
 
 	-- A little stone hut with a mossy roof, to show "cut grass -> reveal building".
@@ -363,7 +363,7 @@ local function buildDemo()
 	hut.Material = Enum.Material.Slate
 	hut.Name = "DemoHut"
 	hut.Parent = grassRoot
-	hut:SetAttribute("GrassType", "Moss")
+	hut:SetAttribute("GrassType", "Mossmire")
 	coatSurface(hut)
 end
 

@@ -55,7 +55,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 4
+local PROFILE_VERSION = 5
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -139,6 +139,35 @@ local function reconcile(profile: Profile): Profile
 				b.owned[def.key] = true
 				b.level[def.key] = b.level[def.key] or 1
 				b.equipped = def.key
+			end
+		end
+	end
+	-- v4 -> v5: the ring 3/4 zone keys were renamed to end the long-standing split
+	-- between the code and the design docs:
+	--     "Moss"  -> "Mossmire"  (ring 3)
+	--     "Thick" -> "Thicket"   (ring 4)
+	-- `quests.reached` is keyed by grass/zone key and IS persisted, so without this
+	-- remap every existing player would silently lose their ring 3 and ring 4
+	-- unlocks -- which also re-locks those zones' quests, backpacks and auto-mowers,
+	-- since all three gate on quests.reached. `zones` is remapped for the same
+	-- reason. Old keys are copied, not moved, only if the new key is absent, so
+	-- running this twice is harmless.
+	if incoming < 5 then
+		local RENAMES = { Moss = "Mossmire", Thick = "Thicket" }
+		local reached = profile.quests and profile.quests.reached
+		for oldKey, newKey in RENAMES do
+			if reached and reached[oldKey] ~= nil then
+				if reached[newKey] == nil then
+					reached[newKey] = reached[oldKey]
+				end
+				reached[oldKey] = nil
+			end
+			local zones = profile.zones
+			if zones and zones[oldKey] ~= nil then
+				if zones[newKey] == nil then
+					zones[newKey] = zones[oldKey]
+				end
+				zones[oldKey] = nil
 			end
 		end
 	end

@@ -5,7 +5,7 @@
 -- studs total, tiled because a single 2560-wide part exceeds Roblox's 2048-stud
 -- limit). The house sits dead-center on a bare dirt yard, and FIVE big concentric
 -- grass rings surround it, ordered easiest-nearest to toughest-outermost
--- (Meadow -> Wild -> Moss -> Thick -> Ironweed, matching the tool progression).
+-- (Meadow -> Wild -> Mossmire -> Thicket -> Ironweed, matching the tool progression).
 --
 -- Each ring is a true circular BAND (membership is a pure radius test, so the
 -- edges are round, not square) and each ring is wider -- and covers far more
@@ -50,8 +50,8 @@ type RingDef = { grass: string, inner: number, outer: number, pad: number, tile:
 local RINGS: { RingDef } = {
 	{ grass = "Meadow", inner = 120, outer = 255, pad = 20, tile = 10 },
 	{ grass = "Wild", inner = 290, outer = 480, pad = 28, tile = 14 },
-	{ grass = "Moss", inner = 515, outer = 725, pad = 36, tile = 18 },
-	{ grass = "Thick", inner = 765, outer = 965, pad = 48, tile = 24 },
+	{ grass = "Mossmire", inner = 515, outer = 725, pad = 36, tile = 18 },
+	{ grass = "Thicket", inner = 765, outer = 965, pad = 48, tile = 24 },
 	{ grass = "Ironweed", inner = 1005, outer = 1145, pad = 60, tile = 30 },
 }
 
