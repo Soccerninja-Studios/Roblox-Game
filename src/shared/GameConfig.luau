@@ -88,7 +88,7 @@ local GameConfig = {
 		{
 			key = "rucksack",
 			name = "Mire Rucksack",
-			zone = "Moss",
+			zone = "Mossmire",
 			desc = "Sealed against bog water and spores.",
 			shape = "rucksack",
 			goldCost = 22000,
@@ -108,7 +108,7 @@ local GameConfig = {
 		{
 			key = "bramblepack",
 			name = "Bramble Pack",
-			zone = "Thick",
+			zone = "Thicket",
 			desc = "Thorn-proof hide over a hardwood frame.",
 			shape = "frame",
 			goldCost = 120000,
@@ -181,8 +181,8 @@ local GameConfig = {
 	GRASS_TYPES = {
 		Meadow = { displayName = "Meadow Grass", health = 3, armor = 0, height = 2.6, clipReward = 3, color = { 120, 196, 92 } },
 		Wild = { displayName = "Wild Grass", health = 6, armor = 0, height = 4.8, clipReward = 6, color = { 86, 158, 66 } },
-		Thick = { displayName = "Thicket", health = 16, armor = 2, height = 5.6, clipReward = 25, color = { 58, 120, 52 } },
-		Moss = { displayName = "Creeping Moss", health = 12, armor = 1, height = 2.2, clipReward = 15, color = { 74, 132, 86 } },
+		Thicket = { displayName = "Thicket", health = 16, armor = 2, height = 5.6, clipReward = 25, color = { 58, 120, 52 } },
+		Mossmire = { displayName = "Mire Moss", health = 12, armor = 1, height = 2.2, clipReward = 15, color = { 74, 132, 86 } },
 		Ironweed = { displayName = "Ironweed", health = 40, armor = 5, height = 5.0, clipReward = 80, color = { 44, 92, 74 } },
 	},
 
@@ -211,12 +211,12 @@ local GameConfig = {
 		{ name = "Bramble Sickle", bladesPerSwing = 13, cost = 2500, style = "sickle", favored = "Wild", favoredMul = 2.6, offMul = 0.7, handleColor = { 96, 68, 40 }, bladeColor = { 120, 168, 96 }, bladeMaterial = "Metal", toolScale = 1.12 },
 		-- 5 \u{00B7} all-rounder
 		{ name = "Garden Sickle", bladesPerSwing = 15, cost = 6000, style = "sickle", favored = nil, handleColor = { 116, 80, 46 }, bladeColor = { 210, 214, 224 }, bladeMaterial = "Metal", toolScale = 1.15 },
-		-- 6 \u{00B7} specialist: Moss
-		{ name = "Moss Whip", bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Moss", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
+		-- 6 \u{00B7} specialist: Mossmire
+		{ name = "Mire Whip", bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Mossmire", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
 		-- 7 \u{00B7} all-rounder
 		{ name = "Keen Scythe", bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
 		-- 8 \u{00B7} specialist: Thicket
-		{ name = "Thornbite Machete", bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thick", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
+		{ name = "Thornbite Machete", bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thicket", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
 		-- 9 \u{00B7} all-rounder
 		{ name = "Royal Reaper", bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
 		-- 10 \u{00B7} specialist: Ironweed
@@ -277,8 +277,8 @@ local GameConfig = {
 	ZONES = {
 		{ key = "Meadow", displayName = "Meadow", grassType = "Meadow", length = 64, groundColor = { 120, 92, 60 }, requiredTool = "Rusty Shears" },
 		{ key = "Wild", displayName = "Wildfields", grassType = "Wild", length = 64, groundColor = { 98, 74, 52 }, requiredTool = "Rusty Shears" },
-		{ key = "Moss", displayName = "Mossy Hollow", grassType = "Moss", length = 64, groundColor = { 78, 74, 58 }, requiredTool = "Sickle" },
-		{ key = "Thick", displayName = "The Thicket", grassType = "Thick", length = 64, groundColor = { 74, 62, 46 }, requiredTool = "Sickle" },
+		{ key = "Mossmire", displayName = "Mossmire", grassType = "Mossmire", length = 64, groundColor = { 78, 74, 58 }, requiredTool = "Sickle" },
+		{ key = "Thicket", displayName = "Thicket", grassType = "Thicket", length = 64, groundColor = { 74, 62, 46 }, requiredTool = "Sickle" },
 		{ key = "Ironweed", displayName = "Ironweed Expanse", grassType = "Ironweed", length = 72, groundColor = { 60, 56, 50 }, requiredTool = "Scythe" },
 	},
 
@@ -378,8 +378,8 @@ local GameConfig = {
 	AUTO_MOWERS = {
 		{ key = "push", name = "Push Mower", zone = "Meadow", modelName = "PushMower", modelLength = 0, modelYaw = 180, hoverOffset = 0, moveSpeed = 14, cutPower = 4, cutInterval = 0.50, ratePerSec = 2, storageCap = 180, goldCost = 500, diamondCost = 20, bodyColor = { 120, 196, 92 }, desc = "Starter automation for the Meadow." },
 		{ key = "reel", name = "Reel Mower", zone = "Wild", modelName = "ReelMower", modelLength = 0, modelYaw = 180, hoverOffset = 0, moveSpeed = 18, cutPower = 9, cutInterval = 0.45, ratePerSec = 5, storageCap = 450, goldCost = 1500, diamondCost = 45, bodyColor = { 86, 158, 66 }, desc = "Handles tougher Wild grass." },
-		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Moss", modelName = "BrushcutterBot", modelLength = 0, modelYaw = 90, hoverOffset = 0, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Walking legs keep it upright on rough ground." },
-		{ key = "hover", name = "Hover Mower", zone = "Thick", modelName = "HoverMower", modelLength = 0, modelYaw = 0, hoverOffset = 0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats clean over bog water and tangled roots." },
+		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Mossmire", modelName = "BrushcutterBot", modelLength = 0, modelYaw = 90, hoverOffset = 0, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Walking legs keep it upright on rough ground." },
+		{ key = "hover", name = "Hover Mower", zone = "Thicket", modelName = "HoverMower", modelLength = 0, modelYaw = 0, hoverOffset = 0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats clean over bog water and tangled roots." },
 		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", modelName = "PlasmaHarvester", modelLength = 0, modelYaw = 0, hoverOffset = 2, moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
 	},
 }
