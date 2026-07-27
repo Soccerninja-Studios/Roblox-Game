@@ -76,7 +76,7 @@ per swing; a tuft is cut when damage >= its Grass HP.
 | 2 | Meadow Trimmer | 1 | Meadow | 4 | 10 | 3.2 | 0.50s | 150 gold |
 | 3 | Bramble Sickle | 2 | Wild | 8 | 20 | 6.4 | 0.45s | 900 gold |
 | 4 | Thornbite Machete | 3 | Thicket | 16 | 40 | 12.8 | 0.45s | 4,500 gold |
-| 5 | Bogblade | 4 | Mossmire | 30 | 75 | 24 | 0.40s | 18,000 gold |
+| 5 | Bogblade | 3 | Mossmire | 30 | 75 | 24 | 0.40s | 14,000 gold (shipped) |
 | 6 | Ironfang Scythe | 5 | Ironweed | 55 | 137 | 44 | 0.40s | 70,000 gold |
 | 7 | Greenwarden Mower | 3 | Meadow + Wild | 24 | 53 (both) | 20 | 0.40s | 12,000 gold |
 | 8 | Marsh Reaver | 4 | Thicket + Mossmire | 45 | 99 (both) | 38 | 0.38s | 40,000 gold |
@@ -351,83 +351,82 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 | 59 | Elite Hunt: Bramble Crawler | Defeat 10 Elite Bramble Crawlers. | 14 Wild Burr + 5 diamonds |
 | 60 | Wildwood Ring Champion | Defeat the Bramble Broodmother 2 times. | 9 diamonds + the Wildwood Ring Crown |
 
-> **⚠ Known issue - ring 3/4 reward tiers are inverted.** In `QuestData.luau` the
-> Thicket-flavoured quest block (ids 61-90) carries the *cheaper* ring-3 reward tier, and
-> the Mossmire-flavoured block (ids 91-120) carries the *dearer* ring-4 tier. But the
-> canonical order is **Mossmire = ring 3, Thicket = ring 4**. So Thicket quests currently
-> under-reward and Mossmire quests over-reward. Fixing this means swapping the reward and
-> target scalars between the two blocks; it has NOT been done yet because it re-tiers 60
-> quests.
+> **Resolved 2026-07-26.** The ring 3/4 reward tiers were previously inverted: the
+> Thicket block (ids 61-90) carried the cheaper tier while the Mossmire block (ids
+> 91-120) carried the dearer one. Since **Mossmire is ring 3 and Thicket is ring 4**,
+> the reward and target scalars have been swapped between the two blocks. Quest ids,
+> zones, monsters, pets, swords and mowers were left untouched, so no save data or
+> quest identity changed.
 
 ### Thicket Ring quests - **ring 4** (30 quests, ids 61-90)
 
 | # | Quest | Objective | Reward |
 |---|-------|-----------|--------|
-| 61 | Thicket Ring: Greenhorn | Mow 80 tufts of Thicket grass. | 850 gold |
-| 62 | Thicket grass Harvest | Mow 800 Thicket grass tufts in total. | 2,000 gold |
-| 63 | A Full Satchel in the Thicket Ring | Fill your carry bag to capacity while in the Thicket Ring. | 850 gold |
-| 64 | Bank On It (Thicket Ring) | Deposit 2,000 gold at the Gardener. | 4 diamonds |
-| 65 | Vine Lurker Stomper | Defeat 18 Vine Lurkers. | 850 gold + 28 Thicket Sap |
-| 66 | Bark Golemling Menace | Defeat 18 Bark Golemlings. | 2,000 gold + 28 Thicket Sap |
-| 67 | Right Blade for the Job (Thicket Ring) | Buy and equip the Thornbite Machete. | 10 diamonds |
-| 68 | Keen Edge in the Thicket Ring | Upgrade Blade Sharpness to Lv 8. | 2,000 gold |
-| 69 | Quick Clip (Thicket Ring) | Mow 80 Thicket grass tufts within 60 seconds. | 10 diamonds |
-| 70 | Thicket Sap Gatherer | Collect 50 Thicket Sap. | 2,000 gold |
-| 71 | First Blood: Thornguard Sword | Buy the Thornguard Sword. | 28 Thicket Sap |
-| 72 | Twin Fangs of the Thicket Ring | Own both Thicket Ring swords (Thornguard Sword & Bristlebane). | 18 diamonds |
-| 73 | Culling the Thicket Ring | Defeat 90 monsters in the Thicket Ring. | 4,500 gold + 10 diamonds |
-| 74 | Slayer of the Elder Vinewrath | Defeat the Elder Vinewrath. | 18 diamonds + trophy |
-| 75 | Best Friend: Badger | Recruit the Badger. | 10 diamonds |
-| 76 | Loyal Companion: Owl | Recruit the Owl. | 10 diamonds |
-| 77 | Rare Tamer: Boar | Recruit the Boar. | 18 diamonds |
-| 78 | Rescue: Woodcutter Wren | Find and rescue Woodcutter Wren, trapped in the Thicket Ring. | 18 diamonds + permanent perk |
-| 79 | Set It & Forget It (Thicket Ring) | Deploy the Brushcutter Bot in the Thicket Ring. | 18 diamonds |
-| 80 | Overtime Wages (Thicket Ring) | Let the Brushcutter Bot auto-bank 2,000 gold. | 4,500 gold |
-| 81 | Big Spender (Thicket Ring) | Spend 4,000 gold at the Shop. | 10 diamonds |
-| 82 | Boom Season (Thicket Ring) | Use a Grass Bomb 18 times in the Thicket Ring. | 2,000 gold |
-| 83 | Frenzied Cutter (Thicket Ring) | Trigger Frenzy 18 times. | 2,000 gold |
-| 84 | Golden Deposit (Thicket Ring) | Deposit during Golden Hour 8 times. | 10 diamonds |
-| 85 | Untouchable (Thicket Ring) | Defeat 18 Vine Lurkers without taking damage. | 18 diamonds |
-| 86 | Diamond Rush (Thicket Ring) | Earn 40 diamonds while in the Thicket Ring. | 18 diamonds |
-| 87 | Upgrade Spree (Thicket Ring) | Purchase 18 upgrades of any kind. | 2,000 gold |
-| 88 | Clean Sweep (Thicket Ring) | Clear 80% of the Thicket Ring's grass in one session. | 18 diamonds |
-| 89 | Elite Hunt: Bark Golemling | Defeat 18 Elite Bark Golemlings. | 28 Thicket Sap + 10 diamonds |
-| 90 | Thicket Ring Champion | Defeat the Elder Vinewrath 3 times. | 18 diamonds + the Thicket Ring Crown |
+| 61 | Thicket Ring: Greenhorn | Mow 150 tufts of Thicket grass. | 3,000 gold |
+| 62 | Thicket grass Harvest | Mow 1800 Thicket grass tufts in total. | 7,000 gold |
+| 63 | A Full Satchel in the Thicket Ring | Fill your carry bag to capacity while in the Thicket Ring. | 3,000 gold |
+| 64 | Bank On It (Thicket Ring) | Deposit 6,500 gold at the Gardener. | 8 diamonds |
+| 65 | Vine Lurker Stomper | Defeat 30 Vine Lurkers. | 3,000 gold + 50 Thicket Sap |
+| 66 | Bark Golemling Menace | Defeat 30 Bark Golemlings. | 7,000 gold + 50 Thicket Sap |
+| 67 | Right Blade for the Job (Thicket Ring) | Buy and equip the Thornbite Machete. | 22 diamonds |
+| 68 | Keen Edge in the Thicket Ring | Upgrade Blade Sharpness to Lv 12. | 7,000 gold |
+| 69 | Quick Clip (Thicket Ring) | Mow 150 Thicket grass tufts within 60 seconds. | 22 diamonds |
+| 70 | Thicket Sap Gatherer | Collect 90 Thicket Sap. | 7,000 gold |
+| 71 | First Blood: Thornguard Sword | Buy the Thornguard Sword. | 50 Thicket Sap |
+| 72 | Twin Fangs of the Thicket Ring | Own both Thicket Ring swords (Thornguard Sword & Bristlebane). | 38 diamonds |
+| 73 | Culling the Thicket Ring | Defeat 150 monsters in the Thicket Ring. | 16,000 gold + 22 diamonds |
+| 74 | Slayer of the Elder Vinewrath | Defeat the Elder Vinewrath. | 38 diamonds + trophy |
+| 75 | Best Friend: Badger | Recruit the Badger. | 22 diamonds |
+| 76 | Loyal Companion: Owl | Recruit the Owl. | 22 diamonds |
+| 77 | Rare Tamer: Boar | Recruit the Boar. | 38 diamonds |
+| 78 | Rescue: Woodcutter Wren | Find and rescue Woodcutter Wren, trapped in the Thicket Ring. | 38 diamonds + permanent perk |
+| 79 | Set It & Forget It (Thicket Ring) | Deploy the Brushcutter Bot in the Thicket Ring. | 38 diamonds |
+| 80 | Overtime Wages (Thicket Ring) | Let the Brushcutter Bot auto-bank 6,500 gold. | 16,000 gold |
+| 81 | Big Spender (Thicket Ring) | Spend 15,000 gold at the Shop. | 22 diamonds |
+| 82 | Boom Season (Thicket Ring) | Use a Grass Bomb 30 times in the Thicket Ring. | 7,000 gold |
+| 83 | Frenzied Cutter (Thicket Ring) | Trigger Frenzy 30 times. | 7,000 gold |
+| 84 | Golden Deposit (Thicket Ring) | Deposit during Golden Hour 10 times. | 22 diamonds |
+| 85 | Untouchable (Thicket Ring) | Defeat 30 Vine Lurkers without taking damage. | 38 diamonds |
+| 86 | Diamond Rush (Thicket Ring) | Earn 90 diamonds while in the Thicket Ring. | 38 diamonds |
+| 87 | Upgrade Spree (Thicket Ring) | Purchase 30 upgrades of any kind. | 7,000 gold |
+| 88 | Clean Sweep (Thicket Ring) | Clear 80% of the Thicket Ring's grass in one session. | 38 diamonds |
+| 89 | Elite Hunt: Bark Golemling | Defeat 30 Elite Bark Golemlings. | 50 Thicket Sap + 22 diamonds |
+| 90 | Thicket Ring Champion | Defeat the Elder Vinewrath 3 times. | 38 diamonds + the Thicket Ring Crown |
 
 ### Mossmire Ring quests - **ring 3** (30 quests, ids 91-120)
 
 | # | Quest | Objective | Reward |
 |---|-------|-----------|--------|
-| 91 | Mossmire Ring: Greenhorn | Mow 150 tufts of Mossmire grass. | 3,000 gold |
-| 92 | Mossmire grass Harvest | Mow 1800 Mossmire grass tufts in total. | 7,000 gold |
-| 93 | A Full Satchel in the Mossmire Ring | Fill your carry bag to capacity while in the Mossmire Ring. | 3,000 gold |
-| 94 | Bank On It (Mossmire Ring) | Deposit 6,500 gold at the Gardener. | 8 diamonds |
-| 95 | Spore Hound Stomper | Defeat 30 Spore Hounds. | 3,000 gold + 50 Mire Spore |
-| 96 | Bog Wraith Menace | Defeat 30 Bog Wraiths. | 7,000 gold + 50 Mire Spore |
-| 97 | Right Blade for the Job (Mossmire Ring) | Buy and equip the Bogblade. | 22 diamonds |
-| 98 | Keen Edge in the Mossmire Ring | Upgrade Blade Sharpness to Lv 12. | 7,000 gold |
-| 99 | Quick Clip (Mossmire Ring) | Mow 150 Mossmire grass tufts within 60 seconds. | 22 diamonds |
-| 100 | Mire Spore Gatherer | Collect 90 Mire Spore. | 7,000 gold |
-| 101 | First Blood: Bogpiercer | Buy the Bogpiercer. | 50 Mire Spore |
-| 102 | Twin Fangs of the Mossmire Ring | Own both Mossmire Ring swords (Bogpiercer & Mireblade). | 38 diamonds |
-| 103 | Culling the Mossmire Ring | Defeat 150 monsters in the Mossmire Ring. | 16,000 gold + 22 diamonds |
-| 104 | Slayer of the Mirequeen | Defeat the Mirequeen. | 38 diamonds + trophy |
-| 105 | Best Friend: Marsh Frog | Recruit the Marsh Frog. | 22 diamonds |
-| 106 | Loyal Companion: Firefly | Recruit the Firefly. | 22 diamonds |
-| 107 | Rare Tamer: Newt | Recruit the Newt. | 38 diamonds |
-| 108 | Rescue: Herbalist Hazel | Find and rescue Herbalist Hazel, trapped in the Mossmire Ring. | 38 diamonds + permanent perk |
-| 109 | Set It & Forget It (Mossmire Ring) | Deploy the Hover Mower in the Mossmire Ring. | 38 diamonds |
-| 110 | Overtime Wages (Mossmire Ring) | Let the Hover Mower auto-bank 6,500 gold. | 16,000 gold |
-| 111 | Big Spender (Mossmire Ring) | Spend 15,000 gold at the Shop. | 22 diamonds |
-| 112 | Boom Season (Mossmire Ring) | Use a Grass Bomb 30 times in the Mossmire Ring. | 7,000 gold |
-| 113 | Frenzied Cutter (Mossmire Ring) | Trigger Frenzy 30 times. | 7,000 gold |
-| 114 | Golden Deposit (Mossmire Ring) | Deposit during Golden Hour 10 times. | 22 diamonds |
-| 115 | Untouchable (Mossmire Ring) | Defeat 30 Spore Hounds without taking damage. | 38 diamonds |
-| 116 | Diamond Rush (Mossmire Ring) | Earn 90 diamonds while in the Mossmire Ring. | 38 diamonds |
-| 117 | Upgrade Spree (Mossmire Ring) | Purchase 30 upgrades of any kind. | 7,000 gold |
-| 118 | Clean Sweep (Mossmire Ring) | Clear 80% of the Mossmire Ring's grass in one session. | 38 diamonds |
-| 119 | Elite Hunt: Bog Wraith | Defeat 30 Elite Bog Wraiths. | 50 Mire Spore + 22 diamonds |
-| 120 | Mossmire Ring Champion | Defeat the Mirequeen 3 times. | 38 diamonds + the Mossmire Ring Crown |
+| 91 | Mossmire Ring: Greenhorn | Mow 80 tufts of Mossmire grass. | 850 gold |
+| 92 | Mossmire grass Harvest | Mow 800 Mossmire grass tufts in total. | 2,000 gold |
+| 93 | A Full Satchel in the Mossmire Ring | Fill your carry bag to capacity while in the Mossmire Ring. | 850 gold |
+| 94 | Bank On It (Mossmire Ring) | Deposit 2,000 gold at the Gardener. | 4 diamonds |
+| 95 | Spore Hound Stomper | Defeat 18 Spore Hounds. | 850 gold + 28 Mire Spore |
+| 96 | Bog Wraith Menace | Defeat 18 Bog Wraiths. | 2,000 gold + 28 Mire Spore |
+| 97 | Right Blade for the Job (Mossmire Ring) | Buy and equip the Bogblade. | 10 diamonds |
+| 98 | Keen Edge in the Mossmire Ring | Upgrade Blade Sharpness to Lv 8. | 2,000 gold |
+| 99 | Quick Clip (Mossmire Ring) | Mow 80 Mossmire grass tufts within 60 seconds. | 10 diamonds |
+| 100 | Mire Spore Gatherer | Collect 50 Mire Spore. | 2,000 gold |
+| 101 | First Blood: Bogpiercer | Buy the Bogpiercer. | 28 Mire Spore |
+| 102 | Twin Fangs of the Mossmire Ring | Own both Mossmire Ring swords (Bogpiercer & Mireblade). | 18 diamonds |
+| 103 | Culling the Mossmire Ring | Defeat 90 monsters in the Mossmire Ring. | 4,500 gold + 10 diamonds |
+| 104 | Slayer of the Mirequeen | Defeat the Mirequeen. | 18 diamonds + trophy |
+| 105 | Best Friend: Marsh Frog | Recruit the Marsh Frog. | 10 diamonds |
+| 106 | Loyal Companion: Firefly | Recruit the Firefly. | 10 diamonds |
+| 107 | Rare Tamer: Newt | Recruit the Newt. | 18 diamonds |
+| 108 | Rescue: Herbalist Hazel | Find and rescue Herbalist Hazel, trapped in the Mossmire Ring. | 18 diamonds + permanent perk |
+| 109 | Set It & Forget It (Mossmire Ring) | Deploy the Hover Mower in the Mossmire Ring. | 18 diamonds |
+| 110 | Overtime Wages (Mossmire Ring) | Let the Hover Mower auto-bank 2,000 gold. | 4,500 gold |
+| 111 | Big Spender (Mossmire Ring) | Spend 4,000 gold at the Shop. | 10 diamonds |
+| 112 | Boom Season (Mossmire Ring) | Use a Grass Bomb 18 times in the Mossmire Ring. | 2,000 gold |
+| 113 | Frenzied Cutter (Mossmire Ring) | Trigger Frenzy 18 times. | 2,000 gold |
+| 114 | Golden Deposit (Mossmire Ring) | Deposit during Golden Hour 8 times. | 10 diamonds |
+| 115 | Untouchable (Mossmire Ring) | Defeat 18 Spore Hounds without taking damage. | 18 diamonds |
+| 116 | Diamond Rush (Mossmire Ring) | Earn 40 diamonds while in the Mossmire Ring. | 18 diamonds |
+| 117 | Upgrade Spree (Mossmire Ring) | Purchase 18 upgrades of any kind. | 2,000 gold |
+| 118 | Clean Sweep (Mossmire Ring) | Clear 80% of the Mossmire Ring's grass in one session. | 18 diamonds |
+| 119 | Elite Hunt: Bog Wraith | Defeat 18 Elite Bog Wraiths. | 28 Mire Spore + 10 diamonds |
+| 120 | Mossmire Ring Champion | Defeat the Mirequeen 3 times. | 18 diamonds + the Mossmire Ring Crown |
 
 ### Zone 5 - Ironweed Ring (30 quests)
 
@@ -532,3 +531,15 @@ modern suburban-neighborhood-overtaken-by-plains premise. See `docs/SCRAPPED.md`
 - Rename `workspace.Kingdom`; rename "Verdant Kingcutter" and "Kingsedge".
 - Remove `DistrictService`; retire `BAG_TIERS` capacity fallback.
 - Resolve the ring 3/4 quest reward-tier inversion.
+
+### Addendum - 2026-07-26 (later the same day)
+
+- **Ring 3/4 reward-tier inversion fixed.** Reward and target scalars swapped between
+  quest ids 61-90 (Thicket, ring 4 - now the dearer tier) and 91-120 (Mossmire, ring 3 -
+  now the cheaper tier). Ids and zones unchanged, so quest progress is unaffected.
+- **`Bogblade` restored as the ring 3 specialist tool name.** `GameConfig.TOOL_TIERS`
+  slot 6 had shipped as `"Moss Whip"`, which no doc, quest, or model asset ever used.
+  Quest 97 and `Bogblade.rbxmx` both expect `Bogblade`, so the config was renamed to
+  match. Quest 97 is now completable.
+- Grass display name restored to `"Creeping Moss"`.
+- Quest objective kind `rescue_villager` renamed to `rescue_neighbor`.
