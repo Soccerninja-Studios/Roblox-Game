@@ -340,6 +340,54 @@ end
 -- proper Tool: a hidden structural Handle, a BladeRoot on a "Pivot" Motor6D (so
 -- ToolController's RestC0/SwungC0 swing works), and every visual part rigidly
 -- welded to that BladeRoot so the whole blade swings as one piece.
+--
+-- ==========================================================================
+-- FIX HISTORY (tool orientation / animation / model-reference bugs)
+-- ==========================================================================
+-- 1. WRONG MODEL REFERENCES:
+--    - Meadow Trimmer (tier 2): The asset is named "MeadowTrimmer" (no space)
+--      but the tool name is "Meadow Trimmer" (with space), so adoptCustomModel
+--      could not find it.  It fell through to buildCustomShears, which uses the
+--      "Shears" (Rusty Shears) asset — so Meadow Trimmer looked identical to
+--      the starter tool.
+--      FIX: Added `model = "MeadowTrimmer"` to the GameConfig entry.
+--    - Steel Shears (tier 3): No custom asset exists.  It fell through to
+--      buildCustomShears, which uses "Shears" (Rusty Shears) — same problem.
+--      FIX: buildTool now only calls buildCustomShears for tier 1; all other
+--      shears-style tools without a custom model use the procedural buildShears.
+--
+-- 2. GRIP NOT PRESERVED (tools held at midpoint, facing wrong direction):
+--    - adoptCustomModel always overwrote the tool Grip with identity values,
+--      ignoring the authored GripPos / GripForward / GripUp / GripRight.
+--      Bogblade (GripPos 0,-1,-0.1) and Thornbite Machete (GripPos 0,-1.3,0.1
+--      with a complex rotation) were held at the centre of the handle instead
+--      of near the bottom, and faced the wrong way.
+--      FIX: If the source asset is a Tool, its Grip properties are copied to
+--      the rebuilt tool.  Models (like MeadowTrimmer) still get the default.
+--
+-- 3. WRONG SWING AXIS (tools slam down instead of sweeping):
+--    - adoptCustomModel used a fixed −58° X-axis rotation for every custom
+--      tool.  For Bogblade (a scythe) this made the blade chop straight down.
+--      FIX: Added optional `swingRot = {x,y,z}` (degrees) to GameConfig.
+--      Bogblade now uses swingRot = {0, -58, 0} (Y-axis sweep).
+--
+-- 4. WRONG BLADE ORIENTATION (Bramble Sickle faces right):
+--    - The sickle mesh ships pointing +X (right).  With identity Grip the
+--      blade faced right instead of forward.
+--      FIX: Added optional `modelRot = {x,y,z}` (degrees) to GameConfig.
+--      Bramble Sickle now uses modelRot = {0, 90, 0} to rotate the blade to
+--      face forward (−Z).
+--
+-- 5. VERDANT KINGCUTTER GLOW:
+--    - bladeMaterial was "Neon", making the entire blade glow brightly.
+--      FIX: Changed to "Metal" in GameConfig.
+--
+-- 6. MEADOWTRIMMER HANDLE:
+--    - The MeadowTrimmer model had no part named "Handle", so adoptCustomModel
+--      used the largest part by volume (the blade bar) as the grip point.
+--      FIX: Renamed the bottom Union (the actual handle) to "Handle" so
+--      adoptCustomModel picks it as the anchor.
+-- ==========================================================================
 
 local STRIP_CLASSES = {
 	"Script", "LocalScript", "ModuleScript",
@@ -420,10 +468,23 @@ local function adoptCustomModel(def: any, tier: number): Tool?
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool.ToolTip = def.name
-	tool.GripPos = Vector3.new(0, 0, 0)
-	tool.GripForward = Vector3.new(0, 0, -1)
-	tool.GripUp = Vector3.new(0, 1, 0)
-	tool.GripRight = Vector3.new(1, 0, 0)
+	-- Preserve the original Tool's Grip so the tool sits in the hand exactly as
+	-- the author intended.  Custom Tools (Bogblade, Thornbite Machete, etc.)
+	-- ship with GripPos / GripForward / GripUp / GripRight that offset the hold
+	-- point and orient the mesh; overwriting them with identity made tools look
+	-- "held at the midpoint" and face the wrong way.  Models (like
+	-- MeadowTrimmer) have no Grip, so they get the default identity grip.
+	if source:IsA("Tool") then
+		tool.GripPos = source.GripPos
+		tool.GripForward = source.GripForward
+		tool.GripUp = source.GripUp
+		tool.GripRight = source.GripRight
+	else
+		tool.GripPos = Vector3.new(0, 0, 0)
+		tool.GripForward = Vector3.new(0, 0, -1)
+		tool.GripUp = Vector3.new(0, 1, 0)
+		tool.GripRight = Vector3.new(1, 0, 0)
+	end
 	tool:SetAttribute("Shears", true)
 	tool:SetAttribute("ToolTier", tier)
 
@@ -454,14 +515,39 @@ local function adoptCustomModel(def: any, tier: number): Tool?
 	bladeRoot.CFrame = anchorCFrame
 	bladeRoot.Parent = tool
 
-	local restC0 = CFrame.new()
+	-- modelRot: optional per-tool Euler-angle correction (degrees) that rotates
+	-- the entire visual assembly so the blade faces the right way.  Bramble
+	-- Sickle's mesh ships pointing +X (right); rotating 90° about Y points it
+	-- forward (-Z).
+	local modelRot = CFrame.new()
+	if def.modelRot then
+		modelRot = CFrame.Angles(
+			math.rad(def.modelRot[1] or 0),
+			math.rad(def.modelRot[2] or 0),
+			math.rad(def.modelRot[3] or 0)
+		)
+	end
+
+	-- swingRot: optional per-tool swing rotation (degrees) replacing the default
+	-- -58° about X.  Bogblade (a scythe) uses a Y-axis sweep so the blade arcs
+	-- side-to-side instead of slamming straight down.
+	local swingRot = CFrame.Angles(math.rad(-58), 0, 0)
+	if def.swingRot then
+		swingRot = CFrame.Angles(
+			math.rad(def.swingRot[1] or -58),
+			math.rad(def.swingRot[2] or 0),
+			math.rad(def.swingRot[3] or 0)
+		)
+	end
+
+	local restC0 = modelRot
 	local pivot = Instance.new("Motor6D")
 	pivot.Name = "Pivot"
 	pivot.Part0 = handle
 	pivot.Part1 = bladeRoot
 	pivot.C0 = restC0
 	pivot:SetAttribute("RestC0", restC0)
-	pivot:SetAttribute("SwungC0", restC0 * CFrame.Angles(math.rad(-58), 0, 0))
+	pivot:SetAttribute("SwungC0", restC0 * swingRot)
 	pivot.Parent = handle
 
 	-- Reparent each visual part under the Tool and rigidly weld it to BladeRoot,
@@ -504,8 +590,11 @@ local function buildTool(tier: number): Tool
 		return custom
 	end
 
-	-- Rusty Shears still uses the bespoke scissor asset (named "Shears").
-	if def.style == "shears" then
+	-- Only tier 1 (Rusty Shears) uses the bespoke scissor asset (named "Shears").
+	-- Other shears-style tools without custom model assets use the procedural
+	-- builder so they get their own coloured shears instead of looking like
+	-- Rusty Shears.
+	if tier == 1 and def.style == "shears" then
 		local scissor = buildCustomShears(def, tier)
 		if scissor then
 			return scissor
