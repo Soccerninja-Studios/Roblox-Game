@@ -332,6 +332,163 @@ local function buildCustomShears(def: any, tier: number): Tool?
 	return tool
 end
 
+-- ---- Adopting hand-made model assets ---------------------------------------
+-- Player-made tool models arrive in many shapes: some are Tools with a Handle,
+-- some are bare Models, some are Accessories, and none ship the swing rig our
+-- animation code expects. This normalizer clones whichever asset matches the
+-- tool name, strips anything that would fight our setup, then rebuilds it into a
+-- proper Tool: a hidden structural Handle, a BladeRoot on a "Pivot" Motor6D (so
+-- ToolController's RestC0/SwungC0 swing works), and every visual part rigidly
+-- welded to that BladeRoot so the whole blade swings as one piece.
+
+local STRIP_CLASSES = {
+	"Script", "LocalScript", "ModuleScript",
+	"Motor6D", "Weld", "WeldConstraint", "Constraint",
+	"Attachment", "Sound", "Animation", "Animator",
+	"Keyframe", "KeyframeSequence", "Pose",
+	"Camera", "ValueBase", "Configuration",
+}
+
+local function stripJunk(container: Instance)
+	for _, d in container:GetDescendants() do
+		for _, className in STRIP_CLASSES do
+			if d:IsA(className) then
+				d:Destroy()
+				break
+			end
+		end
+	end
+end
+
+local function collectParts(root: Instance): { BasePart }
+	local parts: { BasePart } = {}
+	if root:IsA("BasePart") then
+		table.insert(parts, root)
+	end
+	for _, d in root:GetDescendants() do
+		if d:IsA("BasePart") then
+			table.insert(parts, d)
+		end
+	end
+	return parts
+end
+
+-- Clone the asset named after this tool (def.model or def.name) and rebuild it
+-- into one of our standard Tools. Returns nil when no matching asset exists, so
+-- callers can fall back to the bespoke scissor asset or the procedural builders.
+local function adoptCustomModel(def: any, tier: number): Tool?
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local template = assets and assets:FindFirstChild(def.model or def.name)
+	if not template then
+		return nil
+	end
+
+	local source = template:Clone()
+	stripJunk(source)
+
+	local parts = collectParts(source)
+	if #parts == 0 then
+		source:Destroy()
+		return nil
+	end
+
+	-- Anchor part: an existing "Handle" if the model has one, else the largest
+	-- part by volume (usually the main body / grip).
+	local primary: BasePart = parts[1]
+	local bestVolume = -1
+	for _, p in parts do
+		if p.Name == "Handle" then
+			primary = p
+			break
+		end
+		local v = p.Size.X * p.Size.Y * p.Size.Z
+		if v > bestVolume then
+			bestVolume = v
+			primary = p
+		end
+	end
+
+	-- Capture every visual part's pose relative to the anchor BEFORE rebuilding.
+	local anchorCFrame = primary.CFrame
+	local rels: { { part: BasePart, c0: CFrame } } = {}
+	for _, p in parts do
+		table.insert(rels, { part = p, c0 = anchorCFrame:ToObjectSpace(p.CFrame) })
+	end
+
+	local tool = Instance.new("Tool")
+	tool.Name = "Shears"
+	tool.RequiresHandle = true
+	tool.CanBeDropped = false
+	tool.ToolTip = def.name
+	tool.GripPos = Vector3.new(0, 0, 0)
+	tool.GripForward = Vector3.new(0, 0, -1)
+	tool.GripUp = Vector3.new(0, 1, 0)
+	tool.GripRight = Vector3.new(1, 0, 0)
+	tool:SetAttribute("Shears", true)
+	tool:SetAttribute("ToolTier", tier)
+
+	-- Hidden structural Handle: what the hand actually holds.
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.3, 0.3, 0.3)
+	handle.Transparency = 1
+	handle.Anchored = false
+	handle.CanCollide = false
+	handle.CanQuery = false
+	handle.CanTouch = false
+	handle.Massless = true
+	handle.CFrame = anchorCFrame
+	handle.Parent = tool
+
+	-- BladeRoot hangs off the Handle on the "Pivot" Motor6D that ToolController
+	-- tweens between RestC0 and SwungC0.
+	local bladeRoot = Instance.new("Part")
+	bladeRoot.Name = "BladeRoot"
+	bladeRoot.Size = Vector3.new(0.2, 0.2, 0.2)
+	bladeRoot.Transparency = 1
+	bladeRoot.Anchored = false
+	bladeRoot.CanCollide = false
+	bladeRoot.CanQuery = false
+	bladeRoot.CanTouch = false
+	bladeRoot.Massless = true
+	bladeRoot.CFrame = anchorCFrame
+	bladeRoot.Parent = tool
+
+	local restC0 = CFrame.new()
+	local pivot = Instance.new("Motor6D")
+	pivot.Name = "Pivot"
+	pivot.Part0 = handle
+	pivot.Part1 = bladeRoot
+	pivot.C0 = restC0
+	pivot:SetAttribute("RestC0", restC0)
+	pivot:SetAttribute("SwungC0", restC0 * CFrame.Angles(math.rad(-58), 0, 0))
+	pivot.Parent = handle
+
+	-- Reparent each visual part under the Tool and rigidly weld it to BladeRoot,
+	-- preserving its authored pose relative to the anchor.
+	for _, entry in rels do
+		local p = entry.part
+		if p.Name == "Handle" then
+			p.Name = "MeshHandle" -- free the name for our structural Handle
+		end
+		p.Anchored = false
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.Massless = true
+		p.Parent = tool
+		local weld = Instance.new("Motor6D")
+		weld.Name = "Weld_" .. p.Name
+		weld.Part0 = bladeRoot
+		weld.Part1 = p
+		weld.C0 = entry.c0
+		weld.Parent = bladeRoot
+	end
+
+	source:Destroy()
+	return tool
+end
+
 local STYLE_BUILDERS: { [string]: (any, number) -> Tool } = {
 	shears = buildShears,
 	sickle = buildSickle,
@@ -340,12 +497,21 @@ local STYLE_BUILDERS: { [string]: (any, number) -> Tool } = {
 
 local function buildTool(tier: number): Tool
 	local def = GameConfig.TOOL_TIERS[tier] or GameConfig.TOOL_TIERS[1]
+
+	-- Prefer a hand-made model asset that matches this tool by name.
+	local custom = adoptCustomModel(def, tier)
+	if custom then
+		return custom
+	end
+
+	-- Rusty Shears still uses the bespoke scissor asset (named "Shears").
 	if def.style == "shears" then
-		local custom = buildCustomShears(def, tier)
-		if custom then
-			return custom
+		local scissor = buildCustomShears(def, tier)
+		if scissor then
+			return scissor
 		end
 	end
+
 	local builder = STYLE_BUILDERS[def.style] or buildShears
 	return builder(def, tier)
 end
