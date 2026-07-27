@@ -5,13 +5,35 @@
 > tuned to. Everything is balanced around the five grass **zones/rings**, which are
 > the spine of the whole game.
 
+> ## Rulings of 2026-07-26 (read this first)
+>
+> The setting changed from medieval fantasy to a **modern suburban neighborhood overtaken
+> by plains**. Cut content is recorded in `docs/SCRAPPED.md`. The rulings that override
+> anything below:
+>
+> - **5 zones total.** Ring 3 is **Mossmire**, ring 4 is **Thicket**. These are canonical
+>   and match the code keys.
+> - **Zones are gated by capability, not gold.** The old unlock costs are cut.
+> - **11 tools.** Favored-grass multiplier is **x2.0** (was x2.5); off-type **x0.7**.
+> - **Backpacks allow slight overflow** - a cut that would exceed capacity is granted in
+>   full rather than truncated. Clippings are never destroyed by bag arithmetic.
+> - **Pets and Neighbors are two separate systems.** "Neighbors" are renamed
+>   **Neighbors**: 5 rescuable, one guaranteed per zone. **15 pets**, 3 per zone, awarded
+>   by chance per tile cleared.
+> - **The 12 "Kingdom Skills" framing is retired.** The 28-upgrade list in section 8 is
+>   canonical. Mechanics already implemented in code are kept and re-homed into it.
+> - **Ultimate gear needs renaming**: "Verdant Kingcutter" and "Kingsedge" are medieval
+>   leftovers.
+> - **Auto-mowers get 4 deploy anchors per zone**, travelling between them when no grass
+>   is nearby.
+
 ## 1. Core Loop
 
 1. **Mow** grass with your **tool** -> earn **clippings** into your carry **bag**.
 2. **Bank** clippings at the **Gardener** -> convert to **gold** (and rare **diamonds**).
 3. **Spend** gold/diamonds at the **Shop** on tools, swords, auto-mowers, abilities, and upgrades.
 4. **Fight** each zone's **monsters** with **swords** -> earn **essence** + diamonds.
-5. **Recruit pets**, **rescue villagers**, and **complete quests** for permanent power.
+5. **Recruit pets**, **rescue neighbors**, and **complete quests** for permanent power.
 6. **Unlock the next ring**, which has tougher grass, new enemies, and better rewards.
 7. Repeat until you conquer the **Ironweed Ring** and forge the ultimate gear.
 
@@ -22,26 +44,29 @@
 | **Clippings** | Mowing grass (held in your bag, capped by bag tier) | Converted to gold at the Gardener |
 | **Gold** | Banking clippings; quests; auto-mowers | Tools, low/mid swords, most upgrades, Shop restocks |
 | **Diamonds** | Rare deposit rolls (5% per 50 clippings), bosses, quests | Auto-mowers, top-tier gear, ability unlocks, premium upgrades |
-| **Essence** (per-zone: Meadow Pollen, Wild Burr, Thick Sap, Mire Spore, Iron Filament) | Dropped by that zone's monsters | Forging/upgrading that zone's swords, feeding/recruiting pets |
+| **Essence** (per-zone: Meadow Pollen, Wild Burr, Thicket Sap, Mire Spore, Iron Filament) | Dropped by that zone's monsters | Forging/upgrading that zone's swords, feeding/recruiting pets |
 
 ## 3. The Five Zones (Rings)
 
 Each ring wraps the plains outward from the house. Grass gets tougher, pays more, and
-hosts unique enemies and pets. A ring unlocks once you meet BOTH its gold cost and the
-required tool tier.
+hosts unique enemies and pets. A ring is gated by **capability, not purchase**: grass armor
+subtracts from every swing, so a tool that is too weak simply cannot cut it. There is no
+gold cost to unlock a ring.
 
-| Zone | Ring | Grass | Grass HP | Clippings/tuft | Gold/clipping | Unlock Cost | Tool Req |
-|------|------|-------|----------|----------------|---------------|-------------|----------|
-| 1 | Meadow Ring | Meadow | 3 | 1 | x1.0 | Free (start) | Rusty Shears |
-| 2 | Wildwood Ring | Wild | 7 | 2 | x1.4 | 2,500 gold | Tier 2 tool |
-| 3 | Thicket Ring | Thick | 15 | 4 | x2.0 | 20,000 gold | Tier 3 tool |
-| 4 | Mossmire Ring | Moss | 28 | 8 | x3.0 | 120,000 gold | Tier 4 tool |
-| 5 | Ironweed Ring | Ironweed | 50 | 16 | x4.5 | 750,000 gold | Tier 5 tool |
+| Zone | Ring | Grass key | Grass HP | Armor | Clippings/tile | Gold/clipping |
+|------|------|-----------|----------|-------|----------------|---------------|
+| 1 | Meadow | `Meadow` | 3 | 0 | 3 | x1.0 |
+| 2 | Wildfields | `Wild` | 6 | 0 | 6 | x1.4 |
+| 3 | **Mossmire** | `Mossmire` | 12 | 1 | 15 | x2.0 |
+| 4 | **Thicket** | `Thicket` | 16 | 2 | 25 | x3.0 |
+| 5 | Ironweed Expanse | `Ironweed` | 40 | 5 | 80 | x4.5 |
 
-## 4. Tools (Mowers) - 10 total
+> Values above match `GameConfig.GRASS_TYPES` and `GameConfig.ZONES` exactly.
 
-Every specialist tool has a **favored grass** it shreds (x2.5 cut power) and is **weaker
-off-type** (x0.8). The two mid "combo" tools favor two grasses at x2.2. The **ultimate**
+## 4. Tools (Mowers) - 11 total
+
+Every specialist tool has a **favored grass** it shreds (x2.0 cut power) and is **weaker
+off-type** (x0.7). The two mid "combo" tools favor two grasses at x2.2. The **ultimate**
 ignores specialties and cuts everything at a flat, very high power. "Cut power" is damage
 per swing; a tuft is cut when damage >= its Grass HP.
 
@@ -50,13 +75,13 @@ per swing; a tuft is cut when damage >= its Grass HP.
 | 1 | Rusty Shears | 0 | none (all-rounder) | 2 | 2 | 2 | 0.50s | Free (starter) |
 | 2 | Meadow Trimmer | 1 | Meadow | 4 | 10 | 3.2 | 0.50s | 150 gold |
 | 3 | Bramble Sickle | 2 | Wild | 8 | 20 | 6.4 | 0.45s | 900 gold |
-| 4 | Thornbite Machete | 3 | Thick | 16 | 40 | 12.8 | 0.45s | 4,500 gold |
-| 5 | Bogblade | 4 | Moss | 30 | 75 | 24 | 0.40s | 18,000 gold |
+| 4 | Thornbite Machete | 3 | Thicket | 16 | 40 | 12.8 | 0.45s | 4,500 gold |
+| 5 | Bogblade | 4 | Mossmire | 30 | 75 | 24 | 0.40s | 18,000 gold |
 | 6 | Ironfang Scythe | 5 | Ironweed | 55 | 137 | 44 | 0.40s | 70,000 gold |
 | 7 | Greenwarden Mower | 3 | Meadow + Wild | 24 | 53 (both) | 20 | 0.40s | 12,000 gold |
-| 8 | Marsh Reaver | 4 | Thick + Moss | 45 | 99 (both) | 38 | 0.38s | 40,000 gold |
+| 8 | Marsh Reaver | 4 | Thicket + Mossmire | 45 | 99 (both) | 38 | 0.38s | 40,000 gold |
 | 9 | Stormcutter | 5 | Ironweed | 80 | 176 | 72 | 0.35s | 25 diamonds |
-| 10 | **Verdant Kingcutter** (ULTIMATE) | 6 | **ALL** | 120 | 180 (all) | 180 (all) | 0.30s | 150 diamonds + defeat the Ironweed King |
+| 10 | **Verdant Kingcutter** (ULTIMATE) *[RENAME PENDING]* | 6 | **ALL** | 120 | 180 (all) | 180 (all) | 0.30s | 150 diamonds + defeat the Ironweed King |
 
 ## 5. Swords - 11 total (2 per zone + 1 ultimate)
 
@@ -69,13 +94,13 @@ Swords are for combat vs. monsters. Each zone has a cheaper **A-blade** and a st
 | Meadow | Blossom Saber | 15 | 0.55s | Petal Burst (ranged AoE on 5th hit) | 1,200 gold |
 | Wild | Bramblefang Blade | 28 | 0.55s | Bleed (DoT 4/s for 3s) | 3,000 gold + 5 Wild Burr |
 | Wild | Wildwood Cleaver | 45 | 0.6s | Cleave (hits 3 targets) | 12 Wild Burr + 6 diamonds |
-| Thick | Thornguard Sword | 75 | 0.55s | Parry (block next hit, 6s CD) | 25 Thick Sap |
-| Thick | Bristlebane | 120 | 0.5s | Thorns (reflect 30% melee) | 40 Thick Sap + 8 diamonds |
-| Moss | Bogpiercer | 180 | 0.5s | Poison (DoT 20/s for 4s) | 45 Mire Spore |
-| Moss | Mireblade | 280 | 0.5s | Lifesteal (heal 10% of damage) | 70 Mire Spore + 15 diamonds |
+| Thicket | Thornguard Sword | 75 | 0.55s | Parry (block next hit, 6s CD) | 25 Thicket Sap |
+| Thicket | Bristlebane | 120 | 0.5s | Thorns (reflect 30% melee) | 40 Thicket Sap + 8 diamonds |
+| Mossmire | Bogpiercer | 180 | 0.5s | Poison (DoT 20/s for 4s) | 45 Mire Spore |
+| Mossmire | Mireblade | 280 | 0.5s | Lifesteal (heal 10% of damage) | 70 Mire Spore + 15 diamonds |
 | Ironweed | Ironrender | 420 | 0.5s | Armor Break (-40% enemy armor 5s) | 80 Iron Filament |
 | Ironweed | Weepthorn Greatblade | 650 | 0.55s | Execute (instant kill < 15% HP) | 120 Iron Filament + 30 diamonds |
-| ALL | **Kingsedge** (ULTIMATE) | 1,000 | 0.45s | Whirlwind + true damage (ignores armor) | 200 diamonds + defeat all 5 bosses |
+| ALL | **Kingsedge** (ULTIMATE) *[RENAME PENDING]* | 1,000 | 0.45s | Whirlwind + true damage (ignores armor) | 200 diamonds + defeat all 5 bosses |
 
 ## 6. Auto-Mowers - 5 total (one per zone)
 
@@ -91,16 +116,17 @@ Farmer Fields). Only one runs at a time until the Multi-Mower upgrade.
 > a toast. Deploy + auto-bank both feed the `deploy_automower` / `automower_bank` quests.
 > v1 simplifications vs. this table: mowers earn only while you're online, the
 > "Remote Deposit" perk gate and the Multi-Mower one-at-a-time limit are not enforced
-> yet (you can deploy all you own), and every mower deploys at one shared hub anchor
-> until the 5 physical zones are built. Storage caps in the shipped config scale with
+> yet (you can deploy all you own), and mowers currently deploy from one shared hub anchor. **Ruling: this becomes 4 deploy
+> anchors per zone**, so each mower works its own zone and travels to the next anchor when
+> it finds no grass nearby. Storage caps in the shipped config scale with
 > rate (`rate x 90s`); the cost/rate ladder matches the numbers below.
 
 | Zone | Auto-Mower | Clippings/sec | Storage Cap | Cost | Notes |
 |------|-----------|---------------|-------------|------|-------|
 | Meadow | Push Mower | 2 | 500 | 20 diamonds | Starter automation |
 | Wild | Reel Mower | 5 | 1,500 | 45 diamonds | Handles Wild grass |
-| Thick | Brushcutter Bot | 12 | 5,000 | 90 diamonds | Self-rights on slopes |
-| Moss | Hover Mower | 28 | 15,000 | 160 diamonds | Floats over bog water |
+| Thicket | Brushcutter Bot | 12 | 5,000 | 90 diamonds | Self-rights on slopes |
+| Mossmire | Hover Mower | 28 | 15,000 | 160 diamonds | Floats over bog water |
 | Ironweed | Plasma Harvester | 60 | 50,000 | 300 diamonds | Endgame idle engine |
 
 ## 7. Special Abilities & Items - 8 total
@@ -144,7 +170,6 @@ cost. "Effect/Lv" is the per-level gain.
 |---------|--------|-------------|------------|----------|
 | Move Speed | 12 | +4% walk speed | 200 | gold |
 | Stamina / Double Jump | 5 | +1 air jump / +sprint time | 400 | gold |
-| Climb Grip | 8 | +10% climb speed (for climbable walls) | 15 | diamonds |
 
 ### Sword & Combat
 | Upgrade | Max Lv | Effect / Lv | Start Cost | Currency |
@@ -171,7 +196,7 @@ cost. "Effect/Lv" is the per-level gain.
 | Bomb Radius | 8 | +3 studs Grass Bomb radius | 10 | diamonds |
 | Powerup Duration | 10 | +8% active-ability duration | 12 | diamonds |
 
-### Villagers / Pets
+### Pets / Neighbors
 | Upgrade | Max Lv | Effect / Lv | Start Cost | Currency |
 |---------|--------|-------------|------------|----------|
 | Pet Slots | 3 | +1 equipped pet (max 3) | 40 | diamonds |
@@ -179,10 +204,17 @@ cost. "Effect/Lv" is the per-level gain.
 | Pet Loyalty (XP) | 10 | +10% pet XP gain | 8 | essence |
 | Quest Reward Boost | 10 | +6% all quest rewards | 500 | gold |
 
-## 9. Villagers & Pets (per zone)
+## 9. Pets & Neighbors (per zone)
 
-**Pets** are equipped (cap 3) and give stacking passive bonuses; level them by feeding
-essence. **Villagers** are rescued once (via a quest) for a permanent perk + a service.
+**Pets** and **Neighbors** are two **separate** systems.
+
+**Pets - 15 total, 3 per zone.** Equipped (cap 3), giving stacking passive bonuses; level
+them by feeding essence. Pets are awarded **by chance each time a grass tile is fully
+cleared**, and each zone is guaranteed to hand out exactly **one copy of each of its three
+pets** - so a zone can never dry up or duplicate.
+
+**Neighbors - 5 total, 1 per zone** (formerly "villagers"). Rescued once via a quest for a
+permanent buff plus a service. One is guaranteed per zone.
 
 | Zone | Pet | Passive (per level) | Recruit Cost |
 |------|-----|---------------------|--------------|
@@ -192,28 +224,38 @@ essence. **Villagers** are rescued once (via a quest) for a permanent perk + a s
 | Wild | Fox Kit | +8% gold gain | 10 Wild Burr |
 | Wild | Sparrow | +5% swing speed | 12 Wild Burr |
 | Wild | Hedgehog | +6% damage resist | 10 diamonds |
-| Thick | Badger | +10% cut power | 20 Thick Sap |
-| Thick | Owl | +3% diamond luck | 15 diamonds |
-| Thick | Boar | +12% max HP | 22 Thick Sap |
-| Moss | Marsh Frog | +10% deposit bonus | 35 Mire Spore |
-| Moss | Firefly | +6% ability cooldown reduction | 25 diamonds |
-| Moss | Newt | +4% lifesteal | 40 Mire Spore |
+| Thicket | Badger | +10% cut power | 20 Thicket Sap |
+| Thicket | Owl | +3% diamond luck | 15 diamonds |
+| Thicket | Boar | +12% max HP | 22 Thicket Sap |
+| Mossmire | Marsh Frog | +10% deposit bonus | 35 Mire Spore |
+| Mossmire | Firefly | +6% ability cooldown reduction | 25 diamonds |
+| Mossmire | Newt | +4% lifesteal | 40 Mire Spore |
 | Ironweed | Iron Beetle | +10% armor | 60 Iron Filament |
 | Ironweed | Phoenix Chick | +15% crit damage | 45 diamonds |
 | Ironweed | Dragonling | +6% to ALL stats | 120 Iron Filament + 40 diamonds |
 
-| Zone | Villager | Permanent Perk / Service |
+| Zone | Neighbor | Permanent Perk / Service |
 |------|----------|--------------------------|
 | Meadow | Farmer Fields | +5% global gold; unlocks Auto-Mower "Remote Deposit" |
 | Wild | Ranger Rowan | Highlights rare Golden Grass (2x clippings) in the wild |
-| Thick | Woodcutter Wren | +25% essence drops from all monsters |
-| Moss | Herbalist Hazel | Unlocks potion crafting (temporary stat buffs) |
+| Thicket | Woodcutter Wren | +25% essence drops from all monsters |
+| Mossmire | Herbalist Hazel | Unlocks potion crafting (temporary stat buffs) |
 | Ironweed | Blacksmith Brand | Unlocks sword forging + reforging (reroll specials) |
 
 ## 10. Monsters & Bosses (per zone)
 
 Monsters roam their ring and attack while you mow; kill them with swords. Each zone has
 two common monsters and one boss. Stats scale hard by ring.
+
+**Spawn model (ruling).** The old flat "~25 of each monster per zone" is cut - 25 monsters
+in a 1,000-tile field is not threatening. Replace it with either:
+
+1. **Per-zone counts that scale with zone size**, tuned so density (not raw count) is the
+   constant; or
+2. **Chance-based spawning** - e.g. a ~5% chance to spawn a monster each time a grass tile
+   is fully cleared, which ties threat directly to how fast you are mowing.
+
+Final model TBD. Option 2 is favoured because it self-balances with player power.
 
 | Zone | Monster | HP | Damage | Drops |
 |------|---------|----|--------|-------|
@@ -223,19 +265,19 @@ two common monsters and one boss. Stats scale hard by ring.
 | Wild | Thistle Goblin | 90 | 12 | Wild Burr, gold |
 | Wild | Bramble Crawler | 140 | 18 | Wild Burr, gold |
 | Wild | **Bramble Broodmother** (boss) | 1,600 | 45 | diamonds, trophy, Wild Burr (bulk) |
-| Thick | Vine Lurker | 320 | 30 | Thick Sap, gold |
-| Thick | Bark Golemling | 480 | 42 | Thick Sap, gold |
-| Thick | **Elder Vinewrath** (boss) | 5,500 | 90 | diamonds, trophy, Thick Sap (bulk) |
-| Moss | Spore Hound | 900 | 60 | Mire Spore, gold |
-| Moss | Bog Wraith | 1,300 | 80 | Mire Spore, gold |
-| Moss | **Mirequeen** (boss) | 16,000 | 160 | diamonds, trophy, Mire Spore (bulk) |
+| Thicket | Vine Lurker | 320 | 30 | Thicket Sap, gold |
+| Thicket | Bark Golemling | 480 | 42 | Thicket Sap, gold |
+| Thicket | **Elder Vinewrath** (boss) | 5,500 | 90 | diamonds, trophy, Thicket Sap (bulk) |
+| Mossmire | Spore Hound | 900 | 60 | Mire Spore, gold |
+| Mossmire | Bog Wraith | 1,300 | 80 | Mire Spore, gold |
+| Mossmire | **Mirequeen** (boss) | 16,000 | 160 | diamonds, trophy, Mire Spore (bulk) |
 | Ironweed | Weedwraith | 2,600 | 120 | Iron Filament, gold |
 | Ironweed | Ironclad Sentinel | 4,000 | 160 | Iron Filament, gold |
 | Ironweed | **The Ironweed King** (final boss) | 60,000 | 300 | diamonds (bulk), Crown, unlocks ultimate gear |
 
 ## 11. Quests - 150 total (one Quest Giver NPC, zone-gated)
 
-All quests are handed out by a single NPC, **Sprig the Quartermaster**, who stands near
+All quests are handed out by a single NPC, **Sprigman The Questgiver**, who stands near
 the house. The quest board only shows quests for your **current/unlocked zone**, so the
 experience changes ring to ring. 30 quests per zone. Rewards already scale by zone.
 
@@ -309,21 +351,29 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 | 59 | Elite Hunt: Bramble Crawler | Defeat 10 Elite Bramble Crawlers. | 14 Wild Burr + 5 diamonds |
 | 60 | Wildwood Ring Champion | Defeat the Bramble Broodmother 2 times. | 9 diamonds + the Wildwood Ring Crown |
 
-### Zone 3 - Thicket Ring (30 quests)
+> **⚠ Known issue - ring 3/4 reward tiers are inverted.** In `QuestData.luau` the
+> Thicket-flavoured quest block (ids 61-90) carries the *cheaper* ring-3 reward tier, and
+> the Mossmire-flavoured block (ids 91-120) carries the *dearer* ring-4 tier. But the
+> canonical order is **Mossmire = ring 3, Thicket = ring 4**. So Thicket quests currently
+> under-reward and Mossmire quests over-reward. Fixing this means swapping the reward and
+> target scalars between the two blocks; it has NOT been done yet because it re-tiers 60
+> quests.
+
+### Thicket Ring quests - **ring 4** (30 quests, ids 61-90)
 
 | # | Quest | Objective | Reward |
 |---|-------|-----------|--------|
-| 61 | Thicket Ring: Greenhorn | Mow 80 tufts of Thick grass. | 850 gold |
-| 62 | Thick grass Harvest | Mow 800 Thick grass tufts in total. | 2,000 gold |
+| 61 | Thicket Ring: Greenhorn | Mow 80 tufts of Thicket grass. | 850 gold |
+| 62 | Thicket grass Harvest | Mow 800 Thicket grass tufts in total. | 2,000 gold |
 | 63 | A Full Satchel in the Thicket Ring | Fill your carry bag to capacity while in the Thicket Ring. | 850 gold |
 | 64 | Bank On It (Thicket Ring) | Deposit 2,000 gold at the Gardener. | 4 diamonds |
-| 65 | Vine Lurker Stomper | Defeat 18 Vine Lurkers. | 850 gold + 28 Thick Sap |
-| 66 | Bark Golemling Menace | Defeat 18 Bark Golemlings. | 2,000 gold + 28 Thick Sap |
+| 65 | Vine Lurker Stomper | Defeat 18 Vine Lurkers. | 850 gold + 28 Thicket Sap |
+| 66 | Bark Golemling Menace | Defeat 18 Bark Golemlings. | 2,000 gold + 28 Thicket Sap |
 | 67 | Right Blade for the Job (Thicket Ring) | Buy and equip the Thornbite Machete. | 10 diamonds |
 | 68 | Keen Edge in the Thicket Ring | Upgrade Blade Sharpness to Lv 8. | 2,000 gold |
-| 69 | Quick Clip (Thicket Ring) | Mow 80 Thick grass tufts within 60 seconds. | 10 diamonds |
-| 70 | Thick Sap Gatherer | Collect 50 Thick Sap. | 2,000 gold |
-| 71 | First Blood: Thornguard Sword | Buy the Thornguard Sword. | 28 Thick Sap |
+| 69 | Quick Clip (Thicket Ring) | Mow 80 Thicket grass tufts within 60 seconds. | 10 diamonds |
+| 70 | Thicket Sap Gatherer | Collect 50 Thicket Sap. | 2,000 gold |
+| 71 | First Blood: Thornguard Sword | Buy the Thornguard Sword. | 28 Thicket Sap |
 | 72 | Twin Fangs of the Thicket Ring | Own both Thicket Ring swords (Thornguard Sword & Bristlebane). | 18 diamonds |
 | 73 | Culling the Thicket Ring | Defeat 90 monsters in the Thicket Ring. | 4,500 gold + 10 diamonds |
 | 74 | Slayer of the Elder Vinewrath | Defeat the Elder Vinewrath. | 18 diamonds + trophy |
@@ -341,22 +391,22 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 | 86 | Diamond Rush (Thicket Ring) | Earn 40 diamonds while in the Thicket Ring. | 18 diamonds |
 | 87 | Upgrade Spree (Thicket Ring) | Purchase 18 upgrades of any kind. | 2,000 gold |
 | 88 | Clean Sweep (Thicket Ring) | Clear 80% of the Thicket Ring's grass in one session. | 18 diamonds |
-| 89 | Elite Hunt: Bark Golemling | Defeat 18 Elite Bark Golemlings. | 28 Thick Sap + 10 diamonds |
+| 89 | Elite Hunt: Bark Golemling | Defeat 18 Elite Bark Golemlings. | 28 Thicket Sap + 10 diamonds |
 | 90 | Thicket Ring Champion | Defeat the Elder Vinewrath 3 times. | 18 diamonds + the Thicket Ring Crown |
 
-### Zone 4 - Mossmire Ring (30 quests)
+### Mossmire Ring quests - **ring 3** (30 quests, ids 91-120)
 
 | # | Quest | Objective | Reward |
 |---|-------|-----------|--------|
-| 91 | Mossmire Ring: Greenhorn | Mow 150 tufts of Moss grass. | 3,000 gold |
-| 92 | Moss grass Harvest | Mow 1800 Moss grass tufts in total. | 7,000 gold |
+| 91 | Mossmire Ring: Greenhorn | Mow 150 tufts of Mossmire grass. | 3,000 gold |
+| 92 | Mossmire grass Harvest | Mow 1800 Mossmire grass tufts in total. | 7,000 gold |
 | 93 | A Full Satchel in the Mossmire Ring | Fill your carry bag to capacity while in the Mossmire Ring. | 3,000 gold |
 | 94 | Bank On It (Mossmire Ring) | Deposit 6,500 gold at the Gardener. | 8 diamonds |
 | 95 | Spore Hound Stomper | Defeat 30 Spore Hounds. | 3,000 gold + 50 Mire Spore |
 | 96 | Bog Wraith Menace | Defeat 30 Bog Wraiths. | 7,000 gold + 50 Mire Spore |
 | 97 | Right Blade for the Job (Mossmire Ring) | Buy and equip the Bogblade. | 22 diamonds |
 | 98 | Keen Edge in the Mossmire Ring | Upgrade Blade Sharpness to Lv 12. | 7,000 gold |
-| 99 | Quick Clip (Mossmire Ring) | Mow 150 Moss grass tufts within 60 seconds. | 22 diamonds |
+| 99 | Quick Clip (Mossmire Ring) | Mow 150 Mossmire grass tufts within 60 seconds. | 22 diamonds |
 | 100 | Mire Spore Gatherer | Collect 90 Mire Spore. | 7,000 gold |
 | 101 | First Blood: Bogpiercer | Buy the Bogpiercer. | 50 Mire Spore |
 | 102 | Twin Fangs of the Mossmire Ring | Own both Mossmire Ring swords (Bogpiercer & Mireblade). | 38 diamonds |
@@ -433,7 +483,7 @@ experience changes ring to ring. 30 quests per zone. Rewards already scale by zo
 - Each zone's grass HP (3/7/15/28/50) is what tool cut power is balanced against - a favored specialist one-shots its grass; an off-type tool needs 2-3 swings.
 - Sword damage vs. monster HP is tuned so the matching-zone A-blade kills a common monster in ~3-5 hits and the B-blade in ~2-3; bosses are multi-minute fights.
 - Costs climb ~x4-6 per zone so each ring is a meaningful gate; diamonds gate the "convenience + ultimate" layer (auto-mowers, abilities, top gear).
-- Suggested new GameConfig blocks: ZONES, TOOL_TIERS (expand to 10), SWORDS, AUTO_MOWERS, ABILITIES, UPGRADES, PETS, VILLAGERS, MONSTERS, QUESTS.
+- Suggested new GameConfig blocks: ZONES, TOOL_TIERS (11 tools), SWORDS, AUTO_MOWERS, ABILITIES, UPGRADES, PETS, NEIGHBORS, MONSTERS, QUESTS.
 
 ## 14. Implementation changelog (living notes)
 
@@ -452,3 +502,33 @@ Tracks how the shipped build diverges from / advances this design doc.
 
 ---
 *Generated design doc. All names, numbers, and costs are the initial design targets and are meant to be tuned during playtesting.*
+
+---
+
+## Changelog - 2026-07-26
+
+**Setting overhaul.** Medieval "Kingdom of Verdania" framing retired in favour of the
+modern suburban-neighborhood-overtaken-by-plains premise. See `docs/SCRAPPED.md`.
+
+**Applied to code:**
+
+- Zone keys renamed: `Moss` -> `Mossmire` (ring 3), `Thick` -> `Thicket` (ring 4), across
+  `GameConfig`, `QuestData`, `StatCalculator`, `GrassService`, `MapService`,
+  `AutoMowerController`, `BackpackController`. Guarded so `Thickness` /
+  `ScrollBarThickness` / `LineThickness` were untouched.
+- Grass display name `"Creeping Moss"` -> `"Mire Moss"`; zone display `"Mossy Hollow"` ->
+  `"Mossmire"`, `"The Thicket"` -> `"Thicket"`.
+- Essence `"Thick Sap"` -> `"Thicket Sap"`.
+- **Profile schema v4 -> v5** with a migration remapping `quests.reached` and `zones` keys.
+  Required: `quests.reached` is persisted and gates zone quests, backpacks, and
+  auto-mowers.
+- Removed the dead `PurchaseUpgrade("bag")` branch from `UpgradeService`.
+
+**Still to do (not yet applied to code):**
+
+- Favored-grass multiplier x2.6 -> **x2.0**, off-type 0.7 confirmed, in `TOOL_TIERS`.
+- Backpack **slight overflow** behaviour in `BackpackService`.
+- **4 auto-mower deploy anchors per zone.**
+- Rename `workspace.Kingdom`; rename "Verdant Kingcutter" and "Kingsedge".
+- Remove `DistrictService`; retire `BAG_TIERS` capacity fallback.
+- Resolve the ring 3/4 quest reward-tier inversion.
