@@ -182,7 +182,7 @@ local GameConfig = {
 		Meadow = { displayName = "Meadow Grass", health = 3, armor = 0, height = 2.6, clipReward = 3, color = { 120, 196, 92 } },
 		Wild = { displayName = "Wild Grass", health = 6, armor = 0, height = 4.8, clipReward = 6, color = { 86, 158, 66 } },
 		Thicket = { displayName = "Thicket", health = 16, armor = 2, height = 5.6, clipReward = 25, color = { 58, 120, 52 } },
-		Mossmire = { displayName = "Mire Moss", health = 12, armor = 1, height = 2.2, clipReward = 15, color = { 74, 132, 86 } },
+		Mossmire = { displayName = "Creeping Moss", health = 12, armor = 1, height = 2.2, clipReward = 15, color = { 74, 132, 86 } },
 		Ironweed = { displayName = "Ironweed", health = 40, armor = 5, height = 5.0, clipReward = 80, color = { 44, 92, 74 } },
 	},
 
@@ -212,7 +212,7 @@ local GameConfig = {
 		-- 5 \u{00B7} all-rounder
 		{ name = "Garden Sickle", bladesPerSwing = 15, cost = 6000, style = "sickle", favored = nil, handleColor = { 116, 80, 46 }, bladeColor = { 210, 214, 224 }, bladeMaterial = "Metal", toolScale = 1.15 },
 		-- 6 \u{00B7} specialist: Mossmire
-		{ name = "Mire Whip", bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Mossmire", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
+		{ name = "Bogblade", bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Mossmire", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
 		-- 7 \u{00B7} all-rounder
 		{ name = "Keen Scythe", bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
 		-- 8 \u{00B7} specialist: Thicket
