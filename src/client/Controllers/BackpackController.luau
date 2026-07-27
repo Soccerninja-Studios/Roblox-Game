@@ -43,7 +43,7 @@ local function corner(inst: Instance, radius: number)
 end
 
 -- Grass display name for the zone gate, so a locked card reads "reach Thicket"
--- rather than the internal key "Thick".
+-- rather than the internal key "Thicket".
 local function zoneLabel(zone: string): string
 	local def = GameConfig.GRASS_TYPES[zone]
 	return if def and def.displayName then def.displayName else zone

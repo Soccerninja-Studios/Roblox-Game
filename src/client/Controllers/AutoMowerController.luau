@@ -96,7 +96,7 @@ local function build()
 	toastLayout.Parent = toastHolder
 end
 
--- Zone keys like "Moss" are internal bookkeeping; players know the grass by its
+-- Zone keys like "Mossmire" are internal bookkeeping; players know the grass by its
 -- display name, so lock messages use that instead.
 local function zoneLabel(zone: string): string
 	local def = GameConfig.GRASS_TYPES[zone]
