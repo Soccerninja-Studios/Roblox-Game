@@ -14,8 +14,8 @@
         "Shears": {
           "$path": "assets/Shears.rbxmx"
         },
-        "Meadow Trimmer": {
-          "$path": "assets/Meadow Trimmer.rbxmx"
+        "MeadowTrimmer": {
+          "$path": "assets/MeadowTrimmer.rbxmx"
         },
         "Bramble Sickle": {
           "$path": "assets/Bramble Sickle.rbxmx"
@@ -28,21 +28,6 @@
         },
         "Ironfang Scythe": {
           "$path": "assets/Ironfang Scythe.rbxmx"
-        },
-        "Steel Shears": {
-          "$path": "assets/Steel Shears.rbxmx"
-        },
-        "Garden Sickle": {
-          "$path": "assets/Garden Sickle.rbxmx"
-        },
-        "Keen Scythe": {
-          "$path": "assets/Keen Scythe.rbxmx"
-        },
-        "Royal Reaper": {
-          "$path": "assets/Royal Reaper.rbxmx"
-        },
-        "Verdant Kingcutter": {
-          "$path": "assets/Verdant Kingcutter.rbxmx"
         },
         "House": {
           "$path": "assets/House.rbxmx"
