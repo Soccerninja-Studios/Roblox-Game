@@ -218,9 +218,9 @@ local GameConfig = {
 		-- 8 \u{00B7} specialist: Thicket
 		{ name = "Thornbite Machete", bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thicket", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
 		-- 9 \u{00B7} all-rounder
-		{ name = "Royal Reaper", modelRot = { 0, -90, 0 }, bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
+		{ name = "Royal Reaper", bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
 		-- 10 \u{00B7} specialist: Ironweed
-		{ name = "Ironfang Scythe", modelRot = { 0, 0, 90 }, bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
+		{ name = "Ironfang Scythe", modelRot = { 0, -90, 90 }, bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
 		-- 11 \u{00B7} ULTIMATE: excels at every grass type
 		{ name = "Verdant Kingcutter", bladesPerSwing = 70, cost = 900000, style = "scythe", favored = "all", favoredMul = 1.6, handleColor = { 40, 90, 60 }, bladeColor = { 180, 245, 170 }, bladeMaterial = "Metal", toolScale = 1.42 },
 	},
