@@ -25,6 +25,8 @@ local Assets = require(ReplicatedStorage.Shared.Assets)
 local AutoMowerController = require(script.Parent.AutoMowerController)
 -- Sibling controller. It draws the five zone backpacks into our Packs tab.
 local BackpackController = require(script.Parent.BackpackController)
+-- Sibling controller: draws the sword buy/equip/sharpen cards into the Swords tab.
+local SwordController = require(script.Parent.SwordController)
 
 local UIController = {}
 
@@ -596,6 +598,9 @@ local function selectTab(id: string)
 		-- every time the tab is opened rather than trusting the last broadcast.
 		AutoMowerController.Refresh()
 	end
+	if id == "swords" then
+		SwordController.Refresh()
+	end
 	if id == "packs" then
 		-- Prices are compared against live gold, so re-pull rather than trusting
 		-- the last broadcast.
@@ -967,13 +972,10 @@ local function buildShopModal(gui: ScreenGui)
 	-- SWORDS ----------------------------------------------------------------
 	local swordsPage = makePage(bodyHost, "swords")
 	sectionHeader(swordsPage, 0, "Swords")
-	emptyState(
-		swordsPage,
-		1,
-		"\u{1F5E1}\u{FE0F}",
-		"The forge is cold",
-		"Swords arrive alongside the monsters worth swinging them at. Eleven blades are planned, one per boss tier."
-	)
+	local swordsOk, swordsErr = pcall(SwordController.Mount, swordsPage)
+	if not swordsOk then
+		warn("[UIController] sword list failed to mount: " .. tostring(swordsErr))
+	end
 
 	-- AUTO-MOWERS -----------------------------------------------------------
 	local mowersPage = makePage(bodyHost, "mowers")
