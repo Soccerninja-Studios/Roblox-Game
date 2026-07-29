@@ -426,7 +426,27 @@ end
 -- callers can fall back to the bespoke scissor asset or the procedural builders.
 local function adoptCustomModel(def: any, tier: number): Tool?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	local template = assets and assets:FindFirstChild(def.model or def.name)
+	if not assets then
+		return nil
+	end
+	local wanted = def.model or def.name
+	local template = assets:FindFirstChild(wanted)
+	if not template then
+		-- Space/case-insensitive fallback so an asset named "SteelShears" or
+		-- "MeadowTrimmer" resolves for a tool named "Steel Shears" / "Meadow
+		-- Trimmer". Prevents silently falling through to the wrong model when
+		-- the model instance name does not exactly match the tool name.
+		local function norm(s)
+			return (string.gsub(string.lower(s), "%s", ""))
+		end
+		local target = norm(wanted)
+		for _, child in assets:GetChildren() do
+			if norm(child.Name) == target then
+				template = child
+				break
+			end
+		end
+	end
 	if not template then
 		return nil
 	end
