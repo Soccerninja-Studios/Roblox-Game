@@ -39,6 +39,22 @@ local function swingMotor(motor: Motor6D, from: CFrame, to: CFrame, downTime: nu
 	down:Play()
 end
 
+-- Tween a motor sequentially through poses[2..], starting from poses[1]. Used
+-- for the weed-wacker sweep: middle -> right -> left -> middle.
+local function swingSequence(motor: Motor6D, poses: { CFrame }, times: { number })
+	local i = 1
+	local function step()
+		if i > #times then
+			return
+		end
+		local tween = TweenService:Create(motor, TweenInfo.new(times[i], Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { C0 = poses[i + 1] })
+		i += 1
+		tween.Completed:Connect(step)
+		tween:Play()
+	end
+	step()
+end
+
 -- Every Motor6D carrying the given pair of CFrame pose attributes.
 local function motorsWithPose(tool: Tool, fromAttr: string, toAttr: string): { Motor6D }
 	local motors: { Motor6D } = {}
@@ -65,7 +81,13 @@ function ToolController.PlaySwing()
 	for _, motor in motorsWithPose(tool, "RestC0", "SwungC0") do
 		local rest = motor:GetAttribute("RestC0") :: CFrame
 		local swung = motor:GetAttribute("SwungC0") :: CFrame
-		swingMotor(motor, rest, swung, 0.09, 0.16)
+		local sweep = motor:GetAttribute("SweepC0")
+		if typeof(sweep) == "CFrame" then
+			-- Weed-wacker: middle -> right -> left -> middle.
+			swingSequence(motor, { rest, swung, sweep, rest }, { 0.1, 0.18, 0.14 })
+		else
+			swingMotor(motor, rest, swung, 0.09, 0.16)
+		end
 	end
 
 	-- Procedural fallback shears use a separate blade-close joint.
