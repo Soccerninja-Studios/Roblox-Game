@@ -44,6 +44,18 @@ local REMOTE_NAMES = {
 	"CutsceneFade", -- server -> client: fade the screen ("out"/"in", seconds)
 	"CutscenePose", -- server -> client: play an animation on MY character (poseId, animId)
 	"CutscenePoseDone", -- client -> server: that pose finished (poseId)
+	-- Combat: swords + monsters
+	"RequestSwords",
+	"SwordState",
+	"PurchaseSword",
+	"UpgradeSword",
+	"EquipSword",
+	"SwordSwing",
+	"MonsterHit",
+	"MonsterDefeated",
+	"PlayerHurt",
+	"ClippingsScattered",
+	"ClippingsRecovered",
 }
 
 local Remotes = {}

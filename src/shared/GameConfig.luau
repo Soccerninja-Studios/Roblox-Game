@@ -204,7 +204,7 @@ local GameConfig = {
 		-- 1 \u{00B7} all-rounder (starter)
 		{ name = "Rusty Shears", bladesPerSwing = 1, cost = 0, style = "shears", favored = nil, handleColor = { 92, 64, 40 }, bladeColor = { 138, 120, 96 }, bladeMaterial = "CorrodedMetal", toolScale = 1.0 },
 		-- 2 \u{00B7} specialist: Meadow
-		{ name = "Meadow Trimmer", swingRot = { 0, -58, 0 }, sweep = true, bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
+		{ name = "Meadow Trimmer", modelRot = { 180, 0, 0 }, swingRot = { 0, -58, 0 }, sweep = true, bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
 		-- 3 \u{00B7} all-rounder
 		{ name = "Steel Shears", bladesPerSwing = 7, cost = 900, style = "shears", favored = nil, handleColor = { 70, 74, 82 }, bladeColor = { 198, 204, 214 }, bladeMaterial = "Metal", toolScale = 1.1 },
 		-- 4 \u{00B7} specialist: Wild
@@ -214,13 +214,13 @@ local GameConfig = {
 		-- 6 \u{00B7} specialist: Mossmire
 		{ name = "Bogblade", modelRot = { 0, 180, 0 }, bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Mossmire", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
 		-- 7 \u{00B7} all-rounder
-		{ name = "Keen Scythe", modelRot = { 0, -90, 0 }, bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
+		{ name = "Keen Scythe", modelRot = { 0, 90, 0 }, bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
 		-- 8 \u{00B7} specialist: Thicket
 		{ name = "Thornbite Machete", bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thicket", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
 		-- 9 \u{00B7} all-rounder
-		{ name = "Royal Reaper", modelRot = { 0, 180, 0 }, bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
+		{ name = "Royal Reaper", modelRot = { 0, 90, 0 }, bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
 		-- 10 \u{00B7} specialist: Ironweed
-		{ name = "Ironfang Scythe", modelRot = { 0, 90, 90 }, bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
+		{ name = "Ironfang Scythe", modelRot = { 0, 90, 0 }, bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
 		-- 11 \u{00B7} ULTIMATE: excels at every grass type
 		{ name = "Verdant Kingcutter", bladesPerSwing = 70, cost = 900000, style = "scythe", favored = "all", favoredMul = 1.6, handleColor = { 40, 90, 60 }, bladeColor = { 180, 245, 170 }, bladeMaterial = "Metal", toolScale = 1.42 },
 	},
@@ -381,6 +381,57 @@ local GameConfig = {
 		{ key = "brushcutter", name = "Brushcutter Bot", zone = "Mossmire", modelName = "BrushcutterBot", modelLength = 0, modelYaw = 90, hoverOffset = 0, moveSpeed = 20, cutPower = 20, cutInterval = 0.40, ratePerSec = 12, storageCap = 1080, goldCost = 5000, diamondCost = 90, bodyColor = { 58, 120, 52 }, desc = "Walking legs keep it upright on rough ground." },
 		{ key = "hover", name = "Hover Mower", zone = "Thicket", modelName = "HoverMower", modelLength = 0, modelYaw = 0, hoverOffset = 0, moveSpeed = 26, cutPower = 16, cutInterval = 0.35, ratePerSec = 28, storageCap = 2520, goldCost = 15000, diamondCost = 160, bodyColor = { 74, 132, 86 }, desc = "Floats clean over bog water and tangled roots." },
 		{ key = "plasma", name = "Plasma Harvester", zone = "Ironweed", modelName = "PlasmaHarvester", modelLength = 0, modelYaw = 0, hoverOffset = 2, moveSpeed = 32, cutPower = 50, cutInterval = 0.30, ratePerSec = 60, storageCap = 5400, goldCost = 50000, diamondCost = 300, bodyColor = { 150, 245, 170 }, desc = "Endgame idle engine." },
+	},
+
+	-- =========================================================================
+	-- COMBAT (Phase 3: swords + monsters). The Meadow vertical slice is wired; the
+	-- other zones follow the same shape once their content lands.
+	-- =========================================================================
+
+	-- Player health, scaled by the toughest zone you have REACHED. Design goal: HP
+	-- climbs from a fragile 3 in the Meadow up to 50 in the Ironweed Expanse.
+	COMBAT = {
+		defaultMaxHP = 3,
+		zoneMaxHP = { Meadow = 3, Wild = 8, Mossmire = 16, Thicket = 30, Ironweed = 50 },
+		regenPerSecond = 1, -- HP healed per second once out of combat
+		regenDelay = 5, -- seconds after the last hit before regen kicks in
+		scatterPileLifetime = 45, -- seconds a dropped clippings pile waits to be reclaimed
+		scatterReclaimRange = 6, -- studs you must get within to reclaim the pile
+	},
+
+	-- Monster spawning uses a self-correcting PITY chance rolled every time a tile is
+	-- fully cleared. Right after a spawn the chance is suppressed (so monsters can''t
+	-- cluster); through a drought it ramps up; and after a hard cap a spawn is
+	-- GUARANTEED (so it can never dry up). Base is ~10%.
+	MONSTER_SPAWN = {
+		baseChance = 0.10,
+		minChance = 0.02, -- floor right after a spawn
+		maxChance = 0.85, -- ceiling reached through a drought
+		suppressTiles = 4, -- tiles after a spawn spent ramping back up to base
+		droughtRamp = 0.05, -- +5% chance per dry tile once past the suppression window
+		guaranteeAfter = 24, -- a spawn is guaranteed after this many dry tiles
+		maxAlivePerZone = 12, -- do not oversaturate a zone
+	},
+
+	-- Per-zone combat currency dropped by monsters (spent on future combat perks).
+	ESSENCE = {
+		MeadowPollen = { name = "Meadow Pollen", zone = "Meadow", color = { 240, 214, 110 } },
+	},
+
+	-- Monsters. spawnWeight is the relative chance of THIS monster when a spawn fires
+	-- in its zone. hp/damage/speed drive the fight; goldReward + essence are the
+	-- payout for killing it.
+	MONSTERS = {
+		{ key = "weedSprite", name = "Weed Sprite", zone = "Meadow", hp = 12, damage = 1, moveSpeed = 11, attackRange = 6, attackCooldown = 1.4, aggroRange = 42, roamRange = 22, spawnWeight = 70, goldReward = 8, essenceKey = "MeadowPollen", essenceReward = 2, scale = 1.0, bodyColor = { 120, 196, 92 }, headColor = { 150, 220, 120 } },
+		{ key = "gardenGnome", name = "Garden Gnome", zone = "Meadow", hp = 30, damage = 1, moveSpeed = 8, attackRange = 6.5, attackCooldown = 1.1, aggroRange = 48, roamRange = 18, spawnWeight = 30, goldReward = 22, essenceKey = "MeadowPollen", essenceReward = 5, scale = 1.15, bodyColor = { 180, 84, 70 }, headColor = { 235, 220, 190 } },
+	},
+
+	-- Swords: a separate hotbar weapon ladder for combat. Each is bought with gold
+	-- once its zone is reached, then SHARPENED up a per-sword damage ladder. Two per
+	-- zone are planned; the Meadow pair is live.
+	SWORDS = {
+		{ key = "meadowCutlass", name = "Meadow Cutlass", zone = "Meadow", desc = "A light blade forged for Meadow pests.", goldCost = 250, diamondCost = 0, attackCooldown = 0.6, reach = 9, scale = 1.0, handleColor = { 108, 78, 46 }, bladeColor = { 180, 214, 150 }, levels = { { damage = 6, cost = 0 }, { damage = 9, cost = 400 }, { damage = 13, cost = 1200 }, { damage = 18, cost = 3000 } } },
+		{ key = "blossomSaber", name = "Blossom Saber", zone = "Meadow", desc = "Heavier Meadow steel that bites deep.", goldCost = 1200, diamondCost = 0, attackCooldown = 0.7, reach = 10, scale = 1.12, handleColor = { 90, 60, 120 }, bladeColor = { 235, 150, 180 }, levels = { { damage = 14, cost = 0 }, { damage = 20, cost = 1500 }, { damage = 28, cost = 4000 }, { damage = 40, cost = 9000 } } },
 	},
 }
 

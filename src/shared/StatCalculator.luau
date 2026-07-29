@@ -89,4 +89,61 @@ function StatCalculator.CanCutGrass(toolTier: number, grassType: string): boolea
 	return zoneIndex <= StatCalculator.GetToolMaxZone(toolTier)
 end
 
+-- ---------------------------------------------------------------------------
+-- Combat: swords + player HP (all values from GameConfig)
+-- ---------------------------------------------------------------------------
+
+local function swordDef(swordKey)
+	if not swordKey then
+		return nil
+	end
+	for _, d in ipairs(GameConfig.SWORDS) do
+		if d.key == swordKey then
+			return d
+		end
+	end
+	return nil
+end
+
+function StatCalculator.GetSwordDef(swordKey): any
+	return swordDef(swordKey)
+end
+
+-- Damage one sword swing deals, from its bought upgrade level.
+function StatCalculator.GetSwordDamage(swordKey, level: number, skills): number
+	local def = swordDef(swordKey)
+	if not def then
+		return 0
+	end
+	local lvl = math.clamp(level or 1, 1, #def.levels)
+	return def.levels[lvl].damage
+end
+
+-- Seconds between sword swings.
+function StatCalculator.GetSwordCooldown(swordKey, skills): number
+	local def = swordDef(swordKey)
+	return (def and def.attackCooldown) or 0.6
+end
+
+-- Studs a sword reaches in front of the player.
+function StatCalculator.GetSwordReach(swordKey): number
+	local def = swordDef(swordKey)
+	return (def and def.reach) or 9
+end
+
+-- Player max HP scales with the toughest zone REACHED (design: 3 -> 50).
+local COMBAT_ZONE_ORDER = { "Meadow", "Wild", "Mossmire", "Thicket", "Ironweed" }
+function StatCalculator.GetPlayerMaxHP(reached): number
+	local combat = GameConfig.COMBAT
+	local best = (combat and combat.defaultMaxHP) or 3
+	if reached and combat and combat.zoneMaxHP then
+		for _, zone in ipairs(COMBAT_ZONE_ORDER) do
+			if reached[zone] and combat.zoneMaxHP[zone] then
+				best = math.max(best, combat.zoneMaxHP[zone])
+			end
+		end
+	end
+	return best
+end
+
 return StatCalculator
