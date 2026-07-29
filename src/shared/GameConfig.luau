@@ -204,23 +204,23 @@ local GameConfig = {
 		-- 1 \u{00B7} all-rounder (starter)
 		{ name = "Rusty Shears", bladesPerSwing = 1, cost = 0, style = "shears", favored = nil, handleColor = { 92, 64, 40 }, bladeColor = { 138, 120, 96 }, bladeMaterial = "CorrodedMetal", toolScale = 1.0 },
 		-- 2 \u{00B7} specialist: Meadow
-		{ name = "Meadow Trimmer", model = "MeadowTrimmer", bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
+		{ name = "Meadow Trimmer", swingRot = { 0, -58, 0 }, bladesPerSwing = 8, cost = 300, style = "shears", favored = "Meadow", favoredMul = 2.6, offMul = 0.7, handleColor = { 108, 78, 46 }, bladeColor = { 176, 214, 150 }, bladeMaterial = "Metal", toolScale = 1.05 },
 		-- 3 \u{00B7} all-rounder
 		{ name = "Steel Shears", bladesPerSwing = 7, cost = 900, style = "shears", favored = nil, handleColor = { 70, 74, 82 }, bladeColor = { 198, 204, 214 }, bladeMaterial = "Metal", toolScale = 1.1 },
 		-- 4 \u{00B7} specialist: Wild
 		{ name = "Bramble Sickle", modelRot = { 0, 90, 0 }, bladesPerSwing = 13, cost = 2500, style = "sickle", favored = "Wild", favoredMul = 2.6, offMul = 0.7, handleColor = { 96, 68, 40 }, bladeColor = { 120, 168, 96 }, bladeMaterial = "Metal", toolScale = 1.12 },
 		-- 5 \u{00B7} all-rounder
-		{ name = "Garden Sickle", bladesPerSwing = 15, cost = 6000, style = "sickle", favored = nil, handleColor = { 116, 80, 46 }, bladeColor = { 210, 214, 224 }, bladeMaterial = "Metal", toolScale = 1.15 },
+		{ name = "Garden Sickle", swingRot = { 0, -58, 0 }, bladesPerSwing = 15, cost = 6000, style = "sickle", favored = nil, handleColor = { 116, 80, 46 }, bladeColor = { 210, 214, 224 }, bladeMaterial = "Metal", toolScale = 1.15 },
 		-- 6 \u{00B7} specialist: Mossmire
 		{ name = "Bogblade", swingRot = { 0, -58, 0 }, bladesPerSwing = 20, cost = 14000, style = "scythe", favored = "Mossmire", favoredMul = 2.6, offMul = 0.7, handleColor = { 60, 82, 58 }, bladeColor = { 150, 198, 150 }, bladeMaterial = "Metal", toolScale = 1.18 },
 		-- 7 \u{00B7} all-rounder
-		{ name = "Keen Scythe", bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
+		{ name = "Keen Scythe", swingRot = { 0, -58, 0 }, bladesPerSwing = 26, cost = 32000, style = "scythe", favored = nil, handleColor = { 74, 52, 34 }, bladeColor = { 220, 224, 235 }, bladeMaterial = "Metal", toolScale = 1.22 },
 		-- 8 \u{00B7} specialist: Thicket
 		{ name = "Thornbite Machete", swingRot = { 0, -58, 0 }, bladesPerSwing = 30, cost = 70000, style = "scythe", favored = "Thicket", favoredMul = 2.6, offMul = 0.7, handleColor = { 58, 44, 30 }, bladeColor = { 90, 150, 84 }, bladeMaterial = "Metal", toolScale = 1.25 },
 		-- 9 \u{00B7} all-rounder
-		{ name = "Royal Reaper", bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
+		{ name = "Royal Reaper", swingRot = { 0, -58, 0 }, bladesPerSwing = 44, cost = 150000, style = "scythe", favored = nil, handleColor = { 60, 44, 74 }, bladeColor = { 236, 232, 210 }, bladeMaterial = "Metal", toolScale = 1.3 },
 		-- 10 \u{00B7} specialist: Ironweed
-		{ name = "Ironfang Scythe", bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
+		{ name = "Ironfang Scythe", swingRot = { 0, -58, 0 }, bladesPerSwing = 40, cost = 320000, style = "scythe", favored = "Ironweed", favoredMul = 2.6, offMul = 0.7, handleColor = { 40, 44, 48 }, bladeColor = { 120, 140, 150 }, bladeMaterial = "Metal", toolScale = 1.34 },
 		-- 11 \u{00B7} ULTIMATE: excels at every grass type
 		{ name = "Verdant Kingcutter", bladesPerSwing = 70, cost = 900000, style = "scythe", favored = "all", favoredMul = 1.6, handleColor = { 40, 90, 60 }, bladeColor = { 180, 245, 170 }, bladeMaterial = "Metal", toolScale = 1.42 },
 	},
