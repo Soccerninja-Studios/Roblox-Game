@@ -2,7 +2,7 @@
 	<Meta name="ExplicitAutoJoints">true</Meta>
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBXDF3EC82100E444A48DAF5C380914357A">
+	<Item class="Tool" referent="RBXEA090CECB2434A6EA1D286DE0AD37EFE">
 		<Properties>
 			<bool name="CanBeDropped">false</bool>
 			<bool name="Enabled">true</bool>
@@ -26,18 +26,18 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset?id=128720392</url></Content>
 			<token name="LevelOfDetail">0</token>
 			<CoordinateFrame name="ModelMeshCFrame">
-				<X>2.04363823</X>
-				<Y>-7.43384027</Y>
-				<Z>-9.56632805</Z>
-				<R00>1</R00>
-				<R01>0</R01>
-				<R02>0</R02>
-				<R10>0</R10>
-				<R11>0.707147598</R11>
-				<R12>-0.707147598</R12>
-				<R20>0</R20>
-				<R21>0.707147717</R21>
-				<R22>0.707147717</R22>
+				<X>-33.2608643</X>
+				<Y>-7.44125986</Y>
+				<Z>1.52998006</Z>
+				<R00>1.0000062</R00>
+				<R01>-3.82267172e-06</R01>
+				<R02>-3.86172906e-06</R02>
+				<R10>3.05479766e-08</R10>
+				<R11>0.707737863</R11>
+				<R12>-0.707743049</R12>
+				<R20>-5.45811872e-06</R20>
+				<R21>0.707735896</R21>
+				<R22>0.707740903</R22>
 			</CoordinateFrame>
 			<SharedString name="ModelMeshData">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<Vector3 name="ModelMeshSize">
@@ -52,18 +52,18 @@
 			<SharedString name="SlimHash">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<OptionalCoordinateFrame name="WorldPivotData">
 				<CFrame>
-					<X>29.7999992</X>
-					<Y>1.35000074</Y>
-					<Z>-16.5</Z>
+					<X>0.800000668</X>
+					<Y>1.50000215</Y>
+					<Z>-20.6499996</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>1.00000036</R11>
+					<R11>1.00000143</R11>
 					<R12>0</R12>
 					<R20>0</R20>
 					<R21>0</R21>
-					<R22>1.00000036</R22>
+					<R22>1.00000143</R22>
 				</CFrame>
 			</OptionalCoordinateFrame>
 			<BinaryString name="AttributesSerialize"></BinaryString>
@@ -73,7 +73,7 @@
 			<int64 name="SourceAssetId">3639536969</int64>
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 		</Properties>
-		<Item class="Part" referent="RBXCCA32C41DBB247548558D153A546AB52">
+		<Item class="Part" referent="RBXDED7E425E8B4426EBDCA5B3057B91409">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">3</token>
@@ -88,18 +88,18 @@
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
 				<CoordinateFrame name="CFrame">
-					<X>29.7999992</X>
-					<Y>1.35000074</Y>
-					<Z>-16.5</Z>
+					<X>0.800000668</X>
+					<Y>1.50000215</Y>
+					<Z>-20.6499996</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
 					<R10>0</R10>
-					<R11>1.00000036</R11>
+					<R11>1.00000143</R11>
 					<R12>0</R12>
 					<R20>0</R20>
 					<R21>0</R21>
-					<R22>1.00000036</R22>
+					<R22>1.00000143</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">false</bool>
 				<bool name="CanQuery">true</bool>
@@ -171,7 +171,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBXA576A6856AAD4B3C9315456B2A033342">
+			<Item class="SpecialMesh" referent="RBX019D031B1B0E47EF949EB4DA828EE16B">
 				<Properties>
 					<token name="MeshType">5</token>
 					<Content name="MeshId"><url>rbxassetid://2496539575</url></Content>
@@ -200,7 +200,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Camera" referent="RBX11F1229A12C84B9BA408A95C8E65FCDD">
+		<Item class="Camera" referent="RBXD31E2456143047EBAF5ACCB36F917263">
 			<Properties>
 				<CoordinateFrame name="CFrame">
 					<X>-2.235466</X>

@@ -2,7 +2,7 @@
 	<Meta name="ExplicitAutoJoints">true</Meta>
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Tool" referent="RBX7371DA88A1474053B6F6073CE93C7D57">
+	<Item class="Tool" referent="RBXD57F71CAE4F042158D9B6E7E5FA5849F">
 		<Properties>
 			<bool name="CanBeDropped">true</bool>
 			<bool name="Enabled">true</bool>
@@ -26,18 +26,18 @@
 			<Content name="TextureId"><url>http://www.roblox.com/asset/?id=7722474825</url></Content>
 			<token name="LevelOfDetail">0</token>
 			<CoordinateFrame name="ModelMeshCFrame">
-				<X>11.3327532</X>
-				<Y>-22.2138481</Y>
-				<Z>-7.44729042</Z>
-				<R00>0.744262278</R00>
-				<R01>-0.668393254</R01>
-				<R02>0</R02>
-				<R10>0.668393254</R10>
-				<R11>0.744262278</R11>
-				<R12>0</R12>
-				<R20>0</R20>
-				<R21>0</R21>
-				<R22>1</R22>
+				<X>21.9916649</X>
+				<Y>-22.410965</Y>
+				<Z>-1.82437301</Z>
+				<R00>-6.28658836e-06</R00>
+				<R01>9.35038543e-07</R01>
+				<R02>1.00053704</R02>
+				<R10>0.669666827</R10>
+				<R11>0.745698631</R11>
+				<R12>-3.49214611e-06</R12>
+				<R20>-0.745308161</R20>
+				<R21>0.669319391</R21>
+				<R22>5.19964578e-06</R22>
 			</CoordinateFrame>
 			<SharedString name="ModelMeshData">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<Vector3 name="ModelMeshSize">
@@ -52,18 +52,18 @@
 			<SharedString name="SlimHash">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<OptionalCoordinateFrame name="WorldPivotData">
 				<CFrame>
-					<X>29.585001</X>
-					<Y>1.95999908</Y>
-					<Z>-13.1000004</Z>
-					<R00>0</R00>
+					<X>1.10000038</X>
+					<Y>1.96000171</Y>
+					<Z>-26.4150009</Z>
+					<R00>1.00000072</R00>
 					<R01>0</R01>
-					<R02>-1.00000095</R02>
+					<R02>0</R02>
 					<R10>0</R10>
-					<R11>1.00000095</R11>
+					<R11>1.00000262</R11>
 					<R12>0</R12>
-					<R20>1</R20>
+					<R20>0</R20>
 					<R21>0</R21>
-					<R22>0</R22>
+					<R22>1.00000191</R22>
 				</CFrame>
 			</OptionalCoordinateFrame>
 			<BinaryString name="AttributesSerialize"></BinaryString>
@@ -73,7 +73,7 @@
 			<int64 name="SourceAssetId">11663904408</int64>
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 		</Properties>
-		<Item class="Part" referent="RBX97BBAA84E22D49969F8BF99E81897086">
+		<Item class="Part" referent="RBX4ABE89C774C44483A7A3839902FFCB8D">
 			<Properties>
 				<token name="shape">1</token>
 				<token name="formFactorRaw">3</token>
@@ -88,18 +88,18 @@
 				<token name="BottomSurface">0</token>
 				<token name="BottomSurfaceInput">0</token>
 				<CoordinateFrame name="CFrame">
-					<X>29.585001</X>
-					<Y>1.95999908</Y>
-					<Z>-13.1000004</Z>
-					<R00>0</R00>
+					<X>1.10000038</X>
+					<Y>1.96000171</Y>
+					<Z>-26.4150009</Z>
+					<R00>1.00000072</R00>
 					<R01>0</R01>
-					<R02>-1.00000095</R02>
+					<R02>0</R02>
 					<R10>0</R10>
-					<R11>1.00000095</R11>
+					<R11>1.00000262</R11>
 					<R12>0</R12>
-					<R20>1</R20>
+					<R20>0</R20>
 					<R21>0</R21>
-					<R22>0</R22>
+					<R22>1.00000191</R22>
 				</CoordinateFrame>
 				<bool name="CanCollide">true</bool>
 				<bool name="CanQuery">true</bool>
@@ -171,7 +171,7 @@
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="SpecialMesh" referent="RBX7272EEB3B1664DABB912831F1225B1AA">
+			<Item class="SpecialMesh" referent="RBX573DA0231B6A40A78EE7103CD85D1DAC">
 				<Properties>
 					<token name="MeshType">5</token>
 					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=123248347</url></Content>
@@ -199,7 +199,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBXE0E4A2524BE94083AAFED8171616D7B9">
+			<Item class="Sound" referent="RBX255C7D8F9FC84E8BB672A1934E8410B6">
 				<Properties>
 					<bool name="AcousticSimulationEnabled">true</bool>
 					<NumberRange name="LoopRegion">0 60000 </NumberRange>
@@ -224,7 +224,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Sound" referent="RBX8E65CF5155404F86938F0232546A62F6">
+			<Item class="Sound" referent="RBX9099DEAEA69E4D26BAB12BF92F615303">
 				<Properties>
 					<bool name="AcousticSimulationEnabled">true</bool>
 					<NumberRange name="LoopRegion">0 60000 </NumberRange>
@@ -249,7 +249,7 @@
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
 			</Item>
-			<Item class="Attachment" referent="RBXA13BF705D86447E587F51F8733796844">
+			<Item class="Attachment" referent="RBX458A2FF4565D4CE8BE9F939F7FD19110">
 				<Properties>
 					<CoordinateFrame name="CFrame">
 						<X>2.38418579e-07</X>
@@ -275,7 +275,7 @@
 				</Properties>
 			</Item>
 		</Item>
-		<Item class="Animation" referent="RBXD7989575F61540479EC59F9828338C08">
+		<Item class="Animation" referent="RBX918D55A2A74F47DFBCB9CC8BB5605278">
 			<Properties>
 				<Content name="AnimationId"><url>rbxassetid://89289879</url></Content>
 				<BinaryString name="AttributesSerialize"></BinaryString>
@@ -286,7 +286,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Camera" referent="RBX20DDBDC2354B48DAB28EB3427760A861">
+		<Item class="Camera" referent="RBXD6B9C38828384B4394AF99C69A1D0DF2">
 			<Properties>
 				<CoordinateFrame name="CFrame">
 					<X>6.80676508</X>
@@ -331,7 +331,7 @@
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBXF0D80671688946ADBE4DF3E26CC55993">
+		<Item class="Script" referent="RBXCE529BB2C8D0408BBA7F200B37BED9AF">
 			<Properties>
 				<ProtectedString name="Source"><![CDATA[--Rescripted by TakeoHonorable
 
@@ -441,7 +441,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<token name="RunContext">0</token>
-				<string name="ScriptGuid">{C27E0D83-B547-4830-84D6-12FBEA66E99A}</string>
+				<string name="ScriptGuid">{191E225C-60C1-4FCE-9C75-29ABDB9950FB}</string>
 				<BinaryString name="AttributesSerialize"></BinaryString>
 				<SecurityCapabilities name="Capabilities">17996771963439872</SecurityCapabilities>
 				<bool name="DefinesCapabilities">true</bool>
@@ -450,7 +450,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Animation" referent="RBX580CBE7B97124D95A29AE4B9CA9D414D">
+		<Item class="Animation" referent="RBX0E4B2236ABF5496AB2659BCF6F8D9239">
 			<Properties>
 				<Content name="AnimationId"><url>rbxassetid://2850678159</url></Content>
 				<BinaryString name="AttributesSerialize"></BinaryString>
@@ -461,7 +461,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
 		</Item>
-		<Item class="Keyframe" referent="RBX05A564CABB4E419A91AB8409F1B19EA6">
+		<Item class="Keyframe" referent="RBX74A53EDA6AF24B5ABCABA14E68FFD433">
 			<Properties>
 				<float name="Time">0</float>
 				<BinaryString name="AttributesSerialize"></BinaryString>
@@ -471,7 +471,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 				<int64 name="SourceAssetId">-1</int64>
 				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			</Properties>
-			<Item class="Pose" referent="RBXB9BA464A56C14CEF8E944E52DEC5F623">
+			<Item class="Pose" referent="RBXEFDD087B03514033B1A007852F7D8E3B">
 				<Properties>
 					<CoordinateFrame name="CFrame">
 						<X>0</X>
@@ -497,7 +497,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 					<int64 name="SourceAssetId">-1</int64>
 					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 				</Properties>
-				<Item class="Pose" referent="RBXEC692670342445BB9D081B5552983594">
+				<Item class="Pose" referent="RBX2155563481B04004BAA83B6409B5ADA4">
 					<Properties>
 						<CoordinateFrame name="CFrame">
 							<X>0</X>
@@ -523,7 +523,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 						<int64 name="SourceAssetId">-1</int64>
 						<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 					</Properties>
-					<Item class="Pose" referent="RBXA316FA4500CA4665B36FDE53679F78A7">
+					<Item class="Pose" referent="RBX4279C24D07364CB6B3E22C0FF44BE64B">
 						<Properties>
 							<CoordinateFrame name="CFrame">
 								<X>0</X>
@@ -549,7 +549,7 @@ Tool.Equipped:Connect(Equipped)]]></ProtectedString>
 							<int64 name="SourceAssetId">-1</int64>
 							<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 						</Properties>
-						<Item class="Pose" referent="RBXE6CDD298BAEE4D1FB2CCD26F1B802495">
+						<Item class="Pose" referent="RBX0309B06104204BCFBF571C398367212E">
 							<Properties>
 								<CoordinateFrame name="CFrame">
 									<X>0</X>
