@@ -235,11 +235,46 @@ end
 -- ReplicatedStorage.Assets.Shears). We clone it, tag it like our own tools, and
 -- rebuild its hinge so BOTH scissor halves swing inward together when snipping.
 -- If the asset is missing we fall back to the procedural shears below.
+-- Resolve the hand-made asset for a tool def, tolerating name differences like
+-- "SteelShears" vs "Steel Shears" (space/case-insensitive) so a model still
+-- loads when its instance name does not exactly match the tool name.
+local function resolveAsset(def: any): Instance?
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	if not assets then
+		return nil
+	end
+	local wanted = def.model or def.name
+	local exact = assets:FindFirstChild(wanted)
+	if exact then
+		return exact
+	end
+	local function norm(s: string): string
+		return (string.gsub(string.lower(s), "%s", ""))
+	end
+	local target = norm(wanted)
+	for _, child in assets:GetChildren() do
+		if norm(child.Name) == target then
+			return child
+		end
+	end
+	return nil
+end
+
+-- True when the tool asset is built like scissors (two mirrored halves), so we
+-- can drive its authored "Pivot" joint as a snipping clip like the Rusty Shears.
+local function isScissorModel(def: any): boolean
+	local template = resolveAsset(def)
+	return template ~= nil and template:FindFirstChild("BladeLeft", true) ~= nil
+end
+
 local SNIP_HALF_ANGLE = math.rad(14) -- each half turns this much (~28 deg total closure)
 
 local function buildCustomShears(def: any, tier: number): Tool?
-	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	local template = assets and assets:FindFirstChild("Shears")
+	local template = resolveAsset(def)
+	if not template then
+		local assets = ReplicatedStorage:FindFirstChild("Assets")
+		template = assets and assets:FindFirstChild("Shears")
+	end
 	if not template or not template:IsA("Tool") then
 		return nil
 	end
@@ -425,28 +460,7 @@ end
 -- into one of our standard Tools. Returns nil when no matching asset exists, so
 -- callers can fall back to the bespoke scissor asset or the procedural builders.
 local function adoptCustomModel(def: any, tier: number): Tool?
-	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	if not assets then
-		return nil
-	end
-	local wanted = def.model or def.name
-	local template = assets:FindFirstChild(wanted)
-	if not template then
-		-- Space/case-insensitive fallback so an asset named "SteelShears" or
-		-- "MeadowTrimmer" resolves for a tool named "Steel Shears" / "Meadow
-		-- Trimmer". Prevents silently falling through to the wrong model when
-		-- the model instance name does not exactly match the tool name.
-		local function norm(s)
-			return (string.gsub(string.lower(s), "%s", ""))
-		end
-		local target = norm(wanted)
-		for _, child in assets:GetChildren() do
-			if norm(child.Name) == target then
-				template = child
-				break
-			end
-		end
-	end
+	local template = resolveAsset(def)
 	if not template then
 		return nil
 	end
@@ -567,7 +581,12 @@ local function adoptCustomModel(def: any, tier: number): Tool?
 	pivot.Part1 = bladeRoot
 	pivot.C0 = restC0
 	pivot:SetAttribute("RestC0", restC0)
-	pivot:SetAttribute("SwungC0", restC0 * swingRot)
+	pivot:SetAttribute("SwungC0", swingRot * restC0)
+	if def.sweep then
+		-- Weed-wacker sweep: a mirrored pose on the far side so the swing runs
+		-- middle -> one side -> other side -> middle (see ToolController).
+		pivot:SetAttribute("SweepC0", swingRot:Inverse() * restC0)
+	end
 	pivot.Parent = handle
 
 	-- Reparent each visual part under the Tool and rigidly weld it to BladeRoot,
@@ -603,6 +622,16 @@ local STYLE_BUILDERS: { [string]: (any, number) -> Tool } = {
 
 local function buildTool(tier: number): Tool
 	local def = GameConfig.TOOL_TIERS[tier] or GameConfig.TOOL_TIERS[1]
+
+	-- Scissor-structured models (mirrored halves + a "Pivot" joint, like the
+	-- Rusty Shears asset) get the real snipping clip instead of the generic swing
+	-- rig, so Steel Shears / Verdant Kingcutter close like scissors.
+	if isScissorModel(def) then
+		local scissor = buildCustomShears(def, tier)
+		if scissor then
+			return scissor
+		end
+	end
 
 	-- Prefer a hand-made model asset that matches this tool by name.
 	local custom = adoptCustomModel(def, tier)
