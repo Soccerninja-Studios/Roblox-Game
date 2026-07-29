@@ -37,6 +37,12 @@ export type Profile = {
 	skills: { [string]: number },
 	zones: { [string]: { tilesCut: number, restored: boolean } },
 	prestige: number,
+	swords: {
+		owned: { [string]: boolean },
+		level: { [string]: number },
+		equipped: string?,
+	},
+	essence: { [string]: number },
 	quests: {
 		progress: { [string]: number }, -- questId (as string) -> current progress
 		claimed: { [string]: boolean }, -- questId (as string) -> reward claimed
@@ -55,7 +61,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 5
+local PROFILE_VERSION = 6
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -100,6 +106,8 @@ local function defaultProfile(): Profile
 		prestige = 0,
 		quests = { progress = {}, claimed = {}, reached = {} },
 		autoMowers = { owned = {}, deployed = {} },
+		swords = { owned = {}, level = {}, equipped = nil },
+		essence = {},
 	}
 end
 
@@ -415,6 +423,16 @@ function PlayerDataService.GrantCurrency(player: Player, gold: number, diamonds:
 		profile.diamonds += diamonds
 	end
 	PlayerDataService.PushState(player)
+end
+
+-- Grant a combat essence currency (dropped by monsters). Non-positive ignored.
+function PlayerDataService.GrantEssence(player: Player, key: string, amount: number)
+	local profile = profiles[player]
+	if not profile or not key or not amount or amount <= 0 then
+		return
+	end
+	profile.essence = profile.essence or {}
+	profile.essence[key] = (profile.essence[key] or 0) + amount
 end
 
 -- Returns true and deducts GOLD if the player can afford it; false otherwise.

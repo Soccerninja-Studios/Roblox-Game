@@ -25,6 +25,7 @@ local GrassService = {}
 local PlayerDataService
 local ClippingsService
 local QuestService
+local MonsterService
 local grassRoot: Model -- workspace.Kingdom, holds every grass tile
 
 local function color3(rgb: { number }): Color3
@@ -220,6 +221,11 @@ local function onRequestCut(player: Player, tile: Instance?)
 		QuestService.ReportMow(player, typeName)
 	end
 
+	-- Combat: fully clearing a tile is the trigger for the monster pity roll.
+	if MonsterService then
+		MonsterService.OnTileCleared(player, tile.Position, GrassService.GetGrassZoneIndex(typeName))
+	end
+
 	-- Reveal whatever is underneath and let the player walk through now.
 	tile.CanQuery = false
 	tile.CanCollide = false
@@ -371,6 +377,7 @@ function GrassService.Init(services)
 	PlayerDataService = services.PlayerDataService
 	ClippingsService = services.ClippingsService
 	QuestService = services.QuestService
+	MonsterService = services.MonsterService
 
 	grassRoot = Workspace:FindFirstChild("Kingdom") :: Model
 	if not grassRoot then
