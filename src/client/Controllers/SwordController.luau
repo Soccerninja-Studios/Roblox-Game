@@ -63,53 +63,52 @@ local function restPose(shoulder: Motor6D): CFrame
 	return restC0[shoulder]
 end
 
--- Light wind-up the instant you swing (anticipation, whether or not you connect).
+-- Every swing plays a big, readable overhead SLAM: wind up over the head, slam
+-- the blade down in front, then rise back to rest. Fires on every click so you
+-- always see the attack, hit or miss.
 local function playSwingAnim(char: Model)
 	local shoulder = rightShoulder(char)
 	if not shoulder then
 		return
 	end
 	local base = restPose(shoulder)
-	TweenService:Create(shoulder, TweenInfo.new(0.08), { C0 = base * CFrame.Angles(math.rad(-70), 0, 0) }):Play()
-	task.delay(0.1, function()
+	-- Wind up overhead.
+	TweenService:Create(shoulder, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		C0 = base * CFrame.Angles(math.rad(-160), 0, 0),
+	}):Play()
+	-- Slam down hard in front.
+	task.delay(0.09, function()
 		if shoulder and shoulder.Parent then
-			TweenService:Create(shoulder, TweenInfo.new(0.12), { C0 = base }):Play()
+			TweenService:Create(shoulder, TweenInfo.new(0.07, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				C0 = base * CFrame.Angles(math.rad(-18), 0, 0),
+			}):Play()
+		end
+	end)
+	-- Rise back to rest.
+	task.delay(0.18, function()
+		if shoulder and shoulder.Parent then
+			TweenService:Create(shoulder, TweenInfo.new(0.14), { C0 = base }):Play()
 		end
 	end)
 end
 
--- Decisive downward chop + a bright blade flash, played only when the SERVER
--- confirms a hit landed -- your clear "you connected" feedback.
+-- Confirmed-hit feedback: a bright blade flash the instant the SERVER says a
+-- swing connected. No arm tween here -- the swing slam already owns the arm, and
+-- a second shoulder tween firing at the same time would fight it.
 local function playHitAnim()
-	local char = player.Character
-	if not char then
-		return
-	end
 	local tool = heldSword()
 	local blade = tool and tool:FindFirstChild("Blade")
-	if blade and blade:IsA("BasePart") then
-		local origColor = blade.Color
-		local origMaterial = blade.Material
-		blade.Color = Color3.fromRGB(255, 255, 255)
-		blade.Material = Enum.Material.Neon
-		task.delay(0.12, function()
-			if blade and blade.Parent then
-				blade.Color = origColor
-				blade.Material = origMaterial
-			end
-		end)
-	end
-	local shoulder = rightShoulder(char)
-	if not shoulder then
+	if not (blade and blade:IsA("BasePart")) then
 		return
 	end
-	local base = restPose(shoulder)
-	TweenService:Create(shoulder, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		C0 = base * CFrame.Angles(math.rad(-125), 0, math.rad(28)),
-	}):Play()
-	task.delay(0.09, function()
-		if shoulder and shoulder.Parent then
-			TweenService:Create(shoulder, TweenInfo.new(0.16), { C0 = base }):Play()
+	local origColor = blade.Color
+	local origMaterial = blade.Material
+	blade.Color = Color3.fromRGB(255, 255, 255)
+	blade.Material = Enum.Material.Neon
+	task.delay(0.12, function()
+		if blade and blade.Parent then
+			blade.Color = origColor
+			blade.Material = origMaterial
 		end
 	end)
 end

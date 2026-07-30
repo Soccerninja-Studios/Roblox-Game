@@ -1,8 +1,10 @@
 --!strict
 -- ShiftLockController: press Left Shift to toggle a shoulder/aim lock. While it is
--- on, the mouse is pinned to screen center and the character continuously turns to
--- face the camera's look direction -- so you can circle-strafe a monster and land
--- sword hits without over-running into it or having to fully retreat.
+-- on, the mouse cursor is hidden and pinned to screen center, the camera slides
+-- over the player's right shoulder, and the character continuously turns to face
+-- the camera's look direction -- so you can circle-strafe a monster and land sword
+-- hits without over-running into it, fully retreating, or being blocked by your
+-- own avatar.
 --
 -- NOTE (manual Studio step): if Roblox's built-in "Shift Lock Switch" is also on,
 -- Shift would toggle two systems at once. Turn the built-in one off by setting
@@ -19,6 +21,10 @@ local player = Players.LocalPlayer
 
 local TOGGLE_KEY = Enum.KeyCode.LeftShift
 local BIND_NAME = "ShiftLockFace"
+-- Slide the camera to the player's right (positive X in camera space) so the
+-- avatar sits on the left of the screen and the monsters ahead stay visible --
+-- the classic over-the-shoulder combat framing.
+local SHOULDER_OFFSET = Vector3.new(2, 0, 0)
 
 local enabled = false
 
@@ -40,9 +46,9 @@ local function currentRoot(): BasePart?
 	return nil
 end
 
--- Runs just after the default character update: keep the mouse pinned and turn the
--- character to match where the camera is looking (horizontal only, so the body
--- stays upright while you aim).
+-- Runs just after the default character update: keep the cursor pinned and turn
+-- the character to match where the camera is looking (horizontal only, so the
+-- body stays upright while you aim).
 local function onStep()
 	if not enabled then
 		return
@@ -70,8 +76,10 @@ local function enable()
 	local hum = currentHumanoid()
 	if hum then
 		hum.AutoRotate = false
+		hum.CameraOffset = SHOULDER_OFFSET
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+	UserInputService.MouseIconEnabled = false
 end
 
 local function disable()
@@ -82,8 +90,10 @@ local function disable()
 	local hum = currentHumanoid()
 	if hum then
 		hum.AutoRotate = true
+		hum.CameraOffset = Vector3.zero
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	UserInputService.MouseIconEnabled = true
 end
 
 function ShiftLockController.Init()
@@ -103,7 +113,8 @@ function ShiftLockController.Init()
 		end
 	end)
 
-	-- On respawn, re-apply the lock state to the fresh character.
+	-- On respawn, re-apply the lock state (facing, cursor, and shoulder camera) to
+	-- the fresh character.
 	player.CharacterAdded:Connect(function(char)
 		if not enabled then
 			return
@@ -111,8 +122,10 @@ function ShiftLockController.Init()
 		local hum = char:WaitForChild("Humanoid", 5)
 		if hum and hum:IsA("Humanoid") then
 			hum.AutoRotate = false
+			hum.CameraOffset = SHOULDER_OFFSET
 		end
 		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		UserInputService.MouseIconEnabled = false
 	end)
 end
 
