@@ -43,17 +43,73 @@ local function heldSword(): Tool?
 	return nil
 end
 
-local function playSwingAnim(char: Model)
+-- Cache each shoulder's rest pose so overlapping swing/hit tweens never capture a
+-- mid-animation C0 (which would leave the arm drifting out of place).
+local restC0: { [Motor6D]: CFrame } = {}
+
+local function rightShoulder(char: Model): Motor6D?
 	local torso = char:FindFirstChild("Torso")
 	local shoulder = torso and torso:FindFirstChild("Right Shoulder")
-	if not shoulder or not shoulder:IsA("Motor6D") then
-		return -- R15 or no rig; the server still resolves the hit
+	if shoulder and shoulder:IsA("Motor6D") then
+		return shoulder
 	end
-	local base = shoulder.C0
-	TweenService:Create(shoulder, TweenInfo.new(0.08), { C0 = base * CFrame.Angles(math.rad(-90), 0, 0) }):Play()
-	task.delay(0.12, function()
+	return nil -- R15 or no rig; the server still resolves the hit either way
+end
+
+local function restPose(shoulder: Motor6D): CFrame
+	if not restC0[shoulder] then
+		restC0[shoulder] = shoulder.C0
+	end
+	return restC0[shoulder]
+end
+
+-- Light wind-up the instant you swing (anticipation, whether or not you connect).
+local function playSwingAnim(char: Model)
+	local shoulder = rightShoulder(char)
+	if not shoulder then
+		return
+	end
+	local base = restPose(shoulder)
+	TweenService:Create(shoulder, TweenInfo.new(0.08), { C0 = base * CFrame.Angles(math.rad(-70), 0, 0) }):Play()
+	task.delay(0.1, function()
 		if shoulder and shoulder.Parent then
 			TweenService:Create(shoulder, TweenInfo.new(0.12), { C0 = base }):Play()
+		end
+	end)
+end
+
+-- Decisive downward chop + a bright blade flash, played only when the SERVER
+-- confirms a hit landed -- your clear "you connected" feedback.
+local function playHitAnim()
+	local char = player.Character
+	if not char then
+		return
+	end
+	local tool = heldSword()
+	local blade = tool and tool:FindFirstChild("Blade")
+	if blade and blade:IsA("BasePart") then
+		local origColor = blade.Color
+		local origMaterial = blade.Material
+		blade.Color = Color3.fromRGB(255, 255, 255)
+		blade.Material = Enum.Material.Neon
+		task.delay(0.12, function()
+			if blade and blade.Parent then
+				blade.Color = origColor
+				blade.Material = origMaterial
+			end
+		end)
+	end
+	local shoulder = rightShoulder(char)
+	if not shoulder then
+		return
+	end
+	local base = restPose(shoulder)
+	TweenService:Create(shoulder, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		C0 = base * CFrame.Angles(math.rad(-125), 0, math.rad(28)),
+	}):Play()
+	task.delay(0.09, function()
+		if shoulder and shoulder.Parent then
+			TweenService:Create(shoulder, TweenInfo.new(0.16), { C0 = base }):Play()
 		end
 	end)
 end
@@ -367,6 +423,11 @@ end
 
 function SwordController.Init()
 	ensureWired()
+
+	-- Play the hit reaction whenever the server confirms a swing connected.
+	Remotes.Get("MonsterHit").OnClientEvent:Connect(function()
+		playHitAnim()
+	end)
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then
