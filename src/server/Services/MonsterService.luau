@@ -324,22 +324,32 @@ local function applyDamage(model: Model, damage: number, byPlayer: Player?)
 	end
 end
 
-function MonsterService.DamageMonstersNear(player: Player, origin: Vector3, look: Vector3, reach: number, damage: number)
+-- Swing hitbox resolver. Given an oriented box (the swing volume) in front of the
+-- swinger, damage every living monster whose body overlaps it. No aiming or
+-- targeting: if the box touches the monster, it takes damage.
+--
+-- This is a manual oriented-box test rather than Workspace:GetPartBoundsInBox on
+-- purpose: monster parts run with CanQuery = false, so a spatial query would skip
+-- them entirely. We treat each monster as a small box around its root, which keeps
+-- hit detection working regardless of the CanQuery settings other systems rely on.
+function MonsterService.DamageMonstersInHitbox(player: Player, hitboxCFrame: CFrame, hitboxSize: Vector3, damage: number)
 	if not monsterFolder then
 		return
 	end
-	local flatLook = Vector3.new(look.X, 0, look.Z)
+	local half = hitboxSize * 0.5
 	for _, model in monsterFolder:GetChildren() do
 		if model:IsA("Model") and model.PrimaryPart and not model:GetAttribute("Dead") then
-			local to = model.PrimaryPart.Position - origin
-			if to.Magnitude <= reach then
-				local flatTo = Vector3.new(to.X, 0, to.Z)
-				local inFront = flatLook.Magnitude < 0.1
-					or flatTo.Magnitude < 0.1
-					or flatLook.Unit:Dot(flatTo.Unit) >= 0.15
-				if inFront then
-					applyDamage(model, damage, player)
-				end
+			local pp = model.PrimaryPart :: BasePart
+			-- Monster position expressed in the hitbox's local space.
+			local rel = hitboxCFrame:PointToObjectSpace(pp.Position)
+			-- Pad the box by the monster's own half-extents so a graze along the edge
+			-- still counts as the blade touching it.
+			local mhalf = pp.Size * 0.5
+			if math.abs(rel.X) <= half.X + mhalf.X
+				and math.abs(rel.Y) <= half.Y + mhalf.Y
+				and math.abs(rel.Z) <= half.Z + mhalf.Z
+			then
+				applyDamage(model, damage, player)
 			end
 		end
 	end

@@ -19,6 +19,13 @@ local MonsterService
 
 local lastSwing: { [Player]: number } = {}
 
+-- Base (pre-scale) blade dimensions, shared by the visible sword mesh AND the
+-- swing hitbox so the two can never drift apart.
+local SWORD_BLADE_SIZE = Vector3.new(0.32, 3.8, 0.95)
+-- The swing hitbox is blown up this much versus the blade so small swords still
+-- connect comfortably.
+local HITBOX_SCALE = 1.5
+
 local function c3(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
 end
@@ -88,7 +95,7 @@ local function buildSwordTool(def): Tool
 
 	local blade = Instance.new("Part")
 	blade.Name = "Blade"
-	blade.Size = Vector3.new(0.32, 3.8, 0.95) * scale
+	blade.Size = SWORD_BLADE_SIZE * scale
 	blade.Color = c3(def.bladeColor or { 205, 212, 222 })
 	blade.Material = Enum.Material.Metal
 	blade.Reflectance = 0.14
@@ -179,7 +186,22 @@ local function onSwordSwing(player: Player)
 	local damage = StatCalculator.GetSwordDamage(key, level, profile.skills)
 	local reach = StatCalculator.GetSwordReach(key)
 	if MonsterService then
-		MonsterService.DamageMonstersNear(player, (root :: BasePart).Position, (root :: BasePart).CFrame.LookVector, reach, damage)
+		-- New combat model: no aiming or clicking on a target. We sweep a generous
+		-- swing volume in front of the player -- the blade blown up 1.5x so small
+		-- blades still land -- and damage every monster it overlaps. Forward depth
+		-- uses the sword's reach stat so longer swords keep their range advantage.
+		local scale = def.scale or 1
+		local bladeLen = SWORD_BLADE_SIZE.Y * scale * HITBOX_SCALE
+		local bladeThick = SWORD_BLADE_SIZE.Z * scale * HITBOX_SCALE
+		local forward = math.max(bladeLen, reach)
+		-- Width & height stay forgiving (min floors) so you don't have to line up
+		-- the monster precisely; depth is the forward reach of the slam.
+		local hitboxSize = Vector3.new(math.max(bladeThick, 2.5), math.max(bladeLen, 4), forward)
+		local rootPart = root :: BasePart
+		-- Center the box in front of the player, dropped slightly to match where the
+		-- blade slams down.
+		local hitboxCFrame = rootPart.CFrame * CFrame.new(0, -0.5, -forward * 0.5)
+		MonsterService.DamageMonstersInHitbox(player, hitboxCFrame, hitboxSize, damage)
 	end
 end
 
