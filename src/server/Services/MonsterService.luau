@@ -97,9 +97,7 @@ local function spawnScatterPile(player: Player, pos: Vector3, amount: number)
 	label.Text = "\u{1F33F} " .. amount
 	label.Parent = billboard
 
-	local lifetime = cfg.scatterPileLifetime or 45
 	local range = cfg.scatterReclaimRange or 6
-	local deadline = os.clock() + lifetime
 	local reclaimed = false
 
 	local conn
@@ -107,9 +105,14 @@ local function spawnScatterPile(player: Player, pos: Vector3, amount: number)
 		if reclaimed then
 			return
 		end
-		if os.clock() >= deadline or not pile.Parent then
+		if not pile.Parent or not player.Parent then
+			-- Owner left or the pile is already gone: clean up. The pile is
+			-- otherwise PERMANENT and waits indefinitely to be reclaimed (no timer).
 			if conn then
 				conn:Disconnect()
+			end
+			if not player.Parent and pile.Parent then
+				pile:Destroy()
 			end
 			return
 		end
@@ -131,8 +134,6 @@ local function spawnScatterPile(player: Player, pos: Vector3, amount: number)
 			pile:Destroy()
 		end
 	end)
-
-	Debris:AddItem(pile, lifetime + 0.2)
 end
 
 local function onDied(player: Player, character: Model)
