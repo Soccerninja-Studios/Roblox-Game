@@ -87,11 +87,19 @@ local function buildSwordTool(def): Tool
 	guard.CanTouch = false
 	guard.Massless = true
 	guard.Parent = tool
-	local gw = Instance.new("Weld")
-	gw.Part0 = handle
-	gw.Part1 = guard
-	gw.C0 = CFrame.new(0, 0.75 * scale, 0)
-	gw.Parent = handle
+	-- The Guard hangs off the Handle through a Motor6D named "Pivot" (not a rigid
+	-- Weld) so the client can swing the whole blade around the grip. RestC0 /
+	-- SwungC0 are the swing poses SwordController tweens -- the exact same contract
+	-- the mowing tools use, which is why it animates on any R6/R15 rig.
+	local restPose = CFrame.new(0, 0.75 * scale, 0)
+	local pivot = Instance.new("Motor6D")
+	pivot.Name = "Pivot"
+	pivot.Part0 = handle
+	pivot.Part1 = guard
+	pivot.C0 = restPose
+	pivot:SetAttribute("RestC0", restPose)
+	pivot:SetAttribute("SwungC0", restPose * CFrame.Angles(math.rad(-120), 0, 0))
+	pivot.Parent = handle
 
 	local blade = Instance.new("Part")
 	blade.Name = "Blade"
@@ -104,11 +112,12 @@ local function buildSwordTool(def): Tool
 	blade.CanTouch = false
 	blade.Massless = true
 	blade.Parent = tool
+	-- The Blade rides on the Guard so it swings with the Pivot as one blade unit.
 	local bw = Instance.new("Weld")
-	bw.Part0 = handle
+	bw.Part0 = guard
 	bw.Part1 = blade
-	bw.C0 = CFrame.new(0, 0.75 * scale + 1.9 * scale, 0)
-	bw.Parent = handle
+	bw.C0 = CFrame.new(0, 1.9 * scale, 0)
+	bw.Parent = guard
 
 	return tool
 end
