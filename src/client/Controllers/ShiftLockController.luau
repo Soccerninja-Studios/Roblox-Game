@@ -21,10 +21,10 @@ local player = Players.LocalPlayer
 
 local TOGGLE_KEY = Enum.KeyCode.LeftShift
 local BIND_NAME = "ShiftLockFace"
--- Slide the camera to the player's right (positive X in camera space) so the
--- avatar sits on the left of the screen and the monsters ahead stay visible --
--- the classic over-the-shoulder combat framing.
-local SHOULDER_OFFSET = Vector3.new(2, 0, 0)
+-- Slide the camera over the player's right shoulder and up (X = right, Y = up, in
+-- camera space) so the avatar sits low-left on screen and the monsters ahead stay
+-- visible -- the classic over-the-shoulder combat framing.
+local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
 
 local enabled = false
 

@@ -43,53 +43,35 @@ local function heldSword(): Tool?
 	return nil
 end
 
--- Cache each shoulder's rest pose so overlapping swing/hit tweens never capture a
--- mid-animation C0 (which would leave the arm drifting out of place).
-local restC0: { [Motor6D]: CFrame } = {}
-
-local function rightShoulder(char: Model): Motor6D?
-	local torso = char:FindFirstChild("Torso")
-	local shoulder = torso and torso:FindFirstChild("Right Shoulder")
-	if shoulder and shoulder:IsA("Motor6D") then
-		return shoulder
-	end
-	return nil -- R15 or no rig; the server still resolves the hit either way
+-- Swing the equipped sword by tweening its own Motor6D joints -- the SAME approach
+-- the mowing tools use (ToolController). The sword's "Pivot" joint lives inside
+-- the Tool (built by SwordService) and carries RestC0 / SwungC0 pose attributes,
+-- so the swing renders on any rig (R6 or R15) and is never overridden by the
+-- default character animation -- which is why the old shoulder tween did nothing.
+local function swingMotor(motor: Motor6D, from: CFrame, to: CFrame, downTime: number, upTime: number)
+	local down = TweenService:Create(motor, TweenInfo.new(downTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = to })
+	local up = TweenService:Create(motor, TweenInfo.new(upTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = from })
+	down.Completed:Connect(function()
+		up:Play()
+	end)
+	down:Play()
 end
 
-local function restPose(shoulder: Motor6D): CFrame
-	if not restC0[shoulder] then
-		restC0[shoulder] = shoulder.C0
-	end
-	return restC0[shoulder]
-end
-
--- Every swing plays a big, readable overhead SLAM: wind up over the head, slam
--- the blade down in front, then rise back to rest. Fires on every click so you
--- always see the attack, hit or miss.
-local function playSwingAnim(char: Model)
-	local shoulder = rightShoulder(char)
-	if not shoulder then
+-- Chop the blade down in front and bring it back up on every click.
+local function playSwingAnim()
+	local tool = heldSword()
+	if not tool then
 		return
 	end
-	local base = restPose(shoulder)
-	-- Wind up overhead.
-	TweenService:Create(shoulder, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		C0 = base * CFrame.Angles(math.rad(-160), 0, 0),
-	}):Play()
-	-- Slam down hard in front.
-	task.delay(0.09, function()
-		if shoulder and shoulder.Parent then
-			TweenService:Create(shoulder, TweenInfo.new(0.07, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				C0 = base * CFrame.Angles(math.rad(-18), 0, 0),
-			}):Play()
+	for _, motor in tool:GetDescendants() do
+		if motor:IsA("Motor6D") then
+			local rest = motor:GetAttribute("RestC0")
+			local swung = motor:GetAttribute("SwungC0")
+			if typeof(rest) == "CFrame" and typeof(swung) == "CFrame" then
+				swingMotor(motor, rest, swung, 0.09, 0.16)
+			end
 		end
-	end)
-	-- Rise back to rest.
-	task.delay(0.18, function()
-		if shoulder and shoulder.Parent then
-			TweenService:Create(shoulder, TweenInfo.new(0.14), { C0 = base }):Play()
-		end
-	end)
+	end
 end
 
 -- Confirmed-hit feedback: a bright blade flash the instant the SERVER says a
@@ -125,10 +107,7 @@ local function trySwing()
 		return
 	end
 	lastSwing = now
-	local char = player.Character
-	if char then
-		playSwingAnim(char)
-	end
+	playSwingAnim()
 	Remotes.Get("SwordSwing"):FireServer()
 end
 
