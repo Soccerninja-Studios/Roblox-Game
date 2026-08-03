@@ -1,12 +1,17 @@
 --!strict
 -- TargetingController: press the mouse SCROLL WHEEL (middle button) to toggle a
 -- lock-on mode. While locked on:
---   * the camera frames the targeted enemy from behind you, and
+--   * the camera frames the targeted enemy over your shoulder (same offset as
+--     shift-lock, so your own avatar never blocks the enemy), and
 --   * your character keeps facing that enemy while you walk/strafe freely,
 -- exactly like the lock-on in most action games. A red reticle hovers over the
 -- target: HOLLOW when it is out of sword range, FILLED when it is close enough to
 -- hit. Scroll-wheel again (or the on-screen buttons) toggles it off; SwapTarget
 -- cycles to the next nearby enemy so you are not stuck on one.
+--
+-- Lock-on only turns on when there is an enemy nearby, and turns ITSELF off the
+-- moment no enemy remains in range -- so you are never stuck in a locked camera
+-- staring at nothing.
 --
 -- Coordinates with ShiftLockController through the player attribute "LockOn":
 -- while a lock is held, shift-lock steps aside so they do not fight the camera.
@@ -25,11 +30,14 @@ local TargetingController = {}
 local player = Players.LocalPlayer
 
 local BIND_NAME = "LockOnFace"
-local MAX_LOCK_RANGE = 120 -- studs; drop / ignore targets further than this
-local ACQUIRE_RANGE = 90 -- studs; how far to look when first locking on
-local CAM_BACK = 15 -- studs the camera sits behind the player
-local CAM_HEIGHT = 6 -- studs the camera sits above the player
+local MAX_LOCK_RANGE = 120 -- studs; drop a target (and lock-on) once nothing is this close
+local ACQUIRE_RANGE = 90 -- studs; how far to look when acquiring / what counts as "nearby"
+local CAM_BACK = 12 -- studs the camera sits behind the player
+local CAM_HEIGHT = 3 -- studs the camera sits above the player before the shoulder offset
 local IN_RANGE_PAD = 3 -- fudge added to sword reach for the "filled" ring
+-- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
+-- space) so the avatar sits low-left and never blocks the locked-on enemy.
+local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
 
 local active = false
 local target: Model? = nil
@@ -109,7 +117,7 @@ end
 -- ---------------------------------------------------------------------------
 
 -- Pick the enemy most directly in FRONT of the camera (highest look dot) within
--- range. Used when first locking on.
+-- range. Preferred when first locking on.
 local function acquireTarget(): Model?
 	local folder = monsterFolder()
 	local root = currentRoot()
@@ -149,7 +157,8 @@ local function acquireTarget(): Model?
 	return best
 end
 
--- Alive monsters within range, nearest first. Used for swapping.
+-- Alive monsters within MAX_LOCK_RANGE, nearest first. Used for swapping and as a
+-- fallback when nothing is directly in front.
 local function monstersByDistance(): { Model }
 	local list: { Model } = {}
 	local folder = monsterFolder()
@@ -172,6 +181,28 @@ local function monstersByDistance(): { Model }
 		return (ra - origin).Magnitude < (rb - origin).Magnitude
 	end)
 	return list
+end
+
+-- The target to lock when turning lock-on on (or re-acquiring): prefer whatever is
+-- in front, else the nearest enemy inside ACQUIRE_RANGE. Returns nil when there is
+-- simply no enemy nearby -- which is what gates activation and drives auto-off.
+local function pickTarget(): Model?
+	local t = acquireTarget()
+	if t then
+		return t
+	end
+	local root = currentRoot()
+	if not root then
+		return nil
+	end
+	local list = monstersByDistance()
+	if #list > 0 then
+		local nearest = list[1]
+		if ((nearest.PrimaryPart :: BasePart).Position - root.Position).Magnitude <= ACQUIRE_RANGE then
+			return nearest
+		end
+	end
+	return nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -233,7 +264,7 @@ local function updateReticle(inRange: boolean)
 end
 
 -- ---------------------------------------------------------------------------
--- Per-frame lock-on update
+-- Enable / disable
 -- ---------------------------------------------------------------------------
 
 local function restoreCamera()
@@ -243,67 +274,6 @@ local function restoreCamera()
 	end
 end
 
-local function onStep()
-	if not active then
-		return
-	end
-	local root = currentRoot()
-	if not root then
-		return
-	end
-
-	-- Validate / (re)acquire the target.
-	if not target or not target.Parent or not isAliveMonster(target) then
-		target = acquireTarget()
-	end
-
-	local camera = Workspace.CurrentCamera
-	if not target or not camera then
-		-- Nothing to lock: hand the camera back so the player can move to find one.
-		restoreCamera()
-		local hum = currentHumanoid()
-		if hum then
-			hum.AutoRotate = true
-		end
-		hideReticle()
-		return
-	end
-
-	local troot = target.PrimaryPart :: BasePart
-	local ppos = root.Position
-	local tpos = troot.Position
-
-	-- Face the character at the enemy (flat) so you always face it while moving.
-	local flatTarget = Vector3.new(tpos.X, ppos.Y, tpos.Z)
-	if (flatTarget - ppos).Magnitude > 0.05 then
-		root.CFrame = CFrame.lookAt(ppos, flatTarget)
-	end
-	local hum = currentHumanoid()
-	if hum then
-		hum.AutoRotate = false
-	end
-
-	-- Frame the camera behind the player, looking toward the enemy.
-	local dir = Vector3.new(tpos.X - ppos.X, 0, tpos.Z - ppos.Z)
-	if dir.Magnitude < 0.01 then
-		local look = root.CFrame.LookVector
-		dir = Vector3.new(look.X, 0, look.Z)
-	end
-	dir = dir.Unit
-	camera.CameraType = Enum.CameraType.Scriptable
-	local camPos = ppos - dir * CAM_BACK + Vector3.new(0, CAM_HEIGHT, 0)
-	local focus = ppos:Lerp(tpos, 0.5) + Vector3.new(0, 2, 0)
-	camera.CFrame = CFrame.lookAt(camPos, focus)
-
-	-- Fill the reticle when the enemy is within sword range.
-	local inRange = (tpos - ppos).Magnitude <= swordRange()
-	updateReticle(inRange)
-end
-
--- ---------------------------------------------------------------------------
--- Enable / disable / public API
--- ---------------------------------------------------------------------------
-
 function TargetingController.IsActive(): boolean
 	return active
 end
@@ -312,8 +282,13 @@ local function enable()
 	if active then
 		return
 	end
+	-- Only lock on if there is actually an enemy nearby.
+	local t = pickTarget()
+	if not t then
+		return
+	end
 	active = true
-	target = acquireTarget()
+	target = t
 	player:SetAttribute("LockOn", true) -- lets ShiftLockController step aside
 end
 
@@ -332,6 +307,80 @@ local function disable()
 	hideReticle()
 end
 
+-- ---------------------------------------------------------------------------
+-- Per-frame lock-on update
+-- ---------------------------------------------------------------------------
+
+local function onStep()
+	if not active then
+		return
+	end
+	local root = currentRoot()
+	if not root then
+		return
+	end
+
+	-- Drop the current target if it died, despawned, or drifted out of range.
+	if target then
+		local mroot = target.PrimaryPart
+		if not target.Parent or not isAliveMonster(target) or not mroot then
+			target = nil
+		elseif (mroot.Position - root.Position).Magnitude > MAX_LOCK_RANGE then
+			target = nil
+		end
+	end
+	-- Try to re-acquire; if nothing is nearby, lock-on turns ITSELF off.
+	if not target then
+		target = pickTarget()
+	end
+	if not target then
+		disable()
+		return
+	end
+
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+
+	local troot = target.PrimaryPart :: BasePart
+	local ppos = root.Position
+	local tpos = troot.Position
+
+	-- Face the character at the enemy (flat) so you always face it while moving.
+	local flatTarget = Vector3.new(tpos.X, ppos.Y, tpos.Z)
+	if (flatTarget - ppos).Magnitude > 0.05 then
+		root.CFrame = CFrame.lookAt(ppos, flatTarget)
+	end
+	local hum = currentHumanoid()
+	if hum then
+		hum.AutoRotate = false
+	end
+
+	-- Frame the camera behind the player, looking toward the enemy, then shove it
+	-- over the shoulder by the SAME offset shift-lock uses so the avatar never blocks
+	-- the enemy. Multiplying on the right keeps the view direction and just slides the
+	-- camera right + up in its own space.
+	local dir = Vector3.new(tpos.X - ppos.X, 0, tpos.Z - ppos.Z)
+	if dir.Magnitude < 0.01 then
+		local look = root.CFrame.LookVector
+		dir = Vector3.new(look.X, 0, look.Z)
+	end
+	dir = dir.Unit
+	camera.CameraType = Enum.CameraType.Scriptable
+	local camPos = ppos - dir * CAM_BACK + Vector3.new(0, CAM_HEIGHT, 0)
+	local aim = ppos:Lerp(tpos, 0.6) + Vector3.new(0, 2.5, 0)
+	camera.CFrame = CFrame.lookAt(camPos, aim) * CFrame.new(SHOULDER_OFFSET.X, SHOULDER_OFFSET.Y, 0)
+
+	-- Fill the reticle when the enemy is within sword range.
+	local inRange = (tpos - ppos).Magnitude <= swordRange()
+	updateReticle(inRange)
+end
+
+-- ---------------------------------------------------------------------------
+-- Public API
+-- ---------------------------------------------------------------------------
+
 function TargetingController.Toggle()
 	if active then
 		disable()
@@ -340,7 +389,8 @@ function TargetingController.Toggle()
 	end
 end
 
--- Cycle to the next-nearest enemy. Also turns lock-on on if it was off.
+-- Cycle to the next-nearest enemy. Turns lock-on on first if it was off (and only
+-- if an enemy is nearby, via enable()).
 function TargetingController.SwapTarget()
 	if not active then
 		enable()
