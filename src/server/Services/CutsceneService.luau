@@ -34,6 +34,7 @@ local CutsceneService = {}
 
 local MapService: any
 local ToolService: any
+local BackpackService: any
 -- Services owning the hub props that stay hidden until the intro fades to black.
 local hubPropServices: { any } = {}
 
@@ -523,6 +524,11 @@ local function finish(player: Player, coverFirst: boolean)
 	if ToolService then
 		ToolService.GiveTool(player)
 	end
+	-- Now that the intro is over, put the equipped backpack on (it was kept off the
+	-- player's back for the whole cutscene).
+	if BackpackService then
+		BackpackService.RefreshPack(player)
+	end
 end
 
 local function beginFor(player: Player)
@@ -585,6 +591,7 @@ end
 function CutsceneService.Init(services)
 	MapService = services.MapService
 	ToolService = services.ToolService
+	BackpackService = services.BackpackService
 	-- The hub props (shop stall, gardener stall, Sprigman) stay parked in
 	-- ServerStorage while the intro plays so they're never seen standing in the
 	-- plains mid-cutscene. We hand them over during a fade to black -- see

@@ -368,12 +368,38 @@ function SwordService.Start()
 		SwordService.PushState(player)
 	end)
 
+	-- Everyone starts with the first sword owned + equipped, exactly like the starter
+	-- shears -- monsters can appear from the very first grass cut, so the player must
+	-- always have a weapon in hand.
+	local function ensureStarterSword(player: Player)
+		local profile = PlayerDataService and PlayerDataService.Get(player)
+		if not profile or not profile.swords then
+			return
+		end
+		local swords = profile.swords
+		swords.owned = swords.owned or {}
+		swords.level = swords.level or {}
+		local starter = GameConfig.SWORDS[1]
+		if not starter then
+			return
+		end
+		if not swords.owned[starter.key] then
+			swords.owned[starter.key] = true
+			swords.level[starter.key] = swords.level[starter.key] or 1
+		end
+		if not swords.equipped then
+			swords.equipped = starter.key
+		end
+	end
+
 	local function hook(player: Player)
 		player.CharacterAdded:Connect(function()
 			task.wait(0.6)
+			ensureStarterSword(player)
 			SwordService.GiveSword(player)
 		end)
 		if player.Character then
+			ensureStarterSword(player)
 			SwordService.GiveSword(player)
 		end
 	end

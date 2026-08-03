@@ -25,6 +25,7 @@ local BackpackService = {}
 
 local PlayerDataService: any
 local QuestService: any
+local CutsceneService: any
 
 local PACKS: { any } = GameConfig.BACKPACKS
 local AUTO_TICK: number = GameConfig.BACKPACK_AUTO_DEPOSIT_TICK or 0.5
@@ -187,14 +188,26 @@ local function attachPack(player: Player, def: any?)
 	model.Parent = character
 end
 
--- Re-dress the player in whatever pack their profile says is equipped.
+-- Re-dress the player in whatever pack their profile says is equipped. During the
+-- intro cutscene we keep the back bare (and strip any existing pack) so it isn't
+-- visible on the player's back mid-scene -- the pack goes on when the intro ends,
+-- exactly like tools do.
 local function refreshPack(player: Player)
 	local profile = PlayerDataService.Get(player)
 	if not profile then
 		return
 	end
+	if CutsceneService and CutsceneService.IsIntroPending(player) then
+		attachPack(player, nil) -- removes any existing ZoneBackpack, adds nothing
+		return
+	end
 	local def = PlayerDataService.GetEquippedBackpack(profile)
 	attachPack(player, def)
+end
+
+-- Public: let CutsceneService dress the player the moment the intro finishes.
+function BackpackService.RefreshPack(player: Player)
+	refreshPack(player)
 end
 
 -- ---------------------------------------------------------------------------
@@ -380,6 +393,7 @@ end
 function BackpackService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
 	QuestService = services.QuestService
+	CutsceneService = services.CutsceneService
 
 	Remotes.Get("RequestBackpacks").OnServerEvent:Connect(onRequest)
 	Remotes.Get("PurchaseBackpack").OnServerEvent:Connect(onPurchase)
