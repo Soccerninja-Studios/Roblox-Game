@@ -24,7 +24,7 @@ local lastSwing: { [Player]: number } = {}
 local SWORD_BLADE_SIZE = Vector3.new(0.32, 3.8, 0.95)
 -- The swing hitbox is blown up this much versus the blade so small swords still
 -- connect comfortably.
-local HITBOX_SCALE = 1.5
+local HITBOX_SCALE = 2
 
 local function c3(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
@@ -66,17 +66,51 @@ local function buildSwordTool(def): Tool
 	tool:SetAttribute("Sword", true)
 	tool:SetAttribute("SwordKey", def.key)
 
+	-- The gripped Handle is an INVISIBLE anchor: it is what the hand holds (via the
+	-- engine's RightGrip), so it can never rotate on its own. Every VISIBLE part of
+	-- the sword -- the wooden Hilt, the Guard, and the Blade -- hangs off it through a
+	-- single "Pivot" Motor6D, so when we swing the Pivot the ENTIRE sword (grip
+	-- included) rotates around the hand. This is what fixes the handle not swinging.
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
 	handle.Size = Vector3.new(0.4, 1.4, 0.4) * scale
-	handle.Color = c3(def.handleColor or { 90, 60, 40 })
-	handle.Material = Enum.Material.Wood
+	handle.Transparency = 1
 	handle.CanCollide = false
 	handle.CanQuery = false
 	handle.CanTouch = false
 	handle.Massless = true
 	handle.Parent = tool
 
+	-- Visible wooden grip. Rests exactly on the invisible Handle so it sits in the
+	-- hand, and swings with the blade because it is the Pivot's moving side.
+	local hilt = Instance.new("Part")
+	hilt.Name = "Hilt"
+	hilt.Size = Vector3.new(0.4, 1.4, 0.4) * scale
+	hilt.Color = c3(def.handleColor or { 90, 60, 40 })
+	hilt.Material = Enum.Material.Wood
+	hilt.CanCollide = false
+	hilt.CanQuery = false
+	hilt.CanTouch = false
+	hilt.Massless = true
+	hilt.Parent = tool
+
+	-- The Pivot joins the invisible Handle (Part0 = grip origin) to the visible Hilt
+	-- (Part1). RestC0 keeps the Hilt on the grip; SwungC0 rotates the whole assembly
+	-- forward-down around that grip. SwordController tweens between these two poses --
+	-- the exact same RestC0/SwungC0 contract the mowing tools use, which is why it
+	-- animates on any R6/R15 rig.
+	local restPose = CFrame.new()
+	local pivot = Instance.new("Motor6D")
+	pivot.Name = "Pivot"
+	pivot.Part0 = handle
+	pivot.Part1 = hilt
+	pivot.C0 = restPose
+	pivot:SetAttribute("RestC0", restPose)
+	pivot:SetAttribute("SwungC0", restPose * CFrame.Angles(math.rad(-120), 0, 0))
+	pivot.Parent = handle
+
+	-- Guard and Blade weld onto the Hilt, so grip + guard + blade move as one rigid
+	-- sword whenever the Pivot swings.
 	local guard = Instance.new("Part")
 	guard.Name = "Guard"
 	guard.Size = Vector3.new(1.7, 0.28, 0.55) * scale
@@ -87,19 +121,11 @@ local function buildSwordTool(def): Tool
 	guard.CanTouch = false
 	guard.Massless = true
 	guard.Parent = tool
-	-- The Guard hangs off the Handle through a Motor6D named "Pivot" (not a rigid
-	-- Weld) so the client can swing the whole blade around the grip. RestC0 /
-	-- SwungC0 are the swing poses SwordController tweens -- the exact same contract
-	-- the mowing tools use, which is why it animates on any R6/R15 rig.
-	local restPose = CFrame.new(0, 0.75 * scale, 0)
-	local pivot = Instance.new("Motor6D")
-	pivot.Name = "Pivot"
-	pivot.Part0 = handle
-	pivot.Part1 = guard
-	pivot.C0 = restPose
-	pivot:SetAttribute("RestC0", restPose)
-	pivot:SetAttribute("SwungC0", restPose * CFrame.Angles(math.rad(-120), 0, 0))
-	pivot.Parent = handle
+	local gw = Instance.new("Weld")
+	gw.Part0 = hilt
+	gw.Part1 = guard
+	gw.C0 = CFrame.new(0, 0.75 * scale, 0)
+	gw.Parent = hilt
 
 	local blade = Instance.new("Part")
 	blade.Name = "Blade"
@@ -112,12 +138,11 @@ local function buildSwordTool(def): Tool
 	blade.CanTouch = false
 	blade.Massless = true
 	blade.Parent = tool
-	-- The Blade rides on the Guard so it swings with the Pivot as one blade unit.
 	local bw = Instance.new("Weld")
-	bw.Part0 = guard
+	bw.Part0 = hilt
 	bw.Part1 = blade
-	bw.C0 = CFrame.new(0, 1.9 * scale, 0)
-	bw.Parent = guard
+	bw.C0 = CFrame.new(0, 0.75 * scale + 1.9 * scale, 0)
+	bw.Parent = hilt
 
 	return tool
 end
@@ -196,7 +221,7 @@ local function onSwordSwing(player: Player)
 	local reach = StatCalculator.GetSwordReach(key)
 	if MonsterService then
 		-- New combat model: no aiming or clicking on a target. We sweep a generous
-		-- swing volume in front of the player -- the blade blown up 1.5x so small
+		-- swing volume in front of the player -- the blade blown up 2x so small
 		-- blades still land -- and damage every monster it overlaps. Forward depth
 		-- uses the sword's reach stat so longer swords keep their range advantage.
 		local scale = def.scale or 1

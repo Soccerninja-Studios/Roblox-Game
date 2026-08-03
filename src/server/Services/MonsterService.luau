@@ -390,7 +390,9 @@ local function runMonster(model: Model, def, origin: Vector3)
 			if thrp then
 				goal = (thrp :: BasePart).Position
 			end
-			if tdist <= (def.attackRange or 6) then
+			-- Attack reach halved (0.5x): monsters must close right up before they can
+			-- land a hit, giving the player room to swing first.
+			if tdist <= (def.attackRange or 6) * 0.5 then
 				goal = nil
 				local now = os.clock()
 				if now - lastAttack >= (def.attackCooldown or 1.2) then
