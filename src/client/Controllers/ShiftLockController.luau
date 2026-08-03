@@ -6,9 +6,10 @@
 -- circle-strafe a monster and land sword hits without over-running into it, fully
 -- retreating, or being blocked by your own avatar.
 --
--- The crosshair is shared: TargetingController reuses it during lock-on and tints
--- it (white = out of range, red = in sword range) via SetCrosshairColor, so both
--- modes show the same aim dot. That is why the crosshair helpers are public.
+-- The crosshair is shared: TargetingController reuses it during lock-on. In BOTH
+-- modes it is WHITE normally and turns RED when an enemy is within sword swing
+-- range (shift-lock checks whatever is in front of you; lock-on checks the locked
+-- target). That is why the crosshair helpers are public.
 --
 -- Lock-on takes priority: while TargetingController has a lock (player attribute
 -- "LockOn" is true) this controller steps aside so the two don't fight over the
@@ -22,6 +23,9 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local CombatRange = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("CombatRange"))
 
 local ShiftLockController = {}
 
@@ -34,6 +38,7 @@ local BIND_NAME = "ShiftLockFace"
 -- visible -- the classic over-the-shoulder combat framing.
 local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
 local WHITE = Color3.new(1, 1, 1)
+local RED = Color3.fromRGB(220, 40, 40)
 
 local enabled = false
 local crosshair: ScreenGui? = nil
@@ -126,10 +131,19 @@ local function onStep()
 		return -- TargetingController owns the camera + facing right now
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+	-- Crosshair turns red when an enemy is within swing range in front of you.
+	local inRange = CombatRange.AnyEnemyInSwingRange(player.Character)
+	ShiftLockController.SetCrosshairColor(if inRange then RED else WHITE)
 	local camera = Workspace.CurrentCamera
 	local root = currentRoot()
 	if not camera or not root then
 		return
+	end
+	-- Re-assert manual facing every frame so nothing else (e.g. a just-disabled
+	-- lock-on flipping AutoRotate back on) fights us and jitters the character.
+	local hum = currentHumanoid()
+	if hum then
+		hum.AutoRotate = false
 	end
 	local look = camera.CFrame.LookVector
 	local flat = Vector3.new(look.X, 0, look.Z)
@@ -163,11 +177,15 @@ local function disable()
 	enabled = false
 	local hum = currentHumanoid()
 	if hum then
-		hum.AutoRotate = true
+		-- Only hand facing back to the engine if lock-on isn't still driving it.
+		hum.AutoRotate = not player:GetAttribute("LockOn")
 		hum.CameraOffset = Vector3.zero
 	end
-	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-	UserInputService.MouseIconEnabled = true
+	-- Keep the cursor hidden if lock-on is still active; otherwise restore it.
+	if not player:GetAttribute("LockOn") then
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled = true
+	end
 	ShiftLockController.SetCrosshairColor(WHITE)
 	-- Keep the crosshair up if lock-on is still using it; otherwise hide it.
 	if not player:GetAttribute("LockOn") then

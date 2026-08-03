@@ -1,25 +1,26 @@
 --!strict
 -- TargetingController: press the mouse SCROLL WHEEL (middle button) to toggle a
--- lock-on mode. While locked on:
+-- lock-on mode; press E to swap to the next nearby enemy. While locked on:
 --   * the camera frames the targeted enemy over your shoulder (same offset as
---     shift-lock, so your own avatar never blocks the enemy), and
---   * your character keeps facing that enemy while you walk/strafe freely,
--- exactly like the lock-on in most action games.
+--     shift-lock, so your own avatar never blocks the enemy),
+--   * your character keeps facing that enemy while you walk/strafe freely, and
+--   * the mouse cursor is hidden and pinned to center, just like shift-lock.
 --
 -- You can still ZOOM in/out with the scroll wheel while locked on -- the camera
 -- distance follows your zoom, but the over-the-shoulder proportions (the 4-stud
 -- right / 2-stud up offset) stay fixed regardless of zoom.
 --
 -- The reticle is the shared shift-lock crosshair: it shows WHITE while the target
--- is out of sword range and turns RED when the target is close enough to hit --
--- so the center dot itself tells you when to swing (there is no separate ring).
+-- is out of sword range and turns RED when the target is close enough to hit.
 --
 -- Lock-on only turns on when there is an enemy nearby, and turns ITSELF off the
--- moment no enemy remains in range -- so you are never stuck in a locked camera
--- staring at nothing.
+-- moment no enemy remains in range.
 --
 -- Coordinates with ShiftLockController through the player attribute "LockOn":
 -- while a lock is held, shift-lock steps aside so they do not fight the camera.
+-- On disable, AutoRotate and the cursor are only restored if shift-lock isn't
+-- still on -- otherwise shift-lock keeps owning facing/cursor, which avoids the
+-- Humanoid-vs-shift-lock facing tug-of-war that caused jittery movement.
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -28,7 +29,7 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local StatCalculator = require(Shared:WaitForChild("StatCalculator"))
+local CombatRange = require(Shared:WaitForChild("CombatRange"))
 local ShiftLockController = require(script.Parent:WaitForChild("ShiftLockController"))
 
 local TargetingController = {}
@@ -38,8 +39,7 @@ local player = Players.LocalPlayer
 local BIND_NAME = "LockOnFace"
 local MAX_LOCK_RANGE = 120 -- studs; drop a target (and lock-on) once nothing is this close
 local ACQUIRE_RANGE = 90 -- studs; how far to look when acquiring / what counts as "nearby"
-local CAM_HEIGHT = 3 -- studs the camera sits above the player before the shoulder offset
-local IN_RANGE_PAD = 3 -- fudge added to sword reach for the "in range" (red) crosshair
+local CAM_HEIGHT = 1.5 -- studs above the player before the shoulder offset (halved: camera felt too high)
 local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
 -- space). Kept fixed in studs so the proportions stay the same at any zoom.
@@ -86,37 +86,12 @@ local function monsterFolder(): Folder?
 end
 
 local function isAliveMonster(model: Instance): boolean
-	if not model:IsA("Model") then
-		return false
-	end
-	if model:GetAttribute("Dead") then
-		return false
-	end
-	if (model:GetAttribute("Health") or 0) <= 0 then
-		return false
-	end
-	return model.PrimaryPart ~= nil
+	return CombatRange.IsAliveMonster(model)
 end
 
--- Studs the equipped sword reaches. Returns 0 when no sword is held so the
--- crosshair never turns red without a weapon.
+-- Studs the equipped sword reaches (shared definition, so it matches shift-lock).
 local function swordRange(): number
-	local char = character()
-	if not char then
-		return 0
-	end
-	local held: Tool? = nil
-	for _, ch in char:GetChildren() do
-		if ch:IsA("Tool") and ch:GetAttribute("Sword") then
-			held = ch
-			break
-		end
-	end
-	if not held then
-		return 0
-	end
-	local key = held:GetAttribute("SwordKey")
-	return StatCalculator.GetSwordReach(key) + IN_RANGE_PAD
+	return CombatRange.GetReach(character())
 end
 
 -- Sane zoom clamp: respect the player's own zoom settings but keep a small floor
@@ -264,6 +239,9 @@ local function enable()
 	target = t
 	seedZoom()
 	player:SetAttribute("LockOn", true) -- lets ShiftLockController step aside
+	-- Hide + center the cursor, just like shift-lock.
+	UserInputService.MouseIconEnabled = false
+	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 	-- Reuse the shift-lock crosshair as the reticle (white until in range).
 	ShiftLockController.SetCrosshairColor(WHITE)
 	ShiftLockController.SetCrosshairVisible(true)
@@ -279,10 +257,17 @@ local function disable()
 	restoreCamera()
 	local hum = currentHumanoid()
 	if hum then
-		hum.AutoRotate = true
+		-- If shift-lock is still on it owns facing; turning AutoRotate back on here is
+		-- what caused the jitter (Humanoid auto-turn vs shift-lock's manual facing).
+		hum.AutoRotate = not ShiftLockController.IsEnabled()
 	end
-	-- Hand the crosshair back to shift-lock: reset to white, and keep it visible
-	-- only if shift-lock itself is still on.
+	-- Restore the cursor unless shift-lock still wants it hidden.
+	if not ShiftLockController.IsEnabled() then
+		UserInputService.MouseIconEnabled = true
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	end
+	-- Hand the crosshair back to shift-lock: reset to white, keep it visible only if
+	-- shift-lock itself is still on.
 	ShiftLockController.SetCrosshairColor(WHITE)
 	ShiftLockController.SetCrosshairVisible(ShiftLockController.IsEnabled())
 end
@@ -326,6 +311,11 @@ local function onStep()
 	local troot = target.PrimaryPart :: BasePart
 	local ppos = root.Position
 	local tpos = troot.Position
+
+	-- Keep the cursor hidden/centered every frame (robust even if shift-lock was
+	-- toggled off underneath us).
+	UserInputService.MouseIconEnabled = false
+	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 
 	-- Face the character at the enemy (flat) so you always face it while moving.
 	local flatTarget = Vector3.new(tpos.X, ppos.Y, tpos.Z)
@@ -412,6 +402,8 @@ function TargetingController.Init()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton3 then
 			TargetingController.Toggle()
+		elseif input.KeyCode == Enum.KeyCode.E then
+			TargetingController.SwapTarget()
 		end
 	end)
 
