@@ -361,70 +361,82 @@ local function runMonster(model: Model, def, origin: Vector3)
 	local roamTarget = origin
 	local roamNext = 0
 
+	-- The monster THINKS (scans players, picks a goal, attacks) on a coarse tick, but
+	-- MOVES every frame toward its current goal. Decoupling the two keeps the decision
+	-- cost low while making motion fine-grained -- roughly a tenth of a stud per frame
+	-- instead of a big ~1-stud hop every 0.15s -- so the lock-on camera that follows a
+	-- monster no longer jolts on each step.
+	local THINK_INTERVAL = 0.15
+	local sinceThink = math.huge -- force a think on the very first frame
+	local goal: Vector3? = nil
+	local moveSpeed = def.moveSpeed or 10
+
 	while model.Parent and not model:GetAttribute("Dead") and (model:GetAttribute("Health") or 0) > 0 do
-		local dt = task.wait(0.15)
+		local dt = task.wait()
 		if not root or not root.Parent then
 			break
 		end
 		local pos = root.Position
 
-		local target: Model? = nil
-		local tdist = math.huge
-		for _, plr in Players:GetPlayers() do
-			local ch = plr.Character
-			local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-			local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-			if hrp and hum and hum.Health > 0 then
-				local d = ((hrp :: BasePart).Position - pos).Magnitude
-				if d < tdist then
-					tdist = d
-					target = ch
-				end
-			end
-		end
+		sinceThink += dt
+		if sinceThink >= THINK_INTERVAL then
+			sinceThink = 0
 
-		local speed = def.moveSpeed
-		local goal: Vector3? = nil
-		if target and tdist <= (def.aggroRange or 40) then
-			local thrp = target:FindFirstChild("HumanoidRootPart")
-			if thrp then
-				goal = (thrp :: BasePart).Position
-			end
-			-- Attack reach halved (0.5x): monsters must close right up before they can
-			-- land a hit, giving the player room to swing first.
-			if tdist <= (def.attackRange or 6) * 0.5 then
-				goal = nil
-				local now = os.clock()
-				if now - lastAttack >= (def.attackCooldown or 1.2) then
-					lastAttack = now
-					local plr = Players:GetPlayerFromCharacter(target)
-					local hum = target:FindFirstChildOfClass("Humanoid")
-					if hum and hum.Health > 0 then
-						hum:TakeDamage(def.damage or 1)
-						if plr then
-							lastHurt[plr] = now
-							Remotes.Get("PlayerHurt"):FireClient(plr, def.damage or 1)
-						end
+			local target: Model? = nil
+			local tdist = math.huge
+			for _, plr in Players:GetPlayers() do
+				local ch = plr.Character
+				local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+				if hrp and hum and hum.Health > 0 then
+					local d = ((hrp :: BasePart).Position - pos).Magnitude
+					if d < tdist then
+						tdist = d
+						target = ch
 					end
 				end
 			end
-		else
-			if os.clock() >= roamNext then
-				roamNext = os.clock() + math.random(2, 4)
-				local ang = math.random() * math.pi * 2
-				local r = math.random() * (def.roamRange or 16)
-				roamTarget = origin + Vector3.new(math.cos(ang) * r, 0, math.sin(ang) * r)
+
+			if target and tdist <= (def.aggroRange or 40) then
+				moveSpeed = def.moveSpeed or 10
+				local thrp = target:FindFirstChild("HumanoidRootPart")
+				goal = if thrp then (thrp :: BasePart).Position else nil
+				-- Attack reach halved (0.5x): monsters must close right up before they
+				-- can land a hit, giving the player room to swing first.
+				if tdist <= (def.attackRange or 6) * 0.5 then
+					goal = nil
+					local now = os.clock()
+					if now - lastAttack >= (def.attackCooldown or 1.2) then
+						lastAttack = now
+						local plr = Players:GetPlayerFromCharacter(target)
+						local hum = target:FindFirstChildOfClass("Humanoid")
+						if hum and hum.Health > 0 then
+							hum:TakeDamage(def.damage or 1)
+							if plr then
+								lastHurt[plr] = now
+								Remotes.Get("PlayerHurt"):FireClient(plr, def.damage or 1)
+							end
+						end
+					end
+				end
+			else
+				if os.clock() >= roamNext then
+					roamNext = os.clock() + math.random(2, 4)
+					local ang = math.random() * math.pi * 2
+					local r = math.random() * (def.roamRange or 16)
+					roamTarget = origin + Vector3.new(math.cos(ang) * r, 0, math.sin(ang) * r)
+				end
+				goal = roamTarget
+				moveSpeed = (def.moveSpeed or 10) * 0.5
 			end
-			goal = roamTarget
-			speed = (def.moveSpeed or 10) * 0.5
 		end
 
 		if goal then
 			local flat = Vector3.new(goal.X, pos.Y, goal.Z)
 			local dir = flat - pos
 			local dist = dir.Magnitude
-			if dist > 0.2 then
-				local step = dir.Unit * math.min(speed * dt, dist)
+			if dist > 0.05 then
+				local step = dir.Unit * math.min(moveSpeed * dt, dist)
 				local newPos = pos + step
 				root.CFrame = CFrame.lookAt(newPos, newPos + Vector3.new(dir.X, 0, dir.Z))
 			end
