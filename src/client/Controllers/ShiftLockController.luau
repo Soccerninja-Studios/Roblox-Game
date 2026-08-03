@@ -1,10 +1,14 @@
 --!strict
 -- ShiftLockController: press Left Shift to toggle a shoulder/aim lock. While it is
--- on, the mouse cursor is hidden and pinned to screen center, the camera slides
--- over the player's right shoulder, and the character continuously turns to face
--- the camera's look direction -- so you can circle-strafe a monster and land sword
--- hits without over-running into it, fully retreating, or being blocked by your
--- own avatar.
+-- on, the mouse cursor is hidden and pinned to screen center, a small white
+-- crosshair marks the aim point, the camera slides over the player's right
+-- shoulder, and the character continuously turns to face the camera's look
+-- direction -- so you can circle-strafe a monster and land sword hits without
+-- over-running into it, fully retreating, or being blocked by your own avatar.
+--
+-- Lock-on takes priority: while TargetingController has a lock (player attribute
+-- "LockOn" is true) this controller steps aside so the two don't fight over the
+-- camera and the character's facing.
 --
 -- NOTE (manual Studio step): if Roblox's built-in "Shift Lock Switch" is also on,
 -- Shift would toggle two systems at once. Turn the built-in one off by setting
@@ -27,6 +31,7 @@ local BIND_NAME = "ShiftLockFace"
 local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
 
 local enabled = false
+local crosshair: ScreenGui? = nil
 
 local function currentHumanoid(): Humanoid?
 	local char = player.Character
@@ -46,12 +51,54 @@ local function currentRoot(): BasePart?
 	return nil
 end
 
+-- A tiny white plus in the dead center of the screen. Because shift-lock hides the
+-- OS cursor, this is what the player aims with. Built once and kept across
+-- respawns (ResetOnSpawn = false); shown only while shift-lock is on.
+local function ensureCrosshair()
+	if crosshair then
+		return
+	end
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "ShiftLockCrosshair"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = 30
+	gui.Enabled = false
+
+	local SIZE = 14
+	local THICK = 2
+
+	local horizontal = Instance.new("Frame")
+	horizontal.Name = "H"
+	horizontal.AnchorPoint = Vector2.new(0.5, 0.5)
+	horizontal.Position = UDim2.fromScale(0.5, 0.5)
+	horizontal.Size = UDim2.fromOffset(SIZE, THICK)
+	horizontal.BackgroundColor3 = Color3.new(1, 1, 1)
+	horizontal.BorderSizePixel = 0
+	horizontal.Parent = gui
+
+	local vertical = Instance.new("Frame")
+	vertical.Name = "V"
+	vertical.AnchorPoint = Vector2.new(0.5, 0.5)
+	vertical.Position = UDim2.fromScale(0.5, 0.5)
+	vertical.Size = UDim2.fromOffset(THICK, SIZE)
+	vertical.BackgroundColor3 = Color3.new(1, 1, 1)
+	vertical.BorderSizePixel = 0
+	vertical.Parent = gui
+
+	gui.Parent = player:WaitForChild("PlayerGui")
+	crosshair = gui
+end
+
 -- Runs just after the default character update: keep the cursor pinned and turn
 -- the character to match where the camera is looking (horizontal only, so the
--- body stays upright while you aim).
+-- body stays upright while you aim). Yields entirely to lock-on when it is active.
 local function onStep()
 	if not enabled then
 		return
+	end
+	if player:GetAttribute("LockOn") then
+		return -- TargetingController owns the camera + facing right now
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 	local camera = Workspace.CurrentCamera
@@ -80,6 +127,9 @@ local function enable()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 	UserInputService.MouseIconEnabled = false
+	if crosshair then
+		crosshair.Enabled = true
+	end
 end
 
 local function disable()
@@ -94,9 +144,27 @@ local function disable()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	UserInputService.MouseIconEnabled = true
+	if crosshair then
+		crosshair.Enabled = false
+	end
+end
+
+-- Public API (used by the on-screen combat buttons).
+function ShiftLockController.Toggle()
+	if enabled then
+		disable()
+	else
+		enable()
+	end
+end
+
+function ShiftLockController.IsEnabled(): boolean
+	return enabled
 end
 
 function ShiftLockController.Init()
+	ensureCrosshair()
+
 	-- Bind just after the camera/character update so our facing override wins.
 	RunService:BindToRenderStep(BIND_NAME, Enum.RenderPriority.Character.Value + 1, onStep)
 
@@ -105,11 +173,7 @@ function ShiftLockController.Init()
 			return
 		end
 		if input.KeyCode == TOGGLE_KEY then
-			if enabled then
-				disable()
-			else
-				enable()
-			end
+			ShiftLockController.Toggle()
 		end
 	end)
 
