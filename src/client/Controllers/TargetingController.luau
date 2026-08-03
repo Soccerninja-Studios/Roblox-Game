@@ -4,10 +4,15 @@
 --   * the camera frames the targeted enemy over your shoulder (same offset as
 --     shift-lock, so your own avatar never blocks the enemy), and
 --   * your character keeps facing that enemy while you walk/strafe freely,
--- exactly like the lock-on in most action games. A red reticle hovers over the
--- target: HOLLOW when it is out of sword range, FILLED when it is close enough to
--- hit. Scroll-wheel again (or the on-screen buttons) toggles it off; SwapTarget
--- cycles to the next nearby enemy so you are not stuck on one.
+-- exactly like the lock-on in most action games.
+--
+-- You can still ZOOM in/out with the scroll wheel while locked on -- the camera
+-- distance follows your zoom, but the over-the-shoulder proportions (the 4-stud
+-- right / 2-stud up offset) stay fixed regardless of zoom.
+--
+-- The reticle is the shared shift-lock crosshair: it shows WHITE while the target
+-- is out of sword range and turns RED when the target is close enough to hit --
+-- so the center dot itself tells you when to swing (there is no separate ring).
 --
 -- Lock-on only turns on when there is an enemy nearby, and turns ITSELF off the
 -- moment no enemy remains in range -- so you are never stuck in a locked camera
@@ -24,6 +29,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local StatCalculator = require(Shared:WaitForChild("StatCalculator"))
+local ShiftLockController = require(script.Parent:WaitForChild("ShiftLockController"))
 
 local TargetingController = {}
 
@@ -32,17 +38,18 @@ local player = Players.LocalPlayer
 local BIND_NAME = "LockOnFace"
 local MAX_LOCK_RANGE = 120 -- studs; drop a target (and lock-on) once nothing is this close
 local ACQUIRE_RANGE = 90 -- studs; how far to look when acquiring / what counts as "nearby"
-local CAM_BACK = 12 -- studs the camera sits behind the player
 local CAM_HEIGHT = 3 -- studs the camera sits above the player before the shoulder offset
-local IN_RANGE_PAD = 3 -- fudge added to sword reach for the "filled" ring
+local IN_RANGE_PAD = 3 -- fudge added to sword reach for the "in range" (red) crosshair
+local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
--- space) so the avatar sits low-left and never blocks the locked-on enemy.
+-- space). Kept fixed in studs so the proportions stay the same at any zoom.
 local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
+local WHITE = Color3.new(1, 1, 1)
+local RED = Color3.fromRGB(220, 40, 40)
 
 local active = false
 local target: Model? = nil
-local reticleGui: BillboardGui? = nil
-local reticleCircle: Frame? = nil
+local zoomDistance = 14 -- current camera pull-back; seeded from real zoom on enable
 
 -- ---------------------------------------------------------------------------
 -- Character / world helpers
@@ -91,8 +98,8 @@ local function isAliveMonster(model: Instance): boolean
 	return model.PrimaryPart ~= nil
 end
 
--- Studs the equipped sword reaches. Returns 0 when no sword is held so the ring
--- never fills without a weapon.
+-- Studs the equipped sword reaches. Returns 0 when no sword is held so the
+-- crosshair never turns red without a weapon.
 local function swordRange(): number
 	local char = character()
 	if not char then
@@ -110,6 +117,30 @@ local function swordRange(): number
 	end
 	local key = held:GetAttribute("SwordKey")
 	return StatCalculator.GetSwordReach(key) + IN_RANGE_PAD
+end
+
+-- Sane zoom clamp: respect the player's own zoom settings but keep a small floor
+-- so the shoulder framing never collapses into first-person.
+local function zoomBounds(): (number, number)
+	local lo = math.max(player.CameraMinZoomDistance, 5)
+	local hi = math.min(player.CameraMaxZoomDistance, 80)
+	if hi < lo then
+		hi = lo
+	end
+	return lo, hi
+end
+
+-- Seed the pull-back from the camera's real distance so toggling lock-on does not
+-- snap the zoom the player had set.
+local function seedZoom()
+	local lo, hi = zoomBounds()
+	local camera = Workspace.CurrentCamera
+	local root = currentRoot()
+	if camera and root then
+		zoomDistance = math.clamp((camera.CFrame.Position - root.Position).Magnitude, lo, hi)
+	else
+		zoomDistance = math.clamp(zoomDistance, lo, hi)
+	end
 end
 
 -- ---------------------------------------------------------------------------
@@ -206,64 +237,6 @@ local function pickTarget(): Model?
 end
 
 -- ---------------------------------------------------------------------------
--- Reticle (red circle over the target)
--- ---------------------------------------------------------------------------
-
-local function ensureReticle()
-	if reticleGui then
-		return
-	end
-	local gui = Instance.new("BillboardGui")
-	gui.Name = "LockOnReticle"
-	gui.Size = UDim2.fromOffset(60, 60)
-	gui.StudsOffset = Vector3.new(0, 3, 0)
-	gui.AlwaysOnTop = true
-	gui.ResetOnSpawn = false
-	gui.Enabled = false
-
-	local circle = Instance.new("Frame")
-	circle.Name = "Circle"
-	circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	circle.Position = UDim2.fromScale(0.5, 0.5)
-	circle.Size = UDim2.fromScale(1, 1)
-	circle.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
-	circle.BackgroundTransparency = 1 -- hollow by default
-	circle.BorderSizePixel = 0
-	circle.Parent = gui
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = circle
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(220, 40, 40)
-	stroke.Thickness = 3
-	stroke.Parent = circle
-
-	gui.Parent = player:WaitForChild("PlayerGui")
-	reticleGui = gui
-	reticleCircle = circle
-end
-
-local function hideReticle()
-	if reticleGui then
-		reticleGui.Enabled = false
-		reticleGui.Adornee = nil
-	end
-end
-
-local function updateReticle(inRange: boolean)
-	if not reticleGui or not reticleCircle or not target then
-		return
-	end
-	local adornee = target:FindFirstChild("Head") or target.PrimaryPart
-	reticleGui.Adornee = adornee :: any
-	reticleGui.Enabled = true
-	-- Filled when the enemy is within sword range, hollow otherwise.
-	reticleCircle.BackgroundTransparency = if inRange then 0.35 else 1
-end
-
--- ---------------------------------------------------------------------------
 -- Enable / disable
 -- ---------------------------------------------------------------------------
 
@@ -289,7 +262,11 @@ local function enable()
 	end
 	active = true
 	target = t
+	seedZoom()
 	player:SetAttribute("LockOn", true) -- lets ShiftLockController step aside
+	-- Reuse the shift-lock crosshair as the reticle (white until in range).
+	ShiftLockController.SetCrosshairColor(WHITE)
+	ShiftLockController.SetCrosshairVisible(true)
 end
 
 local function disable()
@@ -304,7 +281,10 @@ local function disable()
 	if hum then
 		hum.AutoRotate = true
 	end
-	hideReticle()
+	-- Hand the crosshair back to shift-lock: reset to white, and keep it visible
+	-- only if shift-lock itself is still on.
+	ShiftLockController.SetCrosshairColor(WHITE)
+	ShiftLockController.SetCrosshairVisible(ShiftLockController.IsEnabled())
 end
 
 -- ---------------------------------------------------------------------------
@@ -357,10 +337,11 @@ local function onStep()
 		hum.AutoRotate = false
 	end
 
-	-- Frame the camera behind the player, looking toward the enemy, then shove it
-	-- over the shoulder by the SAME offset shift-lock uses so the avatar never blocks
-	-- the enemy. Multiplying on the right keeps the view direction and just slides the
-	-- camera right + up in its own space.
+	-- Frame the camera behind the player at the player's current zoom distance,
+	-- looking toward the enemy, then shove it over the shoulder by the SAME offset
+	-- shift-lock uses. Multiplying on the right keeps the view direction and just
+	-- slides the camera right + up in its own space (fixed studs, so the shoulder
+	-- proportions stay constant no matter how far you zoom).
 	local dir = Vector3.new(tpos.X - ppos.X, 0, tpos.Z - ppos.Z)
 	if dir.Magnitude < 0.01 then
 		local look = root.CFrame.LookVector
@@ -368,13 +349,15 @@ local function onStep()
 	end
 	dir = dir.Unit
 	camera.CameraType = Enum.CameraType.Scriptable
-	local camPos = ppos - dir * CAM_BACK + Vector3.new(0, CAM_HEIGHT, 0)
+	local camPos = ppos - dir * zoomDistance + Vector3.new(0, CAM_HEIGHT, 0)
 	local aim = ppos:Lerp(tpos, 0.6) + Vector3.new(0, 2.5, 0)
 	camera.CFrame = CFrame.lookAt(camPos, aim) * CFrame.new(SHOULDER_OFFSET.X, SHOULDER_OFFSET.Y, 0)
 
-	-- Fill the reticle when the enemy is within sword range.
+	-- Crosshair is the range indicator: red when the enemy is within sword range,
+	-- white otherwise. Keep it shown while locked on.
 	local inRange = (tpos - ppos).Magnitude <= swordRange()
-	updateReticle(inRange)
+	ShiftLockController.SetCrosshairColor(if inRange then RED else WHITE)
+	ShiftLockController.SetCrosshairVisible(true)
 end
 
 -- ---------------------------------------------------------------------------
@@ -417,7 +400,6 @@ function TargetingController.SwapTarget()
 end
 
 function TargetingController.Init()
-	ensureReticle()
 	player:SetAttribute("LockOn", false)
 
 	-- Runs after ShiftLockController's bind (Character + 2 vs + 1); shift-lock yields
@@ -430,6 +412,19 @@ function TargetingController.Init()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton3 then
 			TargetingController.Toggle()
+		end
+	end)
+
+	-- Scroll wheel zooms while locked on. Because the lock-on camera is Scriptable
+	-- (which disables the default zoom), we track the distance ourselves and clamp
+	-- it to the player's zoom limits.
+	UserInputService.InputChanged:Connect(function(input, gameProcessed)
+		if not active then
+			return
+		end
+		if input.UserInputType == Enum.UserInputType.MouseWheel then
+			local lo, hi = zoomBounds()
+			zoomDistance = math.clamp(zoomDistance - input.Position.Z * ZOOM_STEP, lo, hi)
 		end
 	end)
 

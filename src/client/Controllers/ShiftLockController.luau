@@ -1,10 +1,14 @@
 --!strict
 -- ShiftLockController: press Left Shift to toggle a shoulder/aim lock. While it is
--- on, the mouse cursor is hidden and pinned to screen center, a small white
--- crosshair marks the aim point, the camera slides over the player's right
--- shoulder, and the character continuously turns to face the camera's look
--- direction -- so you can circle-strafe a monster and land sword hits without
--- over-running into it, fully retreating, or being blocked by your own avatar.
+-- on, the mouse cursor is hidden and pinned to screen center, a small crosshair
+-- marks the aim point, the camera slides over the player's right shoulder, and the
+-- character continuously turns to face the camera's look direction -- so you can
+-- circle-strafe a monster and land sword hits without over-running into it, fully
+-- retreating, or being blocked by your own avatar.
+--
+-- The crosshair is shared: TargetingController reuses it during lock-on and tints
+-- it (white = out of range, red = in sword range) via SetCrosshairColor, so both
+-- modes show the same aim dot. That is why the crosshair helpers are public.
 --
 -- Lock-on takes priority: while TargetingController has a lock (player attribute
 -- "LockOn" is true) this controller steps aside so the two don't fight over the
@@ -29,9 +33,12 @@ local BIND_NAME = "ShiftLockFace"
 -- camera space) so the avatar sits low-left on screen and the monsters ahead stay
 -- visible -- the classic over-the-shoulder combat framing.
 local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
+local WHITE = Color3.new(1, 1, 1)
 
 local enabled = false
 local crosshair: ScreenGui? = nil
+local crosshairH: Frame? = nil
+local crosshairV: Frame? = nil
 
 local function currentHumanoid(): Humanoid?
 	local char = player.Character
@@ -51,9 +58,9 @@ local function currentRoot(): BasePart?
 	return nil
 end
 
--- A tiny white plus in the dead center of the screen. Because shift-lock hides the
--- OS cursor, this is what the player aims with. Built once and kept across
--- respawns (ResetOnSpawn = false); shown only while shift-lock is on.
+-- A tiny plus in the dead center of the screen. Because shift-lock hides the OS
+-- cursor, this is what the player aims with. Built once and kept across respawns
+-- (ResetOnSpawn = false); shown while shift-lock OR lock-on is on.
 local function ensureCrosshair()
 	if crosshair then
 		return
@@ -73,7 +80,7 @@ local function ensureCrosshair()
 	horizontal.AnchorPoint = Vector2.new(0.5, 0.5)
 	horizontal.Position = UDim2.fromScale(0.5, 0.5)
 	horizontal.Size = UDim2.fromOffset(SIZE, THICK)
-	horizontal.BackgroundColor3 = Color3.new(1, 1, 1)
+	horizontal.BackgroundColor3 = WHITE
 	horizontal.BorderSizePixel = 0
 	horizontal.Parent = gui
 
@@ -82,12 +89,30 @@ local function ensureCrosshair()
 	vertical.AnchorPoint = Vector2.new(0.5, 0.5)
 	vertical.Position = UDim2.fromScale(0.5, 0.5)
 	vertical.Size = UDim2.fromOffset(THICK, SIZE)
-	vertical.BackgroundColor3 = Color3.new(1, 1, 1)
+	vertical.BackgroundColor3 = WHITE
 	vertical.BorderSizePixel = 0
 	vertical.Parent = gui
 
 	gui.Parent = player:WaitForChild("PlayerGui")
 	crosshair = gui
+	crosshairH = horizontal
+	crosshairV = vertical
+end
+
+-- Public crosshair controls (also used by TargetingController during lock-on).
+function ShiftLockController.SetCrosshairVisible(visible: boolean)
+	if crosshair then
+		crosshair.Enabled = visible
+	end
+end
+
+function ShiftLockController.SetCrosshairColor(color: Color3)
+	if crosshairH then
+		crosshairH.BackgroundColor3 = color
+	end
+	if crosshairV then
+		crosshairV.BackgroundColor3 = color
+	end
 end
 
 -- Runs just after the default character update: keep the cursor pinned and turn
@@ -127,9 +152,8 @@ local function enable()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 	UserInputService.MouseIconEnabled = false
-	if crosshair then
-		crosshair.Enabled = true
-	end
+	ShiftLockController.SetCrosshairColor(WHITE)
+	ShiftLockController.SetCrosshairVisible(true)
 end
 
 local function disable()
@@ -144,8 +168,10 @@ local function disable()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	UserInputService.MouseIconEnabled = true
-	if crosshair then
-		crosshair.Enabled = false
+	ShiftLockController.SetCrosshairColor(WHITE)
+	-- Keep the crosshair up if lock-on is still using it; otherwise hide it.
+	if not player:GetAttribute("LockOn") then
+		ShiftLockController.SetCrosshairVisible(false)
 	end
 end
 
