@@ -77,20 +77,35 @@ end
 -- Confirmed-hit feedback: a bright blade flash the instant the SERVER says a
 -- swing connected. No arm tween here -- the swing slam already owns the arm, and
 -- a second shoulder tween firing at the same time would fight it.
+-- Base blade look, captured once per flash burst so rapid confirmed hits can't
+-- capture the flashed (white/Neon) state as the "original" and leave the blade
+-- stuck neon white. The token makes sure only the LATEST scheduled restore runs.
+local flashToken = 0
+local flashBaseColor: Color3? = nil
+local flashBaseMaterial: Enum.Material? = nil
 local function playHitAnim()
 	local tool = heldSword()
 	local blade = tool and tool:FindFirstChild("Blade")
 	if not (blade and blade:IsA("BasePart")) then
 		return
 	end
-	local origColor = blade.Color
-	local origMaterial = blade.Material
+	-- Only snapshot the true base look when we are NOT already mid-flash.
+	if flashToken == 0 then
+		flashBaseColor = blade.Color
+		flashBaseMaterial = blade.Material
+	end
+	flashToken += 1
+	local myToken = flashToken
 	blade.Color = Color3.fromRGB(255, 255, 255)
 	blade.Material = Enum.Material.Neon
 	task.delay(0.12, function()
-		if blade and blade.Parent then
-			blade.Color = origColor
-			blade.Material = origMaterial
+		if myToken ~= flashToken then
+			return -- a newer flash started; its restore will be the one that runs
+		end
+		flashToken = 0
+		if blade and blade.Parent and flashBaseColor and flashBaseMaterial then
+			blade.Color = flashBaseColor
+			blade.Material = flashBaseMaterial
 		end
 	end)
 end

@@ -39,7 +39,8 @@ local player = Players.LocalPlayer
 local BIND_NAME = "LockOnFace"
 local MAX_LOCK_RANGE = 120 -- studs; drop a target (and lock-on) once nothing is this close
 local ACQUIRE_RANGE = 90 -- studs; how far to look when acquiring / what counts as "nearby"
-local CAM_HEIGHT = 1.5 -- studs above the player before the shoulder offset (halved: camera felt too high)
+local CAM_PITCH = 25 -- degrees the lock-on camera tilts DOWNWARD toward the enemy (never up)
+local PITCH_REF_DIST = 18 -- at/below this distance (studs) the tilt is the full CAM_PITCH; farther targets tilt gentler so the camera never flies up
 local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
 -- space). Kept fixed in studs so the proportions stay the same at any zoom.
@@ -87,11 +88,6 @@ end
 
 local function isAliveMonster(model: Instance): boolean
 	return CombatRange.IsAliveMonster(model)
-end
-
--- Studs the equipped sword reaches (shared definition, so it matches shift-lock).
-local function swordRange(): number
-	return CombatRange.GetReach(character())
 end
 
 -- Sane zoom clamp: respect the player's own zoom settings but keep a small floor
@@ -339,13 +335,20 @@ local function onStep()
 	end
 	dir = dir.Unit
 	camera.CameraType = Enum.CameraType.Scriptable
-	local camPos = ppos - dir * zoomDistance + Vector3.new(0, CAM_HEIGHT, 0)
-	local aim = ppos:Lerp(tpos, 0.6) + Vector3.new(0, 2.5, 0)
+	local aim = tpos + Vector3.new(0, 2.5, 0)
+	local backXZ = ppos - dir * zoomDistance
+	local horizDist = (Vector3.new(aim.X, 0, aim.Z) - Vector3.new(backXZ.X, 0, backXZ.Z)).Magnitude
+	-- Raise the camera so the view onto the enemy is a fixed downward tilt (never
+	-- up). Capped at PITCH_REF_DIST so far targets tilt gently instead of the camera
+	-- flying up; zoom slides the camera along this angle, keeping the 4/2 shoulder
+	-- offset fixed.
+	local rise = math.min(horizDist, PITCH_REF_DIST) * math.tan(math.rad(CAM_PITCH))
+	local camPos = Vector3.new(backXZ.X, aim.Y + rise, backXZ.Z)
 	camera.CFrame = CFrame.lookAt(camPos, aim) * CFrame.new(SHOULDER_OFFSET.X, SHOULDER_OFFSET.Y, 0)
 
 	-- Crosshair is the range indicator: red when the enemy is within sword range,
 	-- white otherwise. Keep it shown while locked on.
-	local inRange = (tpos - ppos).Magnitude <= swordRange()
+	local inRange = CombatRange.IsInSwingBox(character(), tpos)
 	ShiftLockController.SetCrosshairColor(if inRange then RED else WHITE)
 	ShiftLockController.SetCrosshairVisible(true)
 end
