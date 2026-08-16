@@ -16,6 +16,8 @@ local SwordService = {}
 
 local PlayerDataService
 local MonsterService
+local QuestService
+local CutsceneService
 
 local lastSwing: { [Player]: number } = {}
 
@@ -147,27 +149,34 @@ local function buildSwordTool(def): Tool
 	return tool
 end
 
+local function clearSwordTools(player: Player)
+	local function clear(container: Instance?)
+		if not container then
+			return
+		end
+		for _, child in container:GetChildren() do
+			if child:IsA("Tool") and child:GetAttribute("Sword") then
+				child:Destroy()
+			end
+		end
+	end
+	clear(player.Character)
+	clear(player:FindFirstChildOfClass("Backpack"))
+end
+
 -- Remove any swords the player is carrying, then hand them the sword they have
--- equipped (if any). The sword goes into the BACKPACK, not the character, so it
--- sits in the hotbar next to the shears and the player picks which to hold.
+-- equipped (if any). During the intro, this deliberately stops after cleanup so
+-- no sword can appear in the hotbar or character while the cutscene is playing.
 function SwordService.GiveSword(player: Player)
+	clearSwordTools(player)
+	if CutsceneService and CutsceneService.IsIntroPending(player) then
+		return
+	end
+
 	local profile = PlayerDataService and PlayerDataService.Get(player)
 	if not profile then
 		return
 	end
-
-	local function clearOld(container: Instance?)
-		if not container then
-			return
-		end
-		for _, ch in container:GetChildren() do
-			if ch:IsA("Tool") and ch:GetAttribute("Sword") then
-				ch:Destroy()
-			end
-		end
-	end
-	clearOld(player.Character)
-	clearOld(player:FindFirstChildOfClass("Backpack"))
 
 	local swords = profile.swords
 	local key = swords and swords.equipped
@@ -256,6 +265,9 @@ local function buildState(player: Player): any
 				desc = def.desc,
 				goldCost = def.goldCost or 0,
 				diamondCost = def.diamondCost or 0,
+				essenceKey = def.essenceKey,
+				essenceName = if def.essenceKey and GameConfig.ESSENCE[def.essenceKey] then GameConfig.ESSENCE[def.essenceKey].name else nil,
+				essenceCost = def.essenceCost or 0,
 				damage = def.levels[level].damage,
 				nextDamage = if owned and level < maxLevel then def.levels[level + 1].damage else nil,
 				nextCost = if owned and level < maxLevel then def.levels[level + 1].cost else nil,
@@ -303,11 +315,20 @@ local function onPurchase(player: Player, key)
 	if not hasReachedZone(profile, def.zone) then
 		return
 	end
-	if not PlayerDataService.SpendCurrency(player, def.goldCost or 0, def.diamondCost or 0) then
+	if not PlayerDataService.SpendCurrency(
+		player,
+		def.goldCost or 0,
+		def.diamondCost or 0,
+		def.essenceKey,
+		def.essenceCost or 0
+	) then
 		return
 	end
 	profile.swords.owned[key] = true
 	profile.swords.level[key] = 1
+	if QuestService and typeof(QuestService.ReportSwordPurchase) == "function" then
+		QuestService.ReportSwordPurchase(player, def.name)
+	end
 	if not profile.swords.equipped then
 		profile.swords.equipped = key
 		SwordService.GiveSword(player)
@@ -357,6 +378,8 @@ end
 function SwordService.Init(services)
 	PlayerDataService = services.PlayerDataService
 	MonsterService = services.MonsterService
+	QuestService = services.QuestService
+	CutsceneService = services.CutsceneService
 end
 
 function SwordService.Start()
@@ -389,6 +412,9 @@ function SwordService.Start()
 		end
 		if not swords.equipped then
 			swords.equipped = starter.key
+		end
+		if QuestService and typeof(QuestService.ReportSwordPurchase) == "function" then
+			QuestService.ReportSwordPurchase(player, starter.name)
 		end
 	end
 

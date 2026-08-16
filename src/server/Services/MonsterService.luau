@@ -295,14 +295,23 @@ local function killMonster(model: Model, byPlayer: Player?)
 	model:SetAttribute("Dead", true)
 	local def = defByKey[model:GetAttribute("MonsterKey")]
 	if def and byPlayer then
+		local essenceAmount = def.essenceReward or 0
+		local essenceMeta = if def.essenceKey then GameConfig.ESSENCE[def.essenceKey] else nil
+		local essenceName = if essenceMeta then essenceMeta.name else ""
 		PlayerDataService.GrantCurrency(byPlayer, def.goldReward or 0, 0)
-		if def.essenceKey then
-			PlayerDataService.GrantEssence(byPlayer, def.essenceKey, def.essenceReward or 0)
+		if def.essenceKey and essenceAmount > 0 then
+			PlayerDataService.GrantEssence(byPlayer, def.essenceKey, essenceAmount)
 		end
-		if QuestService and typeof(QuestService.Report) == "function" then
-			pcall(QuestService.Report, byPlayer, "monster", 1, { key = def.key, zone = def.zone })
+		if QuestService and typeof(QuestService.ReportMonsterDefeated) == "function" then
+			QuestService.ReportMonsterDefeated(byPlayer, def.name, def.zone, essenceName, essenceAmount)
 		end
-		Remotes.Get("MonsterDefeated"):FireClient(byPlayer, def.name, def.goldReward or 0)
+		Remotes.Get("MonsterDefeated"):FireClient(
+			byPlayer,
+			def.name,
+			def.goldReward or 0,
+			essenceName,
+			essenceAmount
+		)
 	end
 	Debris:AddItem(model, 0.05)
 end

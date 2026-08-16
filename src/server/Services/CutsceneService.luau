@@ -34,6 +34,7 @@ local CutsceneService = {}
 
 local MapService: any
 local ToolService: any
+local SwordService: any
 local BackpackService: any
 -- Services owning the hub props that stay hidden until the intro fades to black.
 local hubPropServices: { any } = {}
@@ -524,6 +525,9 @@ local function finish(player: Player, coverFirst: boolean)
 	if ToolService then
 		ToolService.GiveTool(player)
 	end
+	if SwordService then
+		SwordService.GiveSword(player)
+	end
 	-- Now that the intro is over, put the equipped backpack on (it was kept off the
 	-- player's back for the whole cutscene).
 	if BackpackService then
@@ -591,6 +595,7 @@ end
 function CutsceneService.Init(services)
 	MapService = services.MapService
 	ToolService = services.ToolService
+	SwordService = services.SwordService
 	BackpackService = services.BackpackService
 	-- The hub props (shop stall, gardener stall, Sprigman) stay parked in
 	-- ServerStorage while the intro plays so they're never seen standing in the
@@ -603,8 +608,8 @@ function CutsceneService.Init(services)
 	}
 end
 
--- True while the given player still needs to finish the intro. ToolService reads
--- this so it doesn't hand out tools until the cutscene is over.
+-- True while the given player still needs to finish the intro. ToolService and
+-- SwordService read this so no equipment appears until the cutscene is over.
 function CutsceneService.IsIntroPending(player: Player): boolean
 	if not GameConfig.INTRO_CUTSCENE then
 		return false

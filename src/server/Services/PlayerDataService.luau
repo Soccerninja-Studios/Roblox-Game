@@ -323,6 +323,7 @@ function PlayerDataService.PushState(player: Player)
 		totalBladesCut = profile.totalBladesCut,
 		toolTier = profile.toolTier,
 		skills = profile.skills,
+		essence = table.clone(profile.essence or {}),
 	})
 end
 
@@ -433,6 +434,7 @@ function PlayerDataService.GrantEssence(player: Player, key: string, amount: num
 	end
 	profile.essence = profile.essence or {}
 	profile.essence[key] = (profile.essence[key] or 0) + amount
+	PlayerDataService.PushState(player)
 end
 
 -- Returns true and deducts GOLD if the player can afford it; false otherwise.
@@ -445,20 +447,36 @@ function PlayerDataService.SpendGold(player: Player, amount: number): boolean
 	return true
 end
 
--- Atomically spend gold AND diamonds together (used for premium purchases like
--- auto-mowers). Deducts both and returns true only if the player can afford both.
-function PlayerDataService.SpendCurrency(player: Player, gold: number, diamonds: number): boolean
+-- Atomically spend gold, diamonds, and (optionally) one essence currency.
+-- Existing two-currency callers can omit the final arguments. No balance changes
+-- occur unless the player can afford every component, preventing partial charges.
+function PlayerDataService.SpendCurrency(
+	player: Player,
+	gold: number,
+	diamonds: number,
+	essenceKey: string?,
+	essenceAmount: number?
+): boolean
 	local profile = profiles[player]
 	if not profile then
 		return false
 	end
-	gold = gold or 0
-	diamonds = diamonds or 0
-	if profile.gold < gold or profile.diamonds < diamonds then
+	gold = math.max(0, gold or 0)
+	diamonds = math.max(0, diamonds or 0)
+	essenceAmount = math.max(0, essenceAmount or 0)
+	profile.essence = profile.essence or {}
+	local essenceBalance = if essenceKey then (profile.essence[essenceKey] or 0) else 0
+	if profile.gold < gold
+		or profile.diamonds < diamonds
+		or (essenceAmount > 0 and (not essenceKey or essenceBalance < essenceAmount))
+	then
 		return false
 	end
 	profile.gold -= gold
 	profile.diamonds -= diamonds
+	if essenceKey and essenceAmount > 0 then
+		profile.essence[essenceKey] = essenceBalance - essenceAmount
+	end
 	return true
 end
 

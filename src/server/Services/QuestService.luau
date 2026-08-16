@@ -30,7 +30,67 @@ local LIVE_KINDS: { [string]: boolean } = {
 	buy_equip_tool = true,
 	deploy_automower = true,
 	automower_bank = true,
+	defeat_monster = true,
+	defeat_zone_monsters = true,
+	collect_essence = true,
+	buy_sword = true,
+	own_swords = true,
 }
+
+-- Combat kinds are live only where their actual content exists. This keeps the
+-- Meadow and Wild objectives active without exposing impossible later-ring
+-- quests before those monsters, essences, and swords are configured.
+local function isQuestLive(quest: any): boolean
+	local objective = quest.objective
+	local kind = objective.kind
+	if not LIVE_KINDS[kind] then
+		return false
+	end
+	if kind == "defeat_monster" then
+		for _, def in ipairs(GameConfig.MONSTERS) do
+			if def.zone == quest.zone and def.name == objective.monster then
+				return true
+			end
+		end
+		return false
+	elseif kind == "defeat_zone_monsters" then
+		for _, def in ipairs(GameConfig.MONSTERS) do
+			if def.zone == objective.zone then
+				return true
+			end
+		end
+		return false
+	elseif kind == "collect_essence" then
+		for _, meta in GameConfig.ESSENCE do
+			if meta.zone == quest.zone and meta.name == objective.essence then
+				return true
+			end
+		end
+		return false
+	elseif kind == "buy_sword" then
+		for _, def in ipairs(GameConfig.SWORDS) do
+			if def.zone == quest.zone and def.name == objective.sword then
+				return true
+			end
+		end
+		return false
+	elseif kind == "own_swords" then
+		for _, requiredName in ipairs(objective.swords or {}) do
+			local configured = false
+			for _, def in ipairs(GameConfig.SWORDS) do
+				if def.zone == quest.zone and def.name == requiredName then
+					configured = true
+					break
+				end
+			end
+			if not configured then
+				return false
+			end
+		end
+		return #(objective.swords or {}) > 0
+	end
+	return true
+end
 
 -- grass key -> the tool tier whose favored grass matches (the zone "specialist"
 -- tool). Built from GameConfig so quest tool targets track the real ladder even
@@ -138,7 +198,7 @@ function QuestService.PushState(player: Player)
 			progress = q.progress[key] or 0,
 			claimed = q.claimed[key] == true,
 			unlocked = isUnlocked(profile, quest.zone),
-			live = LIVE_KINDS[quest.objective.kind] == true,
+			live = isQuestLive(quest),
 			reward = quest.reward,
 		})
 	end
@@ -156,7 +216,7 @@ local function sweep(player: Player, predicate: (any) -> boolean, apply: (any) -
 	local completed = false
 	local changed = false
 	for _, quest in ipairs(QuestData.QUESTS) do
-		if LIVE_KINDS[quest.objective.kind] and isUnlocked(profile, quest.zone) and predicate(quest) then
+		if isQuestLive(quest) and isUnlocked(profile, quest.zone) and predicate(quest) then
 			local wasComplete = apply(quest)
 			changed = true
 			if wasComplete then
@@ -288,6 +348,73 @@ function QuestService.ReportToolTier(player: Player, tier: number)
 	end)
 end
 
+-- Combat reporting keeps the multi-objective bookkeeping in one place: one kill
+-- may advance a named-monster quest, a zone-total quest, and an essence quest.
+function QuestService.ReportMonsterDefeated(
+	player: Player,
+	monsterName: string,
+	zone: string,
+	essenceName: string?,
+	essenceAmount: number?
+)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	sweep(player, function(quest)
+		return quest.objective.kind == "defeat_monster" and quest.objective.monster == monsterName
+	end, function(quest)
+		return addProgress(profile, quest, 1)
+	end)
+	sweep(player, function(quest)
+		return quest.objective.kind == "defeat_zone_monsters" and quest.objective.zone == zone
+	end, function(quest)
+		return addProgress(profile, quest, 1)
+	end)
+	if essenceName and (essenceAmount or 0) > 0 then
+		sweep(player, function(quest)
+			return quest.objective.kind == "collect_essence" and quest.objective.essence == essenceName
+		end, function(quest)
+			return addProgress(profile, quest, essenceAmount or 0)
+		end)
+	end
+end
+
+local function ownsSwordNamed(profile: any, swordName: string): boolean
+	for _, def in ipairs(GameConfig.SWORDS) do
+		if def.name == swordName then
+			return profile.swords and profile.swords.owned and profile.swords.owned[def.key] == true
+		end
+	end
+	return false
+end
+
+-- Recompute sword quest progress from actual ownership. This is idempotent on
+-- respawn and also repairs progress for profiles that owned a sword before these
+-- combat objectives became live.
+function QuestService.ReportSwordPurchase(player: Player, _swordName: string)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	sweep(player, function(quest)
+		return quest.objective.kind == "buy_sword" and ownsSwordNamed(profile, quest.objective.sword)
+	end, function(quest)
+		return setAtLeast(profile, quest, 1)
+	end)
+	sweep(player, function(quest)
+		return quest.objective.kind == "own_swords"
+	end, function(quest)
+		local ownedCount = 0
+		for _, requiredName in ipairs(quest.objective.swords or {}) do
+			if ownsSwordNamed(profile, requiredName) then
+				ownedCount += 1
+			end
+		end
+		return setAtLeast(profile, quest, ownedCount)
+	end)
+end
+
 -- Generic entry point for future systems: QuestService.Report(player, kind, amount, context)
 -- context may carry fields like { grass=, monster=, boss=, essence=, ... } to
 -- match objective params. Unknown/duplicate matching is safe (progress caps).
@@ -330,8 +457,8 @@ local function onClaim(player: Player, rawId: unknown)
 	if not profile then
 		return
 	end
-	if not LIVE_KINDS[quest.objective.kind] then
-		return -- objective's system isn't live yet
+	if not isQuestLive(quest) then
+		return -- objective's system/content isn't live yet
 	end
 	if not isUnlocked(profile, quest.zone) then
 		return
@@ -347,15 +474,26 @@ local function onClaim(player: Player, rawId: unknown)
 	end
 	q.claimed[key] = true
 	local reward = quest.reward
-	-- Only gold + diamonds are payable today; essence and named items (trophies,
-	-- crowns, perks) are recorded on the quest data and will be granted once those
-	-- systems exist.
 	PlayerDataService.GrantCurrency(player, reward.gold or 0, reward.diamonds or 0)
+	local essenceKey: string? = nil
+	if (reward.essence or 0) > 0 and reward.essenceType and reward.essenceType ~= "" then
+		for key, meta in GameConfig.ESSENCE do
+			if key == reward.essenceType or meta.name == reward.essenceType then
+				essenceKey = key
+				break
+			end
+		end
+		if essenceKey then
+			PlayerDataService.GrantEssence(player, essenceKey, reward.essence)
+		end
+	end
 	toast(player, {
 		kind = "claimed",
 		name = quest.name,
 		gold = reward.gold or 0,
 		diamonds = reward.diamonds or 0,
+		essence = if essenceKey then reward.essence or 0 else 0,
+		essenceType = reward.essenceType or "",
 	})
 	QuestService.PushState(player)
 end
