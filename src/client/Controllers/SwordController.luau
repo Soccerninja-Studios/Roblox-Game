@@ -9,6 +9,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -110,6 +112,33 @@ local function playHitAnim()
 	end)
 end
 
+
+-- Confirmed Kingsedge visual. Damage has already been resolved on the server; the
+-- expanding ring is presentation only and cannot be spoofed into dealing damage.
+local function playSwordSpecial(kind: string, worldPos: Vector3, radius: number)
+	if kind ~= "whirlwind" then
+		return
+	end
+	local ring = Instance.new("Part")
+	ring.Name = "KingsedgeWhirlwind"
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.2, 2, 2)
+	ring.CFrame = CFrame.new(worldPos - Vector3.new(0, 2.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Color = Color3.fromRGB(225, 248, 182)
+	ring.Material = Enum.Material.Neon
+	ring.Transparency = 0.18
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanQuery = false
+	ring.CanTouch = false
+	ring.Parent = Workspace
+	TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.new(0.2, radius * 2, radius * 2),
+		Transparency = 1,
+	}):Play()
+	Debris:AddItem(ring, 0.4)
+end
+
 local function trySwing()
 	local tool = heldSword()
 	if not tool then
@@ -139,6 +168,9 @@ local function corner(inst: Instance, radius: number)
 end
 
 local function zoneLabel(zone: string): string
+	if zone == "All" then
+		return "All Rings"
+	end
 	local def = GameConfig.GRASS_TYPES and GameConfig.GRASS_TYPES[zone]
 	return if def and def.displayName then def.displayName else zone
 end
@@ -159,6 +191,7 @@ local function configSnapshot(): any
 			essenceKey = def.essenceKey,
 			essenceName = if def.essenceKey and GameConfig.ESSENCE[def.essenceKey] then GameConfig.ESSENCE[def.essenceKey].name else nil,
 			essenceCost = def.essenceCost or 0,
+			requirementText = def.requirementText,
 			damage = def.levels[1].damage,
 			level = 1,
 			maxLevel = #def.levels,
@@ -273,6 +306,7 @@ local function buildCard(sword: any, order: number, currency: any)
 	sub.Font = Enum.Font.GothamMedium
 	sub.Text = if sword.owned
 		then "Level " .. sword.level .. " / " .. sword.maxLevel
+		elseif sword.requirementText then sword.requirementText
 		else "Unlocks in " .. zoneLabel(sword.zone)
 	sub.TextColor3 = SUBTLE
 	sub.TextSize = 12
@@ -441,6 +475,12 @@ function SwordController.Init()
 	-- Play the hit reaction whenever the server confirms a swing connected.
 	Remotes.Get("MonsterHit").OnClientEvent:Connect(function()
 		playHitAnim()
+	end)
+
+	Remotes.Get("SwordSpecial").OnClientEvent:Connect(function(kind, worldPos, radius)
+		if type(kind) == "string" and typeof(worldPos) == "Vector3" and type(radius) == "number" then
+			playSwordSpecial(kind, worldPos, radius)
+		end
 	end)
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)

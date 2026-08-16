@@ -1,15 +1,16 @@
 --!strict
--- CombatController: the combat HUD. Draws the player's health bar, floats damage
--- numbers over monsters you hit, flashes the screen when you take a hit, and shows
--- the "your clippings scattered" banner on death (plus a recovered confirmation).
+-- CombatController: player health, hit feedback, recoverable-clipping notices,
+-- common-monster rewards, and the complete proximity-aware boss HUD.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
+local RunService = game:GetService("RunService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local CombatController = {}
 
@@ -20,6 +21,27 @@ local hpBarFill: Frame
 local hpLabel: TextLabel
 local flash: Frame
 local banner: TextLabel
+local bossHolder: Frame
+local bossTitle: TextLabel
+local bossPhase: TextLabel
+local bossFill: Frame
+local bossHealth: TextLabel
+
+local bossStates: { [string]: any } = {}
+local bannerToken = 0
+
+local function corner(inst: Instance, radius: number)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius)
+	c.Parent = inst
+end
+
+local function colorFromArray(rgb: any, fallback: Color3): Color3
+	if type(rgb) == "table" and type(rgb[1]) == "number" and type(rgb[2]) == "number" and type(rgb[3]) == "number" then
+		return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+	end
+	return fallback
+end
 
 local function buildGui()
 	gui = Instance.new("ScreenGui")
@@ -37,17 +59,17 @@ local function buildGui()
 	flash.ZIndex = 2
 	flash.Parent = gui
 
+	-- Player health remains low and centered so it never competes with the boss bar.
 	local holder = Instance.new("Frame")
 	holder.AnchorPoint = Vector2.new(0.5, 1)
 	holder.Position = UDim2.new(0.5, 0, 1, -14)
 	holder.Size = UDim2.fromOffset(240, 26)
 	holder.BackgroundColor3 = Color3.fromRGB(40, 44, 40)
 	holder.BackgroundTransparency = 0.15
+	holder.BorderSizePixel = 0
 	holder.ZIndex = 5
 	holder.Parent = gui
-	local hc = Instance.new("UICorner")
-	hc.CornerRadius = UDim.new(0, 13)
-	hc.Parent = holder
+	corner(holder, 13)
 
 	hpBarFill = Instance.new("Frame")
 	hpBarFill.Position = UDim2.fromOffset(3, 3)
@@ -56,9 +78,7 @@ local function buildGui()
 	hpBarFill.BorderSizePixel = 0
 	hpBarFill.ZIndex = 6
 	hpBarFill.Parent = holder
-	local fc = Instance.new("UICorner")
-	fc.CornerRadius = UDim.new(0, 11)
-	fc.Parent = hpBarFill
+	corner(hpBarFill, 11)
 
 	hpLabel = Instance.new("TextLabel")
 	hpLabel.BackgroundTransparency = 1
@@ -71,10 +91,84 @@ local function buildGui()
 	hpLabel.ZIndex = 7
 	hpLabel.Parent = holder
 
+	-- Boss bar appears only for the closest active boss within the configured range.
+	bossHolder = Instance.new("Frame")
+	bossHolder.AnchorPoint = Vector2.new(0.5, 0)
+	bossHolder.Position = UDim2.new(0.5, 0, 0, 52)
+	bossHolder.Size = UDim2.fromOffset(520, 72)
+	bossHolder.BackgroundColor3 = Color3.fromRGB(34, 32, 37)
+	bossHolder.BackgroundTransparency = 0.08
+	bossHolder.BorderSizePixel = 0
+	bossHolder.Visible = false
+	bossHolder.ZIndex = 20
+	bossHolder.Parent = gui
+	corner(bossHolder, 14)
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(244, 220, 142)
+	stroke.Transparency = 0.2
+	stroke.Thickness = 2
+	stroke.Parent = bossHolder
+
+	bossTitle = Instance.new("TextLabel")
+	bossTitle.BackgroundTransparency = 1
+	bossTitle.Position = UDim2.fromOffset(14, 5)
+	bossTitle.Size = UDim2.new(0.64, -14, 0, 24)
+	bossTitle.Font = Enum.Font.FredokaOne
+	bossTitle.TextColor3 = Color3.fromRGB(255, 240, 180)
+	bossTitle.TextSize = 20
+	bossTitle.TextXAlignment = Enum.TextXAlignment.Left
+	bossTitle.Text = ""
+	bossTitle.ZIndex = 22
+	bossTitle.Parent = bossHolder
+
+	bossPhase = Instance.new("TextLabel")
+	bossPhase.BackgroundTransparency = 1
+	bossPhase.AnchorPoint = Vector2.new(1, 0)
+	bossPhase.Position = UDim2.new(1, -14, 0, 8)
+	bossPhase.Size = UDim2.new(0.36, -8, 0, 18)
+	bossPhase.Font = Enum.Font.GothamBold
+	bossPhase.TextColor3 = Color3.fromRGB(204, 210, 198)
+	bossPhase.TextSize = 12
+	bossPhase.TextXAlignment = Enum.TextXAlignment.Right
+	bossPhase.TextTruncate = Enum.TextTruncate.AtEnd
+	bossPhase.Text = ""
+	bossPhase.ZIndex = 22
+	bossPhase.Parent = bossHolder
+
+	local bossBar = Instance.new("Frame")
+	bossBar.Position = UDim2.fromOffset(14, 36)
+	bossBar.Size = UDim2.new(1, -28, 0, 23)
+	bossBar.BackgroundColor3 = Color3.fromRGB(58, 51, 58)
+	bossBar.BorderSizePixel = 0
+	bossBar.ClipsDescendants = true
+	bossBar.ZIndex = 21
+	bossBar.Parent = bossHolder
+	corner(bossBar, 10)
+
+	bossFill = Instance.new("Frame")
+	bossFill.Size = UDim2.fromScale(1, 1)
+	bossFill.BackgroundColor3 = Color3.fromRGB(218, 84, 76)
+	bossFill.BorderSizePixel = 0
+	bossFill.ZIndex = 22
+	bossFill.Parent = bossBar
+	corner(bossFill, 10)
+
+	bossHealth = Instance.new("TextLabel")
+	bossHealth.BackgroundTransparency = 1
+	bossHealth.Size = UDim2.fromScale(1, 1)
+	bossHealth.Font = Enum.Font.FredokaOne
+	bossHealth.TextColor3 = Color3.fromRGB(255, 255, 255)
+	bossHealth.TextStrokeTransparency = 0.35
+	bossHealth.TextSize = 14
+	bossHealth.Text = ""
+	bossHealth.ZIndex = 23
+	bossHealth.Parent = bossBar
+
 	banner = Instance.new("TextLabel")
 	banner.AnchorPoint = Vector2.new(0.5, 0)
 	banner.Position = UDim2.new(0.5, 0, 0, 140)
-	banner.Size = UDim2.fromOffset(560, 40)
+	banner.Size = UDim2.fromOffset(640, 44)
 	banner.BackgroundTransparency = 1
 	banner.Font = Enum.Font.FredokaOne
 	banner.TextColor3 = Color3.fromRGB(255, 235, 120)
@@ -82,7 +176,8 @@ local function buildGui()
 	banner.TextSize = 22
 	banner.Text = ""
 	banner.TextTransparency = 1
-	banner.ZIndex = 8
+	banner.TextWrapped = true
+	banner.ZIndex = 24
 	banner.Parent = gui
 end
 
@@ -93,7 +188,7 @@ local function updateHealth()
 		return
 	end
 	local frac = math.clamp(hum.Health / math.max(1, hum.MaxHealth), 0, 1)
-	TweenService:Create(hpBarFill, TweenInfo.new(0.15), { Size = UDim2.new(frac, -6, 1, -6) }):Play()
+	TweenService:Create(hpBarFill, TweenInfo.new(0.15), { Size = UDim2.new(frac, -6 * frac, 1, -6) }):Play()
 	hpBarFill.BackgroundColor3 = if frac > 0.5
 		then Color3.fromRGB(90, 200, 90)
 		elseif frac > 0.25 then Color3.fromRGB(235, 190, 70)
@@ -112,11 +207,15 @@ local function hookCharacter(char: Model)
 end
 
 local function showBanner(text: string, color: Color3, hold: number)
+	bannerToken += 1
+	local token = bannerToken
 	banner.Text = text
 	banner.TextColor3 = color
 	banner.TextTransparency = 0
 	task.delay(hold, function()
-		TweenService:Create(banner, TweenInfo.new(0.6), { TextTransparency = 1 }):Play()
+		if token == bannerToken then
+			TweenService:Create(banner, TweenInfo.new(0.6), { TextTransparency = 1 }):Play()
+		end
 	end)
 end
 
@@ -132,7 +231,7 @@ local function floatDamage(worldPos: Vector3, amount: number, isKill: boolean)
 	anchor.Parent = Workspace
 
 	local bb = Instance.new("BillboardGui")
-	bb.Size = UDim2.fromOffset(80, 40)
+	bb.Size = UDim2.fromOffset(90, 40)
 	bb.AlwaysOnTop = true
 	bb.Parent = anchor
 	local label = Instance.new("TextLabel")
@@ -148,6 +247,48 @@ local function floatDamage(worldPos: Vector3, amount: number, isKill: boolean)
 	TweenService:Create(anchor, TweenInfo.new(0.7), { Position = worldPos + Vector3.new(0, 4, 0) }):Play()
 	TweenService:Create(label, TweenInfo.new(0.7), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
 	Debris:AddItem(anchor, 0.8)
+end
+
+local function closestBoss(): any
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root or not root:IsA("BasePart") then
+		return nil
+	end
+	local limit = (GameConfig.BOSS_SYSTEM and GameConfig.BOSS_SYSTEM.hudRange) or 260
+	local best = nil
+	local bestDistance = limit
+	for key, state in bossStates do
+		local model = state.model
+		if model and model:IsA("Model") and model.Parent and model.PrimaryPart and not model:GetAttribute("Dead") then
+			local distance = (model.PrimaryPart.Position - root.Position).Magnitude
+			if distance <= bestDistance then
+				bestDistance = distance
+				best = state
+			end
+		else
+			bossStates[key] = nil
+		end
+	end
+	return best
+end
+
+local function updateBossHud()
+	local state = closestBoss()
+	if not state then
+		bossHolder.Visible = false
+		return
+	end
+	local model = state.model :: Model
+	local hp = model:GetAttribute("Health") or state.health or 0
+	local maxHealth = model:GetAttribute("MaxHealth") or state.maxHealth or 1
+	local fraction = math.clamp(hp / math.max(1, maxHealth), 0, 1)
+	bossHolder.Visible = true
+	bossTitle.Text = tostring(state.name) .. "  •  " .. tostring(state.zone)
+	bossPhase.Text = tostring(model:GetAttribute("Phase") or state.phase or "Engaged")
+	bossHealth.Text = string.format("%s / %s", tostring(math.ceil(hp)), tostring(math.ceil(maxHealth)))
+	bossFill.BackgroundColor3 = colorFromArray(state.color, Color3.fromRGB(218, 84, 76))
+	bossFill.Size = UDim2.fromScale(fraction, 1)
 end
 
 function CombatController.Init()
@@ -169,12 +310,12 @@ function CombatController.Init()
 
 	Remotes.Get("ClippingsScattered").OnClientEvent:Connect(function(amount)
 		if amount and amount > 0 then
-			showBanner("\u{1F4A5} Your clippings scattered! Run back to recover them.", Color3.fromRGB(255, 180, 90), 5)
+			showBanner("💥 Your clippings scattered! Run back to recover them.", Color3.fromRGB(255, 180, 90), 5)
 		end
 	end)
 
 	Remotes.Get("ClippingsRecovered").OnClientEvent:Connect(function(amount)
-		showBanner("\u{1F33F} Recovered " .. tostring(amount) .. " clippings!", Color3.fromRGB(150, 235, 120), 3)
+		showBanner("🌿 Recovered " .. tostring(amount) .. " clippings!", Color3.fromRGB(150, 235, 120), 3)
 	end)
 
 	Remotes.Get("MonsterDefeated").OnClientEvent:Connect(function(name, gold, essenceName, essenceAmount)
@@ -186,8 +327,45 @@ function CombatController.Init()
 			table.insert(rewards, "+" .. tostring(essenceAmount) .. " " .. tostring(essenceName))
 		end
 		local suffix = if #rewards > 0 then "  " .. table.concat(rewards, "  ") else ""
-		showBanner("\u{2694}\u{FE0F} Defeated " .. tostring(name) .. suffix, Color3.fromRGB(255, 235, 120), 2.5)
+		showBanner("⚔️ Defeated " .. tostring(name) .. suffix, Color3.fromRGB(255, 235, 120), 2.5)
 	end)
+
+	Remotes.Get("BossState").OnClientEvent:Connect(function(state)
+		if type(state) ~= "table" or type(state.key) ~= "string" then
+			return
+		end
+		if state.action == "defeated" then
+			bossStates[state.key] = nil
+			updateBossHud()
+			return
+		end
+		local wasKnown = bossStates[state.key] ~= nil
+		bossStates[state.key] = state
+		if state.action == "spawn" and not wasKnown then
+			showBanner("👑 " .. tostring(state.name) .. " has awakened!", Color3.fromRGB(255, 214, 108), 4)
+		end
+	end)
+
+	Remotes.Get("BossDefeated").OnClientEvent:Connect(function(result)
+		if type(result) ~= "table" then
+			return
+		end
+		local rewards = {}
+		if (result.gold or 0) > 0 then
+			table.insert(rewards, "+" .. tostring(result.gold) .. "g")
+		end
+		if (result.diamonds or 0) > 0 then
+			table.insert(rewards, "+" .. tostring(result.diamonds) .. "💎")
+		end
+		if (result.essence or 0) > 0 and result.essenceName and result.essenceName ~= "" then
+			table.insert(rewards, "+" .. tostring(result.essence) .. " " .. tostring(result.essenceName))
+		end
+		local first = if result.firstKill then "  First victory!" else ""
+		showBanner("🏆 Defeated " .. tostring(result.name) .. "!  " .. table.concat(rewards, "  ") .. first, Color3.fromRGB(255, 225, 120), 6)
+	end)
+
+	RunService.RenderStepped:Connect(updateBossHud)
+	Remotes.Get("RequestBossState"):FireServer()
 end
 
 function CombatController.Start() end

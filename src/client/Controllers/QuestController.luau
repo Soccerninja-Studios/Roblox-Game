@@ -485,6 +485,9 @@ function QuestController.Start()
 			if (payload.essence or 0) > 0 and payload.essenceType and payload.essenceType ~= "" then
 				table.insert(bits, formatNumber(payload.essence) .. " " .. payload.essenceType)
 			end
+			if payload.item and payload.item ~= "" then
+				table.insert(bits, tostring(payload.item))
+			end
 			local suffix = if #bits > 0 then " (+" .. table.concat(bits, ", ") .. ")" else ""
 			showToast("\u{1F389} Reward claimed" .. suffix, GREEN)
 		end
