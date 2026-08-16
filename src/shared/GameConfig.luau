@@ -7,7 +7,7 @@ local GameConfig = {
 	-- end, swaps the neighborhood out for the plains map (built centered on the
 	-- house). When false, the plains map is built at the origin on server start so
 	-- you can walk it directly -- handy for testing the map on its own.
-	INTRO_CUTSCENE = false,
+	INTRO_CUTSCENE = true,
 
 	-- Economy
 	CRIT_BASE_CHANCE = 0.01, -- 1% base "Golden Blade" chance
@@ -385,7 +385,7 @@ local GameConfig = {
 
 	-- =========================================================================
 	-- COMBAT (Phase 3: swords + monsters). The Meadow vertical slice is wired; the
-	-- other zones follow the same shape once their content lands.
+	-- Meadow and Wild are live; later zones follow the same shape once their content lands.
 	-- =========================================================================
 
 	-- Player health, scaled by the toughest zone you have REACHED. Design goal: HP
@@ -413,9 +413,10 @@ local GameConfig = {
 		maxAlivePerZone = 12, -- do not oversaturate a zone
 	},
 
-	-- Per-zone combat currency dropped by monsters (spent on future combat perks).
+	-- Per-zone combat currency dropped by monsters and spent on combat purchases.
 	ESSENCE = {
 		MeadowPollen = { name = "Meadow Pollen", zone = "Meadow", color = { 240, 214, 110 } },
+		WildBurr = { name = "Wild Burr", zone = "Wild", color = { 196, 146, 86 } },
 	},
 
 	-- Monsters. spawnWeight is the relative chance of THIS monster when a spawn fires
@@ -424,14 +425,19 @@ local GameConfig = {
 	MONSTERS = {
 		{ key = "weedSprite", name = "Weed Sprite", zone = "Meadow", hp = 12, damage = 1, moveSpeed = 11, attackRange = 6, attackCooldown = 1.4, aggroRange = 42, roamRange = 22, spawnWeight = 70, goldReward = 8, essenceKey = "MeadowPollen", essenceReward = 2, scale = 1.0, bodyColor = { 120, 196, 92 }, headColor = { 150, 220, 120 } },
 		{ key = "gardenGnome", name = "Garden Gnome", zone = "Meadow", hp = 30, damage = 1, moveSpeed = 8, attackRange = 6.5, attackCooldown = 1.1, aggroRange = 48, roamRange = 18, spawnWeight = 30, goldReward = 22, essenceKey = "MeadowPollen", essenceReward = 5, scale = 1.15, bodyColor = { 180, 84, 70 }, headColor = { 235, 220, 190 } },
+		{ key = "thistleGoblin", name = "Thistle Goblin", zone = "Wild", hp = 78, damage = 2, moveSpeed = 12, attackRange = 6, attackCooldown = 1.25, aggroRange = 48, roamRange = 24, spawnWeight = 65, goldReward = 28, essenceKey = "WildBurr", essenceReward = 3, scale = 1.08, bodyColor = { 104, 146, 72 }, headColor = { 148, 92, 164 } },
+		{ key = "brambleCrawler", name = "Bramble Crawler", zone = "Wild", hp = 126, damage = 3, moveSpeed = 10, attackRange = 6.5, attackCooldown = 1.2, aggroRange = 52, roamRange = 22, spawnWeight = 35, goldReward = 60, essenceKey = "WildBurr", essenceReward = 6, scale = 1.2, bodyColor = { 92, 68, 44 }, headColor = { 86, 146, 68 } },
 	},
 
-	-- Swords: a separate hotbar weapon ladder for combat. Each is bought with gold
-	-- once its zone is reached, then SHARPENED up a per-sword damage ladder. Two per
-	-- zone are planned; the Meadow pair is live.
+	-- Swords: a separate hotbar weapon ladder for combat. Each is bought with its
+	-- configured gold/diamond/essence mix once the zone is reached, then SHARPENED
+	-- up a per-sword damage ladder. Two per
+	-- zone are planned; the Meadow and Wild pairs are live.
 	SWORDS = {
 		{ key = "meadowCutlass", name = "Meadow Cutlass", zone = "Meadow", desc = "A light blade forged for Meadow pests.", goldCost = 250, diamondCost = 0, attackCooldown = 0.6, reach = 9, scale = 1.0, handleColor = { 108, 78, 46 }, bladeColor = { 180, 214, 150 }, levels = { { damage = 6, cost = 0 }, { damage = 9, cost = 400 }, { damage = 13, cost = 1200 }, { damage = 18, cost = 3000 } } },
 		{ key = "blossomSaber", name = "Blossom Saber", zone = "Meadow", desc = "Heavier Meadow steel that bites deep.", goldCost = 1200, diamondCost = 0, attackCooldown = 0.7, reach = 10, scale = 1.12, handleColor = { 90, 60, 120 }, bladeColor = { 235, 150, 180 }, levels = { { damage = 14, cost = 0 }, { damage = 20, cost = 1500 }, { damage = 28, cost = 4000 }, { damage = 40, cost = 9000 } } },
+		{ key = "bramblefangBlade", name = "Bramblefang Blade", zone = "Wild", desc = "A hooked Wildfields blade paid for partly in Wild Burr.", goldCost = 3000, diamondCost = 0, essenceKey = "WildBurr", essenceCost = 5, attackCooldown = 0.55, reach = 10, scale = 1.14, handleColor = { 88, 58, 36 }, bladeColor = { 126, 174, 94 }, levels = { { damage = 28, cost = 0 }, { damage = 38, cost = 4500 }, { damage = 52, cost = 9000 }, { damage = 70, cost = 18000 } } },
+		{ key = "wildwoodCleaver", name = "Wildwood Cleaver", zone = "Wild", desc = "A heavy cleaver forged from Wild Burr and diamonds.", goldCost = 0, diamondCost = 6, essenceKey = "WildBurr", essenceCost = 12, attackCooldown = 0.6, reach = 10.5, scale = 1.24, handleColor = { 70, 50, 34 }, bladeColor = { 174, 194, 150 }, levels = { { damage = 45, cost = 0 }, { damage = 60, cost = 10000 }, { damage = 80, cost = 20000 }, { damage = 105, cost = 40000 } } },
 	},
 }
 
