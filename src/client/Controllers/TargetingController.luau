@@ -7,8 +7,8 @@
 --   * the mouse cursor is hidden and pinned to center, just like shift-lock.
 --
 -- You can still ZOOM in/out with the scroll wheel while locked on -- the camera
--- distance follows your zoom, but the over-the-shoulder proportions (2 studs
--- right with no vertical lift) stay fixed regardless of zoom.
+-- distance follows your zoom, but the over-the-shoulder proportions (4 studs
+-- right and 2 studs up) stay fixed regardless of zoom.
 --
 -- The reticle is the shared shift-lock crosshair: it shows WHITE while the target
 -- is out of sword range and turns RED when the target is close enough to hit.
@@ -46,7 +46,7 @@ local TARGET_AIM_HEIGHT = 1.25 -- aim around the monster's upper body, not above
 local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
 -- space). Kept fixed in studs so the proportions stay the same at any zoom.
-local SHOULDER_OFFSET = Vector3.new(2, 0, 0)
+local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
 local WHITE = Color3.new(1, 1, 1)
 local RED = Color3.fromRGB(220, 40, 40)
 
