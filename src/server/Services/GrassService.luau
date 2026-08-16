@@ -26,7 +26,9 @@ local PlayerDataService
 local ClippingsService
 local QuestService
 local MonsterService
+local BossService
 local grassRoot: Model -- workspace.Kingdom, holds every grass tile
+local remainingByZone: { [string]: number } = {}
 
 local function color3(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
@@ -69,6 +71,7 @@ local function makeTile(baseCF: CFrame, typeName: string, def: any, parent: Inst
 	tile:SetAttribute("FullHeight", height)
 	tile:SetAttribute("BaseCFrame", baseCF)
 	tile.Parent = parent
+	remainingByZone[typeName] = (remainingByZone[typeName] or 0) + 1
 
 	return tile
 end
@@ -142,6 +145,25 @@ local function refreshTileHeight(tile: BasePart)
 		{ Size = Vector3.new(footprint, newHeight, footprint), CFrame = baseCF * CFrame.new(0, newHeight / 2, 0) }
 	)
 	tween:Play()
+end
+
+
+-- One authoritative completion hook shared by hand tools and auto-mowers. It
+-- guarantees exactly one monster/boss roll per tile, attributes mower rolls to
+-- their owner, and reserves the final tile in a ring for that ring's boss.
+local function reportTileCleared(player: Player, tile: BasePart, typeName: string)
+	if tile:GetAttribute("ClearCounted") then
+		return
+	end
+	tile:SetAttribute("ClearCounted", true)
+	local remaining = math.max(0, (remainingByZone[typeName] or 1) - 1)
+	remainingByZone[typeName] = remaining
+	local zoneIndex = GrassService.GetGrassZoneIndex(typeName)
+	if remaining <= 0 and BossService then
+		BossService.OnZoneCleared(player, tile.Position, zoneIndex)
+	elseif MonsterService then
+		MonsterService.OnTileCleared(player, tile.Position, zoneIndex)
+	end
 end
 
 local function onRequestCut(player: Player, tile: Instance?)
@@ -221,10 +243,8 @@ local function onRequestCut(player: Player, tile: Instance?)
 		QuestService.ReportMow(player, typeName)
 	end
 
-	-- Combat: fully clearing a tile is the trigger for the monster pity roll.
-	if MonsterService then
-		MonsterService.OnTileCleared(player, tile.Position, GrassService.GetGrassZoneIndex(typeName))
-	end
+	-- Combat: every source uses the same one-roll completion pipeline.
+	reportTileCleared(player, tile, typeName)
 
 	-- Reveal whatever is underneath and let the player walk through now.
 	tile.CanQuery = false
@@ -302,7 +322,7 @@ end
 -- Apply one mower swing to a tile.
 -- Returns (cleared, reward): `cleared` is true when this swing felled the tile,
 -- and `reward` is the clippings it yielded (0 unless it was cleared).
-function GrassService.MowerCut(tile: BasePart, cutPower: number): (boolean, number)
+function GrassService.MowerCut(player: Player, tile: BasePart, cutPower: number): (boolean, number)
 	if not GrassService.IsCuttableTile(tile) then
 		return false, 0
 	end
@@ -330,6 +350,7 @@ function GrassService.MowerCut(tile: BasePart, cutPower: number): (boolean, numb
 	-- skill multipliers or crits -- those belong to hand-cutting, which keeps manual
 	-- mowing worth doing even once the field is automated.
 	local reward = def.clipReward or 1
+	reportTileCleared(player, tile, typeName)
 
 	tile.CanQuery = false
 	tile.CanCollide = false
@@ -378,6 +399,7 @@ function GrassService.Init(services)
 	ClippingsService = services.ClippingsService
 	QuestService = services.QuestService
 	MonsterService = services.MonsterService
+	BossService = services.BossService
 
 	grassRoot = Workspace:FindFirstChild("Kingdom") :: Model
 	if not grassRoot then

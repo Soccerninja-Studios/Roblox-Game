@@ -48,11 +48,34 @@ end
 -- always open; other zones unlock through quests.reached (same gate the backpacks
 -- and mowers use).
 local function hasReachedZone(profile, zone: string): boolean
+	if zone == "All" then
+		local kills = profile.bosses and profile.bosses.kills
+		if not kills then
+			return false
+		end
+		for _, boss in ipairs(GameConfig.BOSSES or {}) do
+			if (kills[boss.key] or 0) < 1 then
+				return false
+			end
+		end
+		return #(GameConfig.BOSSES or {}) > 0
+	end
 	if zone == "Meadow" then
 		return true
 	end
 	local reached = profile.quests and profile.quests.reached
 	return reached ~= nil and reached[zone] == true
+end
+
+
+local function canUnlockSword(profile: any, def: any): boolean
+	if not hasReachedZone(profile, def.zone) then
+		return false
+	end
+	if def.requiresAllBosses then
+		return PlayerDataService.HasDefeatedAllBosses(profile)
+	end
+	return true
 end
 
 -- Build a lightweight procedural sword Tool: handle in the palm, a crossguard, and
@@ -229,22 +252,23 @@ local function onSwordSwing(player: Player)
 	local damage = StatCalculator.GetSwordDamage(key, level, profile.skills)
 	local reach = StatCalculator.GetSwordReach(key)
 	if MonsterService then
-		-- New combat model: no aiming or clicking on a target. We sweep a generous
-		-- swing volume in front of the player -- the blade blown up 2x so small
-		-- blades still land -- and damage every monster it overlaps. Forward depth
-		-- uses the sword's reach stat so longer swords keep their range advantage.
-		local scale = def.scale or 1
-		local bladeLen = SWORD_BLADE_SIZE.Y * scale * HITBOX_SCALE
-		local bladeThick = SWORD_BLADE_SIZE.Z * scale * HITBOX_SCALE
-		local forward = math.max(bladeLen, reach)
-		-- Width & height stay forgiving (min floors) so you don't have to line up
-		-- the monster precisely; depth is the forward reach of the slam.
-		local hitboxSize = Vector3.new(math.max(bladeThick, 2.5), math.max(bladeLen, 4), forward)
 		local rootPart = root :: BasePart
-		-- Center the box in front of the player, dropped slightly to match where the
-		-- blade slams down.
-		local hitboxCFrame = rootPart.CFrame * CFrame.new(0, -0.5, -forward * 0.5)
-		MonsterService.DamageMonstersInHitbox(player, hitboxCFrame, hitboxSize, damage)
+		if def.special == "whirlwind" then
+			-- Kingsedge is the all-boss reward: a complete 360-degree sweep whose
+			-- true damage bypasses temporary boss armor.
+			local radius = def.specialRadius or reach
+			MonsterService.DamageMonstersInRadius(player, rootPart.Position, radius, damage, true)
+			Remotes.Get("SwordSpecial"):FireClient(player, "whirlwind", rootPart.Position, radius)
+		else
+			-- Normal swords use a generous oriented volume in front of the player.
+			local scale = def.scale or 1
+			local bladeLen = SWORD_BLADE_SIZE.Y * scale * HITBOX_SCALE
+			local bladeThick = SWORD_BLADE_SIZE.Z * scale * HITBOX_SCALE
+			local forward = math.max(bladeLen, reach)
+			local hitboxSize = Vector3.new(math.max(bladeThick, 2.5), math.max(bladeLen, 4), forward)
+			local hitboxCFrame = rootPart.CFrame * CFrame.new(0, -0.5, -forward * 0.5)
+			MonsterService.DamageMonstersInHitbox(player, hitboxCFrame, hitboxSize, damage)
+		end
 	end
 end
 
@@ -274,7 +298,8 @@ local function buildState(player: Player): any
 				level = level,
 				maxLevel = maxLevel,
 				owned = owned,
-				unlocked = hasReachedZone(profile, def.zone),
+				unlocked = canUnlockSword(profile, def),
+				requirementText = def.requirementText,
 				equipped = profile.swords.equipped == def.key,
 				bladeR = blade[1],
 				bladeG = blade[2],
@@ -312,7 +337,7 @@ local function onPurchase(player: Player, key)
 	if profile.swords.owned[key] then
 		return
 	end
-	if not hasReachedZone(profile, def.zone) then
+	if not canUnlockSword(profile, def) then
 		return
 	end
 	if not PlayerDataService.SpendCurrency(

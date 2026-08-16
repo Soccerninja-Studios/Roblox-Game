@@ -43,6 +43,11 @@ export type Profile = {
 		equipped: string?,
 	},
 	essence: { [string]: number },
+	bosses: {
+		kills: { [string]: number }, -- boss key -> lifetime defeats
+		trophies: { [string]: boolean }, -- zone -> first-kill quest trophy claimed
+		crowns: { [string]: boolean }, -- zone -> champion quest crown claimed
+	},
 	quests: {
 		progress: { [string]: number }, -- questId (as string) -> current progress
 		claimed: { [string]: boolean }, -- questId (as string) -> reward claimed
@@ -61,7 +66,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 6
+local PROFILE_VERSION = 7
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -108,6 +113,7 @@ local function defaultProfile(): Profile
 		autoMowers = { owned = {}, deployed = {} },
 		swords = { owned = {}, level = {}, equipped = nil },
 		essence = {},
+		bosses = { kills = {}, trophies = {}, crowns = {} },
 	}
 end
 
@@ -179,6 +185,12 @@ local function reconcile(profile: Profile): Profile
 			end
 		end
 	end
+	-- v6 -> v7: persistent boss kills and claimed boss collectibles. Keep this
+	-- nested reconciliation unconditional so partially written/future profiles heal.
+	profile.bosses = profile.bosses or { kills = {}, trophies = {}, crowns = {} }
+	profile.bosses.kills = profile.bosses.kills or {}
+	profile.bosses.trophies = profile.bosses.trophies or {}
+	profile.bosses.crowns = profile.bosses.crowns or {}
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -324,6 +336,12 @@ function PlayerDataService.PushState(player: Player)
 		toolTier = profile.toolTier,
 		skills = profile.skills,
 		essence = table.clone(profile.essence or {}),
+		bosses = {
+			kills = table.clone(profile.bosses.kills or {}),
+			trophies = table.clone(profile.bosses.trophies or {}),
+			crowns = table.clone(profile.bosses.crowns or {}),
+			allDefeated = PlayerDataService.HasDefeatedAllBosses(profile),
+		},
 	})
 end
 
@@ -488,6 +506,56 @@ function PlayerDataService.Spend(player: Player, amount: number): boolean
 	end
 	profile.clippings -= amount
 	return true
+end
+
+
+-- Record one authoritative boss defeat. Returns the new lifetime count and whether
+-- this was the player's first victory over that boss.
+function PlayerDataService.RecordBossDefeat(player: Player, bossKey: string): (number, boolean)
+	local profile = profiles[player]
+	if not profile then
+		return 0, false
+	end
+	profile.bosses = profile.bosses or { kills = {}, trophies = {}, crowns = {} }
+	profile.bosses.kills = profile.bosses.kills or {}
+	local previous = profile.bosses.kills[bossKey] or 0
+	local count = previous + 1
+	profile.bosses.kills[bossKey] = count
+	PlayerDataService.PushState(player)
+	return count, previous == 0
+end
+
+function PlayerDataService.GrantBossCollectible(player: Player, zone: string, kind: string)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.bosses = profile.bosses or { kills = {}, trophies = {}, crowns = {} }
+	profile.bosses.trophies = profile.bosses.trophies or {}
+	profile.bosses.crowns = profile.bosses.crowns or {}
+	if kind == "trophy" then
+		profile.bosses.trophies[zone] = true
+	elseif kind == "crown" then
+		profile.bosses.crowns[zone] = true
+	else
+		return
+	end
+	PlayerDataService.PushState(player)
+end
+
+function PlayerDataService.HasDefeatedAllBosses(profile: Profile): boolean
+	local kills = profile.bosses and profile.bosses.kills
+	if not kills then
+		return false
+	end
+	local total = 0
+	for _, def in ipairs(GameConfig.BOSSES or {}) do
+		total += 1
+		if (kills[def.key] or 0) < 1 then
+			return false
+		end
+	end
+	return total > 0
 end
 
 -- ---------------------------------------------------------------------------

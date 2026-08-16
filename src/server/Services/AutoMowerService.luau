@@ -353,7 +353,7 @@ local function stepMower(player: Player, rt: Runtime)
 		elseif os.clock() >= rt.nextCutAt then
 			rt.nextCutAt = os.clock() + def.cutInterval
 			local tile = rt.target :: BasePart
-			local cleared, reward = GrassService.MowerCut(tile, def.cutPower)
+			local cleared, reward = GrassService.MowerCut(player, tile, def.cutPower)
 			if cleared then
 				rt.storage = math.min(def.storageCap, rt.storage + reward)
 				rt.target = nil

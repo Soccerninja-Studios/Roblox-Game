@@ -35,6 +35,8 @@ local LIVE_KINDS: { [string]: boolean } = {
 	collect_essence = true,
 	buy_sword = true,
 	own_swords = true,
+	defeat_boss = true,
+	boss_repeat = true,
 }
 
 -- Combat kinds are live only where their actual content exists. This keeps the
@@ -70,6 +72,13 @@ local function isQuestLive(quest: any): boolean
 	elseif kind == "buy_sword" then
 		for _, def in ipairs(GameConfig.SWORDS) do
 			if def.zone == quest.zone and def.name == objective.sword then
+				return true
+			end
+		end
+		return false
+	elseif kind == "defeat_boss" or kind == "boss_repeat" then
+		for _, def in ipairs(GameConfig.BOSSES or {}) do
+			if def.zone == quest.zone and def.name == objective.boss then
 				return true
 			end
 		end
@@ -380,6 +389,31 @@ function QuestService.ReportMonsterDefeated(
 	end
 end
 
+
+-- A boss victory advances both the one-time slayer objective and the ring's
+-- cumulative champion objective. Profile boss counts are persisted separately by
+-- BossService, so quest claims and combat rewards cannot create duplicate kills.
+function QuestService.ReportBossDefeated(player: Player, bossName: string, zone: string)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	sweep(player, function(quest)
+		return quest.objective.kind == "defeat_boss"
+			and quest.objective.boss == bossName
+			and quest.zone == zone
+	end, function(quest)
+		return addProgress(profile, quest, 1)
+	end)
+	sweep(player, function(quest)
+		return quest.objective.kind == "boss_repeat"
+			and quest.objective.boss == bossName
+			and quest.zone == zone
+	end, function(quest)
+		return addProgress(profile, quest, 1)
+	end)
+end
+
 local function ownsSwordNamed(profile: any, swordName: string): boolean
 	for _, def in ipairs(GameConfig.SWORDS) do
 		if def.name == swordName then
@@ -474,6 +508,11 @@ local function onClaim(player: Player, rawId: unknown)
 	end
 	q.claimed[key] = true
 	local reward = quest.reward
+	if quest.objective.kind == "defeat_boss" and reward.item == "trophy" then
+		PlayerDataService.GrantBossCollectible(player, quest.zone, "trophy")
+	elseif quest.objective.kind == "boss_repeat" and reward.item and reward.item ~= "" then
+		PlayerDataService.GrantBossCollectible(player, quest.zone, "crown")
+	end
 	PlayerDataService.GrantCurrency(player, reward.gold or 0, reward.diamonds or 0)
 	local essenceKey: string? = nil
 	if (reward.essence or 0) > 0 and reward.essenceType and reward.essenceType ~= "" then
@@ -494,6 +533,7 @@ local function onClaim(player: Player, rawId: unknown)
 		diamonds = reward.diamonds or 0,
 		essence = if essenceKey then reward.essence or 0 else 0,
 		essenceType = reward.essenceType or "",
+		item = reward.item or "",
 	})
 	QuestService.PushState(player)
 end

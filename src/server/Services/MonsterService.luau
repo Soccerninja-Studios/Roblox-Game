@@ -22,6 +22,7 @@ local MonsterService = {}
 
 local PlayerDataService
 local QuestService
+local BossService
 
 local ZONE_KEY_BY_INDEX = { "Meadow", "Wild", "Mossmire", "Thicket", "Ironweed" }
 
@@ -358,10 +359,55 @@ function MonsterService.DamageMonstersInHitbox(player: Player, hitboxCFrame: CFr
 				and math.abs(rel.Y) <= half.Y + mhalf.Y
 				and math.abs(rel.Z) <= half.Z + mhalf.Z
 			then
-				applyDamage(model, damage, player)
+				if model:GetAttribute("BossKey") and BossService then
+					BossService.DamageBoss(model, damage, player, false)
+				else
+					applyDamage(model, damage, player)
+				end
 			end
 		end
 	end
+end
+
+
+-- Radial resolver used by complete 360-degree sword specials. The same server
+-- validation and boss routing as the normal oriented swing applies.
+function MonsterService.DamageMonstersInRadius(
+	player: Player,
+	center: Vector3,
+	radius: number,
+	damage: number,
+	trueDamage: boolean?
+)
+	if not monsterFolder then
+		return
+	end
+	for _, model in monsterFolder:GetChildren() do
+		if model:IsA("Model") and model.PrimaryPart and not model:GetAttribute("Dead") then
+			local distance = (model.PrimaryPart.Position - center).Magnitude
+			if distance <= radius + model.PrimaryPart.Size.Magnitude * 0.35 then
+				if model:GetAttribute("BossKey") and BossService then
+					BossService.DamageBoss(model, damage, player, trueDamage == true)
+				else
+					applyDamage(model, damage, player)
+				end
+			end
+		end
+	end
+end
+
+-- Shared authoritative damage path for common monsters and boss hazards. Keeping
+-- lastHurt here prevents out-of-combat regeneration from running during boss hits.
+function MonsterService.DamagePlayer(player: Player, damage: number): boolean
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 or damage <= 0 then
+		return false
+	end
+	humanoid:TakeDamage(damage)
+	lastHurt[player] = os.clock()
+	Remotes.Get("PlayerHurt"):FireClient(player, damage)
+	return true
 end
 
 local function runMonster(model: Model, def, origin: Vector3)
@@ -419,12 +465,10 @@ local function runMonster(model: Model, def, origin: Vector3)
 						lastAttack = now
 						local plr = Players:GetPlayerFromCharacter(target)
 						local hum = target:FindFirstChildOfClass("Humanoid")
-						if hum and hum.Health > 0 then
+						if plr then
+							MonsterService.DamagePlayer(plr, def.damage or 1)
+						elseif hum and hum.Health > 0 then
 							hum:TakeDamage(def.damage or 1)
-							if plr then
-								lastHurt[plr] = now
-								Remotes.Get("PlayerHurt"):FireClient(plr, def.damage or 1)
-							end
 						end
 					end
 				end
@@ -458,6 +502,10 @@ end
 -- =========================================================================
 
 function MonsterService.Spawn(zoneKey: string, nearPos: Vector3)
+	local cfg = GameConfig.MONSTER_SPAWN
+	if (aliveByZone[zoneKey] or 0) >= (cfg.maxAlivePerZone or 12) then
+		return
+	end
 	local pool = monstersByZone[zoneKey]
 	if not pool or #pool == 0 then
 		return
@@ -530,6 +578,7 @@ end
 function MonsterService.Init(services)
 	PlayerDataService = services.PlayerDataService
 	QuestService = services.QuestService
+	BossService = services.BossService
 end
 
 function MonsterService.Start()
