@@ -884,9 +884,9 @@ function BossService.OnZoneCleared(player: Player, position: Vector3, zoneIndex:
 	spawnBoss(zone, position, player)
 end
 
--- Studio-only command-bar hook for focused boss testing without clearing a ring.
--- Example:
--- require(game.ServerScriptService.Server.Services.BossService).SpawnForStudio(player, "Meadow", 100)
+-- Studio-only spawn hook for focused testing without clearing a ring. It is also
+-- exposed through DebugSpawnBoss, so testing never depends on Command Bar context
+-- or the exact ServerScriptService hierarchy.
 function BossService.SpawnForStudio(player: Player, zone: string, testHealth: number?): boolean
 	if not RunService:IsStudio() or not bossByZone[zone] then
 		return false
@@ -943,11 +943,46 @@ function BossService.Init(services: any)
 end
 
 function BossService.Start()
-	monsterFolder = Workspace:WaitForChild("Monsters", 30) :: Folder
-	if not monsterFolder then
-		warn("[BossService] Monsters folder missing; bosses disabled.")
-		return
+	-- BossService and MonsterService start concurrently. Reconcile one shared folder
+	-- instead of waiting on start order or accidentally binding to a duplicate.
+	local existing = Workspace:FindFirstChild("Monsters")
+	if existing and existing:IsA("Folder") then
+		monsterFolder = existing
+	else
+		if existing then
+			existing:Destroy()
+		end
+		monsterFolder = Instance.new("Folder")
+		monsterFolder.Name = "Monsters"
+		monsterFolder.Parent = Workspace
 	end
+
+	Remotes.Get("DebugSpawnBoss").OnServerEvent:Connect(function(player: Player, rawZone: unknown, rawHealth: unknown)
+		if not RunService:IsStudio() then
+			return -- never expose debug spawning in a published/live server
+		end
+		if type(rawZone) ~= "string" or not bossByZone[rawZone] then
+			Remotes.Get("BossDebugResult"):FireClient(player, false, "Unknown boss zone: " .. tostring(rawZone))
+			return
+		end
+		local health: number? = nil
+		if type(rawHealth) == "number" then
+			health = math.clamp(math.floor(rawHealth), 1, 1000000)
+		end
+		local ok, result = pcall(BossService.SpawnForStudio, player, rawZone, health)
+		if not ok then
+			warn("[BossService] Studio spawn failed: " .. tostring(result))
+			Remotes.Get("BossDebugResult"):FireClient(player, false, "Boss spawn failed; check Server Output.")
+			return
+		end
+		if result then
+			local def = bossByZone[rawZone]
+			local suffix = if health then " with " .. tostring(health) .. " HP" else ""
+			Remotes.Get("BossDebugResult"):FireClient(player, true, "Spawned " .. def.name .. suffix .. ".")
+		else
+			Remotes.Get("BossDebugResult"):FireClient(player, false, "Boss could not spawn; make sure your character is alive.")
+		end
+	end)
 
 	Remotes.Get("RequestBossState").OnServerEvent:Connect(function(player: Player)
 		for zone, model in activeByZone do
@@ -968,7 +1003,8 @@ function BossService.Start()
 			end
 		end
 	end)
-	print("[BossService] five-ring boss framework ready.")
+	ReplicatedStorage:SetAttribute("BossServiceStatus", "Ready")
+	print("[BossService] five-ring boss framework ready. Studio testing: DebugSpawnBoss remote is available.")
 end
 
 return BossService

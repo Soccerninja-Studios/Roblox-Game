@@ -582,9 +582,17 @@ function MonsterService.Init(services)
 end
 
 function MonsterService.Start()
-	monsterFolder = Instance.new("Folder")
-	monsterFolder.Name = "Monsters"
-	monsterFolder.Parent = Workspace
+	local existing = Workspace:FindFirstChild("Monsters")
+	if existing and existing:IsA("Folder") then
+		monsterFolder = existing
+	else
+		if existing then
+			existing:Destroy()
+		end
+		monsterFolder = Instance.new("Folder")
+		monsterFolder.Name = "Monsters"
+		monsterFolder.Parent = Workspace
+	end
 
 	for _, def in ipairs(GameConfig.MONSTERS) do
 		defByKey[def.key] = def
