@@ -39,8 +39,10 @@ local player = Players.LocalPlayer
 local BIND_NAME = "LockOnFace"
 local MAX_LOCK_RANGE = 120 -- studs; drop a target (and lock-on) once nothing is this close
 local ACQUIRE_RANGE = 90 -- studs; how far to look when acquiring / what counts as "nearby"
-local CAM_PITCH = 25 -- degrees the lock-on camera tilts DOWNWARD toward the enemy (never up)
-local PITCH_REF_DIST = 18 -- at/below this distance (studs) the tilt is the full CAM_PITCH; farther targets tilt gentler so the camera never flies up
+-- Keep the lock camera near the player's shoulder/head height instead of raising
+-- it from the full player-to-target distance. This avoids the steep overhead view.
+local CAMERA_HEIGHT = 2.25 -- studs above the player's HumanoidRootPart
+local TARGET_AIM_HEIGHT = 1.25 -- aim around the monster's upper body, not above it
 local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
 -- space). Kept fixed in studs so the proportions stay the same at any zoom.
@@ -50,6 +52,7 @@ local RED = Color3.fromRGB(220, 40, 40)
 
 local active = false
 local target: Model? = nil
+local restoreOnNextCharacter = false
 local zoomDistance = 14 -- current camera pull-back; seeded from real zoom on enable
 
 -- ---------------------------------------------------------------------------
@@ -211,11 +214,19 @@ end
 -- Enable / disable
 -- ---------------------------------------------------------------------------
 
-local function restoreCamera()
+local function restoreCamera(subject: Humanoid?)
 	local camera = Workspace.CurrentCamera
-	if camera and camera.CameraType ~= Enum.CameraType.Custom then
-		camera.CameraType = Enum.CameraType.Custom
+	if not camera then
+		return
 	end
+	-- CameraType alone is not enough after a Scriptable-camera death: Roblox can
+	-- retain the dead humanoid as CameraSubject and leave the view at the death site.
+	-- Explicitly bind the current/new humanoid before returning control to Roblox.
+	local hum = subject or currentHumanoid()
+	if hum then
+		camera.CameraSubject = hum
+	end
+	camera.CameraType = Enum.CameraType.Custom
 end
 
 function TargetingController.IsActive(): boolean
@@ -233,6 +244,7 @@ local function enable()
 	end
 	active = true
 	target = t
+	restoreOnNextCharacter = false -- a living rig has taken ownership again
 	seedZoom()
 	player:SetAttribute("LockOn", true) -- lets ShiftLockController step aside
 	-- Hide + center the cursor, just like shift-lock.
@@ -244,9 +256,8 @@ local function enable()
 end
 
 local function disable()
-	if not active then
-		return
-	end
+	-- Always perform the full reset, even if active was already cleared elsewhere.
+	-- Respawning can otherwise leave a Scriptable camera or stale CameraSubject.
 	active = false
 	target = nil
 	player:SetAttribute("LockOn", false)
@@ -277,7 +288,10 @@ local function onStep()
 		return
 	end
 	local root = currentRoot()
-	if not root then
+	local hum = currentHumanoid()
+	if not root or not hum or hum.Health <= 0 then
+		restoreOnNextCharacter = true
+		disable()
 		return
 	end
 
@@ -318,16 +332,12 @@ local function onStep()
 	if (flatTarget - ppos).Magnitude > 0.05 then
 		root.CFrame = CFrame.lookAt(ppos, flatTarget)
 	end
-	local hum = currentHumanoid()
-	if hum then
-		hum.AutoRotate = false
-	end
+	hum.AutoRotate = false
 
 	-- Frame the camera behind the player at the player's current zoom distance,
-	-- looking toward the enemy, then shove it over the shoulder by the SAME offset
-	-- shift-lock uses. Multiplying on the right keeps the view direction and just
-	-- slides the camera right + up in its own space (fixed studs, so the shoulder
-	-- proportions stay constant no matter how far you zoom).
+	-- looking toward the enemy, then move it over the shoulder by the same fixed
+	-- offset shift-lock uses. Its Y position stays near the player's head instead of
+	-- scaling upward with target distance, preventing an overhead lock-on view.
 	local dir = Vector3.new(tpos.X - ppos.X, 0, tpos.Z - ppos.Z)
 	if dir.Magnitude < 0.01 then
 		local look = root.CFrame.LookVector
@@ -335,15 +345,9 @@ local function onStep()
 	end
 	dir = dir.Unit
 	camera.CameraType = Enum.CameraType.Scriptable
-	local aim = tpos + Vector3.new(0, 2.5, 0)
+	local aim = tpos + Vector3.new(0, TARGET_AIM_HEIGHT, 0)
 	local backXZ = ppos - dir * zoomDistance
-	local horizDist = (Vector3.new(aim.X, 0, aim.Z) - Vector3.new(backXZ.X, 0, backXZ.Z)).Magnitude
-	-- Raise the camera so the view onto the enemy is a fixed downward tilt (never
-	-- up). Capped at PITCH_REF_DIST so far targets tilt gently instead of the camera
-	-- flying up; zoom slides the camera along this angle, keeping the 2/0 shoulder
-	-- offset fixed.
-	local rise = math.min(horizDist, PITCH_REF_DIST) * math.tan(math.rad(CAM_PITCH))
-	local camPos = Vector3.new(backXZ.X, aim.Y + rise, backXZ.Z)
+	local camPos = Vector3.new(backXZ.X, ppos.Y + CAMERA_HEIGHT, backXZ.Z)
 	camera.CFrame = CFrame.lookAt(camPos, aim) * CFrame.new(SHOULDER_OFFSET.X, SHOULDER_OFFSET.Y, 0)
 
 	-- Crosshair is the range indicator: red when the enemy is within sword range,
@@ -423,12 +427,50 @@ function TargetingController.Init()
 		end
 	end)
 
-	-- A fresh character means a new rig and camera; drop any stale lock cleanly.
-	player.CharacterAdded:Connect(function()
+	-- Death must release Scriptable mode immediately. On the next CharacterAdded we
+	-- also bind CameraSubject to the NEW humanoid after it exists; this is what makes
+	-- the camera snap back to the respawn instead of watching the old target.
+	local function bindCharacter(char: Model)
+		-- If CharacterAdded beat the death/removal callbacks, preserve the fact that
+		-- this lock-on camera still needs to be rebound to the new rig.
 		if active then
+			restoreOnNextCharacter = true
+			disable()
+		end
+		task.spawn(function()
+			local hum = char:WaitForChild("Humanoid", 10)
+			if not hum or not hum:IsA("Humanoid") or player.Character ~= char then
+				return
+			end
+			hum.Died:Connect(function()
+				if player.Character == char and active then
+					restoreOnNextCharacter = true
+					disable()
+				end
+			end)
+			if restoreOnNextCharacter then
+				-- Let Roblox finish assigning the new character, then explicitly take the
+				-- camera off the dead humanoid/old death-site CFrame.
+				task.wait()
+				if player.Character == char then
+					restoreCamera(hum)
+					restoreOnNextCharacter = false
+				end
+			end
+		end)
+	end
+
+	player.CharacterRemoving:Connect(function()
+		if active then
+			restoreOnNextCharacter = true
 			disable()
 		end
 	end)
+	player.CharacterAdded:Connect(bindCharacter)
+	if player.Character then
+		-- Bind the death listener without overriding an opening cutscene camera.
+		bindCharacter(player.Character)
+	end
 end
 
 function TargetingController.Start() end
