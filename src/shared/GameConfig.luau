@@ -384,8 +384,8 @@ local GameConfig = {
 	},
 
 	-- =========================================================================
-	-- COMBAT (Phase 3: swords + monsters). Meadow, Wild, and Mossmire are live;
-	-- later zones follow the same shape once their content lands.
+	-- COMBAT (Phase 3: swords + monsters). All five zones now have their common
+	-- monsters, per-zone essence, and two-sword progression pair.
 	-- =========================================================================
 
 	-- Player health, scaled by the toughest zone you have REACHED. Design goal: HP
@@ -418,6 +418,8 @@ local GameConfig = {
 		MeadowPollen = { name = "Meadow Pollen", zone = "Meadow", color = { 240, 214, 110 } },
 		WildBurr = { name = "Wild Burr", zone = "Wild", color = { 196, 146, 86 } },
 		MireSpore = { name = "Mire Spore", zone = "Mossmire", color = { 142, 116, 190 } },
+		ThicketSap = { name = "Thicket Sap", zone = "Thicket", color = { 92, 170, 90 } },
+		IronFilament = { name = "Iron Filament", zone = "Ironweed", color = { 116, 176, 188 } },
 	},
 
 	-- Monsters. spawnWeight is the relative chance of THIS monster when a spawn fires
@@ -430,12 +432,16 @@ local GameConfig = {
 		{ key = "brambleCrawler", name = "Bramble Crawler", zone = "Wild", hp = 126, damage = 3, moveSpeed = 10, attackRange = 6.5, attackCooldown = 1.2, aggroRange = 52, roamRange = 22, spawnWeight = 35, goldReward = 60, essenceKey = "WildBurr", essenceReward = 6, scale = 1.2, bodyColor = { 92, 68, 44 }, headColor = { 86, 146, 68 } },
 		{ key = "sporeHound", name = "Spore Hound", zone = "Mossmire", hp = 540, damage = 4, moveSpeed = 11.5, attackRange = 6, attackCooldown = 1.25, aggroRange = 54, roamRange = 25, spawnWeight = 60, goldReward = 95, essenceKey = "MireSpore", essenceReward = 8, scale = 1.15, bodyColor = { 96, 118, 82 }, headColor = { 164, 126, 190 } },
 		{ key = "bogWraith", name = "Bog Wraith", zone = "Mossmire", hp = 780, damage = 5, moveSpeed = 9.5, attackRange = 7, attackCooldown = 1.35, aggroRange = 58, roamRange = 22, spawnWeight = 40, goldReward = 180, essenceKey = "MireSpore", essenceReward = 14, scale = 1.3, bodyColor = { 54, 92, 86 }, headColor = { 126, 186, 164 } },
+		{ key = "vineLurker", name = "Vine Lurker", zone = "Thicket", hp = 1260, damage = 7, moveSpeed = 12, attackRange = 6.5, attackCooldown = 1.15, aggroRange = 60, roamRange = 26, spawnWeight = 60, goldReward = 260, essenceKey = "ThicketSap", essenceReward = 18, scale = 1.2, bodyColor = { 58, 112, 52 }, headColor = { 96, 164, 76 } },
+		{ key = "barkGolemling", name = "Bark Golemling", zone = "Thicket", hp = 1950, damage = 9, moveSpeed = 8.5, attackRange = 7.5, attackCooldown = 1.4, aggroRange = 62, roamRange = 20, spawnWeight = 40, goldReward = 480, essenceKey = "ThicketSap", essenceReward = 30, scale = 1.4, bodyColor = { 92, 66, 42 }, headColor = { 126, 94, 58 } },
+		{ key = "weedwraith", name = "Weedwraith", zone = "Ironweed", hp = 3000, damage = 12, moveSpeed = 13, attackRange = 7, attackCooldown = 1.05, aggroRange = 66, roamRange = 28, spawnWeight = 58, goldReward = 700, essenceKey = "IronFilament", essenceReward = 30, scale = 1.28, bodyColor = { 44, 78, 72 }, headColor = { 94, 154, 160 } },
+		{ key = "ironcladSentinel", name = "Ironclad Sentinel", zone = "Ironweed", hp = 4800, damage = 16, moveSpeed = 8, attackRange = 8, attackCooldown = 1.35, aggroRange = 70, roamRange = 20, spawnWeight = 42, goldReward = 1250, essenceKey = "IronFilament", essenceReward = 50, scale = 1.5, bodyColor = { 74, 84, 90 }, headColor = { 130, 152, 160 } },
 	},
 
 	-- Swords: a separate hotbar weapon ladder for combat. Each is bought with its
 	-- configured gold/diamond/essence mix once the zone is reached, then SHARPENED
-	-- up a per-sword damage ladder. Two per zone are planned; the Meadow, Wild, and
-	-- Mossmire pairs are live.
+	-- up a per-sword damage ladder. All five zone pairs are live; the all-zone
+	-- ultimate remains reserved for the boss-progression pass.
 	SWORDS = {
 		{ key = "meadowCutlass", name = "Meadow Cutlass", zone = "Meadow", desc = "A light blade forged for Meadow pests.", goldCost = 250, diamondCost = 0, attackCooldown = 0.6, reach = 9, scale = 1.0, handleColor = { 108, 78, 46 }, bladeColor = { 180, 214, 150 }, levels = { { damage = 6, cost = 0 }, { damage = 9, cost = 400 }, { damage = 13, cost = 1200 }, { damage = 18, cost = 3000 } } },
 		{ key = "blossomSaber", name = "Blossom Saber", zone = "Meadow", desc = "Heavier Meadow steel that bites deep.", goldCost = 1200, diamondCost = 0, attackCooldown = 0.7, reach = 10, scale = 1.12, handleColor = { 90, 60, 120 }, bladeColor = { 235, 150, 180 }, levels = { { damage = 14, cost = 0 }, { damage = 20, cost = 1500 }, { damage = 28, cost = 4000 }, { damage = 40, cost = 9000 } } },
@@ -443,6 +449,10 @@ local GameConfig = {
 		{ key = "wildwoodCleaver", name = "Wildwood Cleaver", zone = "Wild", desc = "A heavy cleaver forged from Wild Burr and diamonds.", goldCost = 0, diamondCost = 6, essenceKey = "WildBurr", essenceCost = 12, attackCooldown = 0.6, reach = 10.5, scale = 1.24, handleColor = { 70, 50, 34 }, bladeColor = { 174, 194, 150 }, levels = { { damage = 45, cost = 0 }, { damage = 60, cost = 10000 }, { damage = 80, cost = 20000 }, { damage = 105, cost = 40000 } } },
 		{ key = "bogpiercer", name = "Bogpiercer", zone = "Mossmire", desc = "A quick mire-forged blade that channels concentrated spores.", goldCost = 0, diamondCost = 0, essenceKey = "MireSpore", essenceCost = 45, attackCooldown = 0.5, reach = 11, scale = 1.18, handleColor = { 62, 74, 54 }, bladeColor = { 154, 126, 194 }, levels = { { damage = 180, cost = 0 }, { damage = 240, cost = 20000 }, { damage = 320, cost = 40000 }, { damage = 420, cost = 80000 } } },
 		{ key = "mireblade", name = "Mireblade", zone = "Mossmire", desc = "A heavy Mossmire weapon forged from Mire Spore and diamonds.", goldCost = 0, diamondCost = 15, essenceKey = "MireSpore", essenceCost = 70, attackCooldown = 0.5, reach = 11.5, scale = 1.28, handleColor = { 46, 64, 50 }, bladeColor = { 112, 188, 162 }, levels = { { damage = 280, cost = 0 }, { damage = 370, cost = 40000 }, { damage = 490, cost = 80000 }, { damage = 650, cost = 160000 } } },
+		{ key = "thornguardSword", name = "Thornguard Sword", zone = "Thicket", desc = "A guarded thorn-steel blade tempered with Thicket Sap.", goldCost = 0, diamondCost = 0, essenceKey = "ThicketSap", essenceCost = 90, attackCooldown = 0.55, reach = 12, scale = 1.24, handleColor = { 72, 50, 34 }, bladeColor = { 88, 166, 90 }, levels = { { damage = 420, cost = 0 }, { damage = 560, cost = 60000 }, { damage = 740, cost = 120000 }, { damage = 980, cost = 240000 } } },
+		{ key = "bristlebane", name = "Bristlebane", zone = "Thicket", desc = "A brutal Thicket blade forged from sap and diamonds.", goldCost = 0, diamondCost = 25, essenceKey = "ThicketSap", essenceCost = 140, attackCooldown = 0.5, reach = 12.5, scale = 1.34, handleColor = { 58, 42, 30 }, bladeColor = { 142, 194, 112 }, levels = { { damage = 650, cost = 0 }, { damage = 860, cost = 120000 }, { damage = 1140, cost = 240000 }, { damage = 1500, cost = 480000 } } },
+		{ key = "ironrender", name = "Ironrender", zone = "Ironweed", desc = "A dense filament-forged blade built for the final ring.", goldCost = 0, diamondCost = 0, essenceKey = "IronFilament", essenceCost = 160, attackCooldown = 0.5, reach = 13, scale = 1.32, handleColor = { 54, 62, 66 }, bladeColor = { 116, 178, 190 }, levels = { { damage = 1000, cost = 0 }, { damage = 1320, cost = 200000 }, { damage = 1740, cost = 400000 }, { damage = 2300, cost = 800000 } } },
+		{ key = "weepthornGreatblade", name = "Weepthorn Greatblade", zone = "Ironweed", desc = "A massive endgame blade forged from Iron Filament and diamonds.", goldCost = 0, diamondCost = 45, essenceKey = "IronFilament", essenceCost = 240, attackCooldown = 0.55, reach = 14, scale = 1.48, handleColor = { 42, 48, 52 }, bladeColor = { 158, 210, 216 }, levels = { { damage = 1600, cost = 0 }, { damage = 2100, cost = 400000 }, { damage = 2800, cost = 800000 }, { damage = 3700, cost = 1600000 } } },
 	},
 }
 
