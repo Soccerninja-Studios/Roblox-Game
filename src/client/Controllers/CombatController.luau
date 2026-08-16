@@ -346,6 +346,17 @@ function CombatController.Init()
 		end
 	end)
 
+	Remotes.Get("BossDebugResult").OnClientEvent:Connect(function(success, message)
+		local text = tostring(message or "Boss test finished.")
+		if success then
+			print("[BossDebug] " .. text)
+			showBanner("🧪 " .. text, Color3.fromRGB(170, 235, 150), 5)
+		else
+			warn("[BossDebug] " .. text)
+			showBanner("⚠️ " .. text, Color3.fromRGB(255, 170, 110), 6)
+		end
+	end)
+
 	Remotes.Get("BossDefeated").OnClientEvent:Connect(function(result)
 		if type(result) ~= "table" then
 			return
