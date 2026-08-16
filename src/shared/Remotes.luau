@@ -56,6 +56,11 @@ local REMOTE_NAMES = {
 	"PlayerHurt",
 	"ClippingsScattered",
 	"ClippingsRecovered",
+	-- Five-ring bosses
+	"RequestBossState", -- client -> server: request every active boss snapshot
+	"BossState", -- server -> client: boss spawned/updated/defeated
+	"BossDefeated", -- server -> contributing client: authoritative reward summary
+	"SwordSpecial", -- server -> client: confirmed special-sword visual
 }
 
 local Remotes = {}

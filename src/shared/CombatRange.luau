@@ -96,6 +96,16 @@ function CombatRange.IsInSwingBox(char: Model?, worldPos: Vector3): boolean
 	end
 	local rootPart = root :: BasePart
 	local origin = rootPart.Position
+	-- Radial specials do not use the ordinary forward box. Mirror the server's
+	-- true 360-degree radius so lock-on and shift-lock feedback stay accurate.
+	local held = char:FindFirstChildOfClass("Tool")
+	if held and held:GetAttribute("Sword") then
+		local def = StatCalculator.GetSwordDef(held:GetAttribute("SwordKey"))
+		if def and def.special == "whirlwind" then
+			local delta = worldPos - origin
+			return Vector3.new(delta.X, 0, delta.Z).Magnitude <= (def.specialRadius or reach)
+		end
+	end
 	local look = rootPart.CFrame.LookVector
 	local flatLook = Vector3.new(look.X, 0, look.Z)
 	if flatLook.Magnitude < 0.001 then

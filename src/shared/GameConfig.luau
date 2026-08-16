@@ -384,8 +384,8 @@ local GameConfig = {
 	},
 
 	-- =========================================================================
-	-- COMBAT (Phase 3: swords + monsters). All five zones now have their common
-	-- monsters, per-zone essence, and two-sword progression pair.
+	-- COMBAT (Phase 3: swords + monsters + bosses). All five zones have their
+	-- common combat pair, boss encounter, per-zone essence, and sword progression.
 	-- =========================================================================
 
 	-- Player health, scaled by the toughest zone you have REACHED. Design goal: HP
@@ -438,10 +438,81 @@ local GameConfig = {
 		{ key = "ironcladSentinel", name = "Ironclad Sentinel", zone = "Ironweed", hp = 4800, damage = 16, moveSpeed = 8, attackRange = 8, attackCooldown = 1.35, aggroRange = 70, roamRange = 20, spawnWeight = 42, goldReward = 1250, essenceKey = "IronFilament", essenceReward = 50, scale = 1.5, bodyColor = { 74, 84, 90 }, headColor = { 130, 152, 160 } },
 	},
 
+	-- Bosses awaken when the final tile in their ring is cleared. Every attack is
+	-- telegraphed before server-side damage is applied. The same definitions power
+	-- spawning, health UI, rewards, quest validation, and the combat state machine.
+	BOSS_SYSTEM = {
+		respawnSeconds = 60,
+		hudRange = 260,
+	},
+
+	BOSSES = {
+		{
+			key = "dandelionTitan", name = "Dandelion Titan", zone = "Meadow", visual = "flower",
+			hp = 420, damage = 1, moveSpeed = 6.5, attackRange = 8, attackCooldown = 1.45,
+			aggroRange = 80, resetDelay = 10, scale = 2.15, globalAbilityCooldown = 2.3,
+			bodyColor = { 116, 178, 72 }, headColor = { 214, 174, 72 }, accentColor = { 250, 218, 92 },
+			goldReward = 400, diamondReward = 4, essenceKey = "MeadowPollen", essenceReward = 25,
+			abilities = {
+				{ kind = "summon", label = "Seedling Call", count = 2, windup = 0.7, cooldown = 10 },
+				{ kind = "spikes", label = "Dandelion Burst", pattern = "ring", count = 6, ringRadius = 11, radius = 3, height = 6, damage = 1, windup = 1.2, cooldown = 8 },
+				{ kind = "slam", label = "Pollen Slam", radius = 10, height = 3, damage = 1, windup = 1.05, cooldown = 7 },
+			},
+		},
+		{
+			key = "brambleBroodmother", name = "Bramble Broodmother", zone = "Wild", visual = "broodmother",
+			hp = 2200, damage = 3, moveSpeed = 7.5, attackRange = 8.5, attackCooldown = 1.3,
+			aggroRange = 88, resetDelay = 10, scale = 2.25, globalAbilityCooldown = 2.2,
+			bodyColor = { 88, 62, 42 }, headColor = { 116, 156, 70 }, accentColor = { 174, 116, 194 },
+			goldReward = 1800, diamondReward = 9, essenceKey = "WildBurr", essenceReward = 45,
+			abilities = {
+				{ kind = "summon", label = "Hatch the Brood", count = 3, windup = 0.65, cooldown = 9 },
+				{ kind = "spikes", label = "Bramble Trail", pattern = "line", count = 6, spacing = 6, radius = 3.3, height = 7, damage = 2, windup = 1.05, cooldown = 7.5 },
+				{ kind = "charge", label = "Broodmother Charge", width = 8, maxDistance = 38, damage = 3, windup = 0.9, duration = 0.5, cooldown = 8.5 },
+			},
+		},
+		{
+			key = "mirequeen", name = "Mirequeen", zone = "Mossmire", visual = "mirequeen",
+			hp = 9000, damage = 6, moveSpeed = 7, attackRange = 9, attackCooldown = 1.35,
+			aggroRange = 94, resetDelay = 11, scale = 2.45, globalAbilityCooldown = 2.1,
+			bodyColor = { 54, 90, 82 }, headColor = { 130, 110, 170 }, accentColor = { 174, 126, 214 }, poolColor = { 76, 142, 106 },
+			goldReward = 6500, diamondReward = 18, essenceKey = "MireSpore", essenceReward = 90,
+			abilities = {
+				{ kind = "summon", label = "Mireborn Call", count = 3, windup = 0.7, cooldown = 10 },
+				{ kind = "pools", label = "Spore Bloom", count = 3, radius = 5, spread = 10, damage = 2, windup = 1.1, duration = 5, tickRate = 1, cooldown = 8 },
+				{ kind = "slam", label = "Royal Mirewave", radius = 13, height = 4, damage = 5, windup = 1.2, cooldown = 9 },
+			},
+		},
+		{
+			key = "elderVinewrath", name = "Elder Vinewrath", zone = "Thicket", visual = "vine",
+			hp = 22000, damage = 11, moveSpeed = 7.5, attackRange = 9.5, attackCooldown = 1.25,
+			aggroRange = 100, resetDelay = 11, scale = 2.65, globalAbilityCooldown = 2.0,
+			bodyColor = { 70, 88, 46 }, headColor = { 94, 140, 64 }, accentColor = { 88, 182, 92 },
+			goldReward = 20000, diamondReward = 38, essenceKey = "ThicketSap", essenceReward = 160,
+			abilities = {
+				{ kind = "summon", label = "Ancient Growth", count = 4, windup = 0.65, cooldown = 10 },
+				{ kind = "spikes", label = "Root Prison", pattern = "ring", count = 8, ringRadius = 12, radius = 3.5, height = 10, damage = 5, windup = 1.05, cooldown = 7 },
+				{ kind = "spikes", label = "Vine Rupture", pattern = "line", count = 7, spacing = 6.5, radius = 3.5, height = 9, damage = 6, windup = 1.0, cooldown = 8.5 },
+			},
+		},
+		{
+			key = "ironweedKing", name = "The Ironweed King", zone = "Ironweed", visual = "ironking",
+			hp = 60000, damage = 18, moveSpeed = 7, attackRange = 10, attackCooldown = 1.2,
+			aggroRange = 108, resetDelay = 12, scale = 2.85, globalAbilityCooldown = 1.9,
+			bodyColor = { 68, 76, 82 }, headColor = { 104, 132, 138 }, accentColor = { 144, 210, 218 },
+			goldReward = 60000, diamondReward = 75, essenceKey = "IronFilament", essenceReward = 300,
+			abilities = {
+				{ kind = "spikes", label = "Royal Ironline", pattern = "line", count = 8, spacing = 7, radius = 3.8, height = 11, damage = 8, windup = 0.95, cooldown = 7 },
+				{ kind = "slam", label = "King's Decree", radius = 15, height = 5, damage = 12, windup = 1.15, cooldown = 8.5 },
+				{ kind = "armor", label = "Iron Dominion", reduction = 0.55, count = 4, windup = 0.65, duration = 5, cooldown = 12 },
+			},
+		},
+	},
+
 	-- Swords: a separate hotbar weapon ladder for combat. Each is bought with its
 	-- configured gold/diamond/essence mix once the zone is reached, then SHARPENED
-	-- up a per-sword damage ladder. All five zone pairs are live; the all-zone
-	-- ultimate remains reserved for the boss-progression pass.
+	-- up a per-sword damage ladder. The all-zone Kingsedge unlocks only after every
+	-- configured ring boss has been defeated at least once.
 	SWORDS = {
 		{ key = "meadowCutlass", name = "Meadow Cutlass", zone = "Meadow", desc = "A light blade forged for Meadow pests.", goldCost = 250, diamondCost = 0, attackCooldown = 0.6, reach = 9, scale = 1.0, handleColor = { 108, 78, 46 }, bladeColor = { 180, 214, 150 }, levels = { { damage = 6, cost = 0 }, { damage = 9, cost = 400 }, { damage = 13, cost = 1200 }, { damage = 18, cost = 3000 } } },
 		{ key = "blossomSaber", name = "Blossom Saber", zone = "Meadow", desc = "Heavier Meadow steel that bites deep.", goldCost = 1200, diamondCost = 0, attackCooldown = 0.7, reach = 10, scale = 1.12, handleColor = { 90, 60, 120 }, bladeColor = { 235, 150, 180 }, levels = { { damage = 14, cost = 0 }, { damage = 20, cost = 1500 }, { damage = 28, cost = 4000 }, { damage = 40, cost = 9000 } } },
@@ -453,6 +524,7 @@ local GameConfig = {
 		{ key = "bristlebane", name = "Bristlebane", zone = "Thicket", desc = "A brutal Thicket blade forged from sap and diamonds.", goldCost = 0, diamondCost = 25, essenceKey = "ThicketSap", essenceCost = 140, attackCooldown = 0.5, reach = 12.5, scale = 1.34, handleColor = { 58, 42, 30 }, bladeColor = { 142, 194, 112 }, levels = { { damage = 650, cost = 0 }, { damage = 860, cost = 120000 }, { damage = 1140, cost = 240000 }, { damage = 1500, cost = 480000 } } },
 		{ key = "ironrender", name = "Ironrender", zone = "Ironweed", desc = "A dense filament-forged blade built for the final ring.", goldCost = 0, diamondCost = 0, essenceKey = "IronFilament", essenceCost = 160, attackCooldown = 0.5, reach = 13, scale = 1.32, handleColor = { 54, 62, 66 }, bladeColor = { 116, 178, 190 }, levels = { { damage = 1000, cost = 0 }, { damage = 1320, cost = 200000 }, { damage = 1740, cost = 400000 }, { damage = 2300, cost = 800000 } } },
 		{ key = "weepthornGreatblade", name = "Weepthorn Greatblade", zone = "Ironweed", desc = "A massive endgame blade forged from Iron Filament and diamonds.", goldCost = 0, diamondCost = 45, essenceKey = "IronFilament", essenceCost = 240, attackCooldown = 0.55, reach = 14, scale = 1.48, handleColor = { 42, 48, 52 }, bladeColor = { 158, 210, 216 }, levels = { { damage = 1600, cost = 0 }, { damage = 2100, cost = 400000 }, { damage = 2800, cost = 800000 }, { damage = 3700, cost = 1600000 } } },
+		{ key = "kingsedge", name = "Kingsedge", zone = "All", desc = "The all-ring blade. Every swing is a true-damage whirlwind.", goldCost = 0, diamondCost = 200, requiresAllBosses = true, requirementText = "Defeat all five ring bosses", special = "whirlwind", specialRadius = 18, attackCooldown = 0.5, reach = 16, scale = 1.62, handleColor = { 54, 82, 60 }, bladeColor = { 224, 246, 184 }, levels = { { damage = 2800, cost = 0 }, { damage = 3900, cost = 800000 }, { damage = 5300, cost = 1600000 }, { damage = 7000, cost = 3200000 } } },
 	},
 }
 
