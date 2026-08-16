@@ -61,24 +61,53 @@ local REMOTE_NAMES = {
 	"BossState", -- server -> client: boss spawned/updated/defeated
 	"BossDefeated", -- server -> contributing client: authoritative reward summary
 	"SwordSpecial", -- server -> client: confirmed special-sword visual
+	-- Studio-only boss testing. The server rejects this outside Studio.
+	"DebugSpawnBoss", -- client -> server: request a focused Studio boss spawn
+	"BossDebugResult", -- server -> client: success/error feedback for that request
 }
 
 local Remotes = {}
+local known: { [string]: boolean } = {}
+for _, name in REMOTE_NAMES do
+	known[name] = true
+end
 
-if RunService:IsServer() and not ReplicatedStorage:FindFirstChild("Remotes") then
-	local folder = Instance.new("Folder")
-	folder.Name = "Remotes"
-	for _, name in REMOTE_NAMES do
-		local remote = Instance.new("RemoteEvent")
-		remote.Name = name
-		remote.Parent = folder
+-- Do not only create events when the folder is absent. Studio can preserve an
+-- older/partial Remotes folder during syncs, which previously made every new
+-- Remotes.Get call wait forever. The server now reconciles every event on boot.
+if RunService:IsServer() then
+	local existing = ReplicatedStorage:FindFirstChild("Remotes")
+	local folder: Folder
+	if existing and existing:IsA("Folder") then
+		folder = existing
+	else
+		if existing then
+			existing:Destroy()
+		end
+		folder = Instance.new("Folder")
+		folder.Name = "Remotes"
+		folder.Parent = ReplicatedStorage
 	end
-	folder.Parent = ReplicatedStorage
+	for _, name in REMOTE_NAMES do
+		local child = folder:FindFirstChild(name)
+		if child and not child:IsA("RemoteEvent") then
+			child:Destroy()
+			child = nil
+		end
+		if not child then
+			local remote = Instance.new("RemoteEvent")
+			remote.Name = name
+			remote.Parent = folder
+		end
+	end
 end
 
 function Remotes.Get(name: string): RemoteEvent
+	assert(known[name], string.format("[Remotes] Unknown remote requested: %s", tostring(name)))
 	local folder = ReplicatedStorage:WaitForChild("Remotes")
-	return folder:WaitForChild(name) :: RemoteEvent
+	local remote = folder:WaitForChild(name)
+	assert(remote:IsA("RemoteEvent"), string.format("[Remotes] %s is not a RemoteEvent", name))
+	return remote
 end
 
 return Remotes
