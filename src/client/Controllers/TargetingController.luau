@@ -7,8 +7,8 @@
 --   * the mouse cursor is hidden and pinned to center, just like shift-lock.
 --
 -- You can still ZOOM in/out with the scroll wheel while locked on -- the camera
--- distance follows your zoom, but the over-the-shoulder proportions (the 4-stud
--- right / 2-stud up offset) stay fixed regardless of zoom.
+-- distance follows your zoom, but the over-the-shoulder proportions (2 studs
+-- right with no vertical lift) stay fixed regardless of zoom.
 --
 -- The reticle is the shared shift-lock crosshair: it shows WHITE while the target
 -- is out of sword range and turns RED when the target is close enough to hit.
@@ -44,7 +44,7 @@ local PITCH_REF_DIST = 18 -- at/below this distance (studs) the tilt is the full
 local ZOOM_STEP = 3 -- studs of zoom per scroll-wheel notch while locked on
 -- Same over-the-shoulder framing as ShiftLockController (X = right, Y = up, camera
 -- space). Kept fixed in studs so the proportions stay the same at any zoom.
-local SHOULDER_OFFSET = Vector3.new(4, 2, 0)
+local SHOULDER_OFFSET = Vector3.new(2, 0, 0)
 local WHITE = Color3.new(1, 1, 1)
 local RED = Color3.fromRGB(220, 40, 40)
 
@@ -340,7 +340,7 @@ local function onStep()
 	local horizDist = (Vector3.new(aim.X, 0, aim.Z) - Vector3.new(backXZ.X, 0, backXZ.Z)).Magnitude
 	-- Raise the camera so the view onto the enemy is a fixed downward tilt (never
 	-- up). Capped at PITCH_REF_DIST so far targets tilt gently instead of the camera
-	-- flying up; zoom slides the camera along this angle, keeping the 4/2 shoulder
+	-- flying up; zoom slides the camera along this angle, keeping the 2/0 shoulder
 	-- offset fixed.
 	local rise = math.min(horizDist, PITCH_REF_DIST) * math.tan(math.rad(CAM_PITCH))
 	local camPos = Vector3.new(backXZ.X, aim.Y + rise, backXZ.Z)
