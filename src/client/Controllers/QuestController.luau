@@ -223,9 +223,10 @@ local function build()
 	toastHolder = Instance.new("Frame")
 	toastHolder.Name = "Toasts"
 	toastHolder.AnchorPoint = Vector2.new(0.5, 0)
-	toastHolder.Position = UDim2.new(0.5, 0, 0, 96)
+	toastHolder.Position = UDim2.new(0.5, 0, 0, 190)
 	toastHolder.Size = UDim2.new(0, 420, 0, 0)
 	toastHolder.BackgroundTransparency = 1
+	toastHolder.ZIndex = 40
 	toastHolder.Parent = gui
 	local toastLayout = Instance.new("UIListLayout")
 	toastLayout.Padding = UDim.new(0, 6)
@@ -411,6 +412,7 @@ local function showToast(text: string, accent: Color3)
 	toast.Size = UDim2.new(1, 0, 0, 40)
 	toast.BackgroundColor3 = Color3.fromRGB(38, 46, 36)
 	toast.BackgroundTransparency = 0.08
+	toast.ZIndex = 40
 	toast.Parent = toastHolder
 	corner(toast, 10)
 	stroke(toast, 2, accent, 0.2)
@@ -424,6 +426,7 @@ local function showToast(text: string, accent: Color3)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextSize = 14
 	label.TextTruncate = Enum.TextTruncate.AtEnd
+	label.ZIndex = 41
 	label.Parent = toast
 	task.delay(3, function()
 		local tween = TweenService:Create(toast, TweenInfo.new(0.4), { BackgroundTransparency = 1 })
@@ -478,6 +481,9 @@ function QuestController.Start()
 			end
 			if (payload.diamonds or 0) > 0 then
 				table.insert(bits, formatNumber(payload.diamonds) .. " \u{1F48E}")
+			end
+			if (payload.essence or 0) > 0 and payload.essenceType and payload.essenceType ~= "" then
+				table.insert(bits, formatNumber(payload.essence) .. " " .. payload.essenceType)
 			end
 			local suffix = if #bits > 0 then " (+" .. table.concat(bits, ", ") .. ")" else ""
 			showToast("\u{1F389} Reward claimed" .. suffix, GREEN)

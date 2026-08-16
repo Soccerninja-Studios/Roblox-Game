@@ -73,7 +73,7 @@ local function buildGui()
 
 	banner = Instance.new("TextLabel")
 	banner.AnchorPoint = Vector2.new(0.5, 0)
-	banner.Position = UDim2.new(0.5, 0, 0, 90)
+	banner.Position = UDim2.new(0.5, 0, 0, 140)
 	banner.Size = UDim2.fromOffset(560, 40)
 	banner.BackgroundTransparency = 1
 	banner.Font = Enum.Font.FredokaOne
@@ -177,8 +177,16 @@ function CombatController.Init()
 		showBanner("\u{1F33F} Recovered " .. tostring(amount) .. " clippings!", Color3.fromRGB(150, 235, 120), 3)
 	end)
 
-	Remotes.Get("MonsterDefeated").OnClientEvent:Connect(function(name, gold)
-		showBanner("\u{2694}\u{FE0F} Defeated " .. tostring(name) .. "  +" .. tostring(gold) .. "g", Color3.fromRGB(255, 235, 120), 2)
+	Remotes.Get("MonsterDefeated").OnClientEvent:Connect(function(name, gold, essenceName, essenceAmount)
+		local rewards = {}
+		if (gold or 0) > 0 then
+			table.insert(rewards, "+" .. tostring(gold) .. "g")
+		end
+		if (essenceAmount or 0) > 0 and essenceName and essenceName ~= "" then
+			table.insert(rewards, "+" .. tostring(essenceAmount) .. " " .. tostring(essenceName))
+		end
+		local suffix = if #rewards > 0 then "  " .. table.concat(rewards, "  ") else ""
+		showBanner("\u{2694}\u{FE0F} Defeated " .. tostring(name) .. suffix, Color3.fromRGB(255, 235, 120), 2.5)
 	end)
 end
 

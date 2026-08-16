@@ -52,7 +52,7 @@ local SKILL_META: { [string]: { icon: string, name: string, desc: string } } = {
 }
 
 -- State -----------------------------------------------------------------------
-local latestState: any = { clippings = 0, gold = 0, diamonds = 0, bagCapacity = 25, toolTier = 1, skills = {} }
+local latestState: any = { clippings = 0, gold = 0, diamonds = 0, essence = {}, bagCapacity = 25, toolTier = 1, skills = {} }
 local isOpen = false
 local openedByZone = false
 local cardUpdaters: { (state: any) -> () } = {}
@@ -61,6 +61,19 @@ local bagCountLabel: TextLabel
 local bagFill: Frame
 local goldLabel: TextLabel
 local diamondLabel: TextLabel
+local essenceButton: TextButton
+local essenceDot: Frame
+local essenceLabel: TextLabel
+local activeEssenceIndex = 1
+local previousEssence: { [string]: number } = {}
+local essenceOrder: { string } = {}
+for _, zone in ipairs(GameConfig.ZONES or {}) do
+	for key, meta in GameConfig.ESSENCE or {} do
+		if meta.zone == zone.key then
+			table.insert(essenceOrder, key)
+		end
+	end
+end
 -- Counters that are mid roll-up. While a label is in here, updateUI leaves its
 -- text alone so the server state push cannot snap it straight to the total.
 local countingUp: { [TextLabel]: boolean } = {}
@@ -203,6 +216,28 @@ local function buildCoinIcon(diameter: number, baseZ: number): GuiObject
 	shine.Parent = coin
 
 	return coin
+end
+
+local function renderEssenceCounter(values: { [string]: number }?)
+	if not essenceButton or #essenceOrder == 0 then
+		return
+	end
+	local balances = values or {}
+	for index, key in ipairs(essenceOrder) do
+		local amount = balances[key] or 0
+		if amount > (previousEssence[key] or 0) then
+			activeEssenceIndex = index -- jump to the essence that was just earned
+		end
+	end
+	activeEssenceIndex = math.clamp(activeEssenceIndex, 1, #essenceOrder)
+	local key = essenceOrder[activeEssenceIndex]
+	local meta = GameConfig.ESSENCE[key]
+	local rgb = (meta and meta.color) or { 116, 176, 92 }
+	essenceDot.BackgroundColor3 = Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+	essenceLabel.Text = (meta and meta.name or key) .. "  " .. formatNumber(balances[key] or 0)
+	for _, knownKey in ipairs(essenceOrder) do
+		previousEssence[knownKey] = balances[knownKey] or 0
+	end
 end
 
 local function buildCurrency(gui: ScreenGui)
@@ -368,6 +403,66 @@ local function buildCurrency(gui: ScreenGui)
 	-- gold: right edge 135px left of center; diamond: left edge 135px right of center.
 	goldLabel = makeCounter("COIN", GOLD, 1, -135)
 	diamondLabel = makeCounter(Assets.Diamond ~= "" and "DIAMOND" or "\u{1F48E}", DIAMOND, 0, 135)
+
+	-- Essence is per-zone, so one compact counter displays the current currency and
+	-- cycles through the others when clicked. Earning a new type selects it
+	-- automatically; this scales to all five zones without crowding the HUD.
+	essenceButton = Instance.new("TextButton")
+	essenceButton.Name = "EssenceCounter"
+	essenceButton.AnchorPoint = Vector2.new(0.5, 0)
+	essenceButton.Position = UDim2.new(0.5, 0, 0, 84)
+	essenceButton.Size = UDim2.fromOffset(230, 44)
+	essenceButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	essenceButton.BackgroundTransparency = 0.06
+	essenceButton.BorderSizePixel = 0
+	essenceButton.Text = ""
+	essenceButton.AutoButtonColor = true
+	essenceButton.ZIndex = 5
+	corner(essenceButton, 12)
+	stroke(essenceButton, 2, Color3.fromRGB(116, 176, 92), 0.28)
+	essenceButton.Parent = gui
+
+	essenceDot = Instance.new("Frame")
+	essenceDot.Name = "EssenceColor"
+	essenceDot.AnchorPoint = Vector2.new(0.5, 0.5)
+	essenceDot.Position = UDim2.new(0, 23, 0.5, 0)
+	essenceDot.Size = UDim2.fromOffset(18, 18)
+	essenceDot.BorderSizePixel = 0
+	essenceDot.ZIndex = 6
+	corner(essenceDot, 9)
+	essenceDot.Parent = essenceButton
+
+	essenceLabel = Instance.new("TextLabel")
+	essenceLabel.BackgroundTransparency = 1
+	essenceLabel.Position = UDim2.fromOffset(42, 0)
+	essenceLabel.Size = UDim2.new(1, -62, 1, 0)
+	essenceLabel.Font = Enum.Font.GothamBold
+	essenceLabel.TextColor3 = INK
+	essenceLabel.TextSize = 14
+	essenceLabel.TextXAlignment = Enum.TextXAlignment.Left
+	essenceLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	essenceLabel.ZIndex = 6
+	essenceLabel.Parent = essenceButton
+
+	local cycle = Instance.new("TextLabel")
+	cycle.BackgroundTransparency = 1
+	cycle.AnchorPoint = Vector2.new(1, 0.5)
+	cycle.Position = UDim2.new(1, -10, 0.5, 0)
+	cycle.Size = UDim2.fromOffset(18, 22)
+	cycle.Font = Enum.Font.GothamBold
+	cycle.Text = "\u{203A}"
+	cycle.TextColor3 = SUBTLE
+	cycle.TextSize = 20
+	cycle.ZIndex = 6
+	cycle.Parent = essenceButton
+
+	essenceButton.Activated:Connect(function()
+		if #essenceOrder > 1 then
+			activeEssenceIndex = (activeEssenceIndex % #essenceOrder) + 1
+			renderEssenceCounter(latestState.essence or {})
+		end
+	end)
+	renderEssenceCounter(latestState.essence or {})
 end
 
 -- Right-side round action button ----------------------------------------------
@@ -1097,6 +1192,7 @@ local function updateUI(state: any)
 	if diamondLabel and not countingUp[diamondLabel] then
 		diamondLabel.Text = formatNumber(state.diamonds or 0)
 	end
+	renderEssenceCounter(state.essence or {})
 	if bagPill and lastShown >= 0 and clippings ~= lastShown then
 		-- little pop when the bag amount changes
 		bagPill.Size = UDim2.fromOffset(236, 54)

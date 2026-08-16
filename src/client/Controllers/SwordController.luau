@@ -156,6 +156,9 @@ local function configSnapshot(): any
 			desc = def.desc,
 			goldCost = def.goldCost or 0,
 			diamondCost = def.diamondCost or 0,
+			essenceKey = def.essenceKey,
+			essenceName = if def.essenceKey and GameConfig.ESSENCE[def.essenceKey] then GameConfig.ESSENCE[def.essenceKey].name else nil,
+			essenceCost = def.essenceCost or 0,
 			damage = def.levels[1].damage,
 			level = 1,
 			maxLevel = #def.levels,
@@ -187,6 +190,20 @@ local function makeButton(parent: Instance, y: number): TextButton
 	corner(btn, 9)
 	btn.Parent = parent
 	return btn
+end
+
+local function purchasePriceText(sword: any): string
+	local parts = {}
+	if (sword.goldCost or 0) > 0 then
+		table.insert(parts, formatNumber(sword.goldCost) .. "g")
+	end
+	if (sword.diamondCost or 0) > 0 then
+		table.insert(parts, formatNumber(sword.diamondCost) .. "\u{1F48E}")
+	end
+	if (sword.essenceCost or 0) > 0 then
+		table.insert(parts, formatNumber(sword.essenceCost) .. " " .. (sword.essenceName or "essence"))
+	end
+	return if #parts > 0 then table.concat(parts, " + ") else "Free"
 end
 
 local function buildCard(sword: any, order: number, currency: any)
@@ -286,10 +303,14 @@ local function buildCard(sword: any, order: number, currency: any)
 		main.AutoButtonColor = false
 		main.Active = false
 	else
-		local affordable = (currency.gold or 0) >= (sword.goldCost or 0) and (currency.diamonds or 0) >= (sword.diamondCost or 0)
+		local essenceBalance = if sword.essenceKey then ((currency.essence and currency.essence[sword.essenceKey]) or 0) else 0
+		local affordable = (currency.gold or 0) >= (sword.goldCost or 0)
+			and (currency.diamonds or 0) >= (sword.diamondCost or 0)
+			and essenceBalance >= (sword.essenceCost or 0)
 		main.BackgroundColor3 = if affordable then GOLD else LOCKED
 		main.TextColor3 = if affordable then INK else WHITE
-		main.Text = formatNumber(sword.goldCost or 0) .. "g"
+		main.TextSize = if (sword.essenceCost or 0) > 0 then 10 else 13
+		main.Text = purchasePriceText(sword)
 		main.Activated:Connect(function()
 			Remotes.Get("PurchaseSword"):FireServer(sword.key)
 		end)
@@ -353,7 +374,7 @@ local function render()
 		end
 	end
 	local snapshot = if latest and latest.swords then latest else configSnapshot()
-	local currency = { gold = snapshot.gold or 0, diamonds = snapshot.diamonds or 0 }
+	local currency = { gold = snapshot.gold or 0, diamonds = snapshot.diamonds or 0, essence = snapshot.essence or {} }
 
 	local ess = essenceLine()
 	if ess ~= "" then
