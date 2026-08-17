@@ -157,15 +157,42 @@ end
 -- Monster model + brain
 -- =========================================================================
 
-local function groundY(pos: Vector3, fallback: number): number
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = { monsterFolder }
-	local hit = Workspace:Raycast(pos + Vector3.new(0, 8, 0), Vector3.new(0, -60, 0), params)
-	if hit then
-		return hit.Position.Y
+-- Project a combat spawn onto real collidable ground. Raycasts used to stop on
+-- GrassTile blades (and other non-collidable effects), placing monsters several
+-- studs in the air. Recast past those decorations and exclude characters and
+-- existing monsters so every common enemy and boss minion shares the same fix.
+local function groundPosition(pos: Vector3): Vector3
+	local exclusions: { Instance } = {}
+	if monsterFolder then
+		table.insert(exclusions, monsterFolder)
 	end
-	return fallback
+	for _, player in Players:GetPlayers() do
+		if player.Character then
+			table.insert(exclusions, player.Character)
+		end
+	end
+
+	for _ = 1, 16 do
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = exclusions
+		local hit = Workspace:Raycast(pos + Vector3.new(0, 64, 0), Vector3.new(0, -256, 0), params)
+		if not hit then
+			break
+		end
+		local instance = hit.Instance
+		local ignore = instance:IsA("BasePart")
+			and (not instance.CanCollide or instance.Name == "GrassTile" or instance.Name == "GrassBarrier")
+		if not ignore then
+			return hit.Position
+		end
+		table.insert(exclusions, instance)
+	end
+	return pos
+end
+
+function MonsterService.GetGroundPosition(pos: Vector3): Vector3
+	return groundPosition(pos)
 end
 
 local function updateNameplate(model: Model)
@@ -284,8 +311,8 @@ local function buildMonster(def, cframe: CFrame): Model
 	model:SetAttribute("MaxHealth", def.hp)
 	model:SetAttribute("Health", def.hp)
 
-	local gy = groundY(cframe.Position, cframe.Position.Y)
-	root.CFrame = CFrame.new(cframe.Position.X, gy + (1 * scale) + 0.5, cframe.Position.Z)
+	local ground = groundPosition(cframe.Position)
+	root.CFrame = CFrame.new(ground.X, ground.Y + (1 * scale) + 0.5, ground.Z)
 	return model
 end
 
@@ -501,14 +528,14 @@ end
 -- Spawning (pity system)
 -- =========================================================================
 
-function MonsterService.Spawn(zoneKey: string, nearPos: Vector3)
+function MonsterService.Spawn(zoneKey: string, nearPos: Vector3, options: any?): Model?
 	local cfg = GameConfig.MONSTER_SPAWN
 	if (aliveByZone[zoneKey] or 0) >= (cfg.maxAlivePerZone or 12) then
-		return
+		return nil
 	end
 	local pool = monstersByZone[zoneKey]
 	if not pool or #pool == 0 then
-		return
+		return nil
 	end
 
 	local total = 0
@@ -526,9 +553,17 @@ function MonsterService.Spawn(zoneKey: string, nearPos: Vector3)
 	end
 
 	local ang = math.random() * math.pi * 2
-	local spawnPos = nearPos + Vector3.new(math.cos(ang) * 5, 0, math.sin(ang) * 5)
+	local offsetRadius = 5
+	if options and type(options.spawnRadius) == "number" then
+		offsetRadius = math.max(0, options.spawnRadius)
+	end
+	local spawnPos = nearPos + Vector3.new(math.cos(ang) * offsetRadius, 0, math.sin(ang) * offsetRadius)
 	local model = buildMonster(def, CFrame.new(spawnPos))
 	model:SetAttribute("Zone", zoneKey)
+	if options and type(options.summonerKey) == "string" then
+		model:SetAttribute("BossSummoned", true)
+		model:SetAttribute("SummonedByBossKey", options.summonerKey)
+	end
 	model.Parent = monsterFolder
 	aliveByZone[zoneKey] = (aliveByZone[zoneKey] or 0) + 1
 
@@ -537,6 +572,7 @@ function MonsterService.Spawn(zoneKey: string, nearPos: Vector3)
 		runMonster(model, def, originPos)
 		aliveByZone[zoneKey] = math.max(0, (aliveByZone[zoneKey] or 1) - 1)
 	end)
+	return model
 end
 
 -- Called by GrassService when a player fully clears a tile. Runs the pity roll:

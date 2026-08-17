@@ -159,10 +159,18 @@ local function reportTileCleared(player: Player, tile: BasePart, typeName: strin
 	local remaining = math.max(0, (remainingByZone[typeName] or 1) - 1)
 	remainingByZone[typeName] = remaining
 	local zoneIndex = GrassService.GetGrassZoneIndex(typeName)
+	-- A grass tile's Position is the center of its blade, several studs above the
+	-- actual ring floor. Use the stored surface CFrame so combat spawns begin from
+	-- the real ground even before the cleared blade has disappeared.
+	local spawnPosition = tile.Position - tile.CFrame.UpVector * (tile.Size.Y * 0.5)
+	local baseCFrame = tile:GetAttribute("BaseCFrame")
+	if typeof(baseCFrame) == "CFrame" then
+		spawnPosition = (baseCFrame :: CFrame).Position
+	end
 	if remaining <= 0 and BossService then
-		BossService.OnZoneCleared(player, tile.Position, zoneIndex)
+		BossService.OnZoneCleared(player, spawnPosition, zoneIndex)
 	elseif MonsterService then
-		MonsterService.OnTileCleared(player, tile.Position, zoneIndex)
+		MonsterService.OnTileCleared(player, spawnPosition, zoneIndex)
 	end
 end
 

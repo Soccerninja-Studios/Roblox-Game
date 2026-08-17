@@ -35,6 +35,7 @@ local spawnOrigins: { [string]: Vector3 } = {}
 local spawnOwners: { [string]: Player } = {}
 local contributors: { [Model]: { [Player]: boolean } } = {}
 local respawnGeneration: { [string]: number } = {}
+local summonLastAt: { [Model]: number } = {}
 
 local spawnBoss: (string, Vector3, Player?) -> Model?
 
@@ -43,12 +44,8 @@ local function c3(rgb: { number }): Color3
 end
 
 local function groundPoint(pos: Vector3): Vector3
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = { monsterFolder }
-	local hit = Workspace:Raycast(pos + Vector3.new(0, 18, 0), Vector3.new(0, -100, 0), params)
-	if hit then
-		return hit.Position
+	if MonsterService and typeof(MonsterService.GetGroundPosition) == "function" then
+		return MonsterService.GetGroundPosition(pos)
 	end
 	return pos
 end
@@ -431,21 +428,84 @@ local function raiseSpike(point: Vector3, radius: number, height: number, color:
 	Debris:AddItem(spike, 0.9)
 end
 
+local function countBossMinions(bossKey: string): number
+	if not monsterFolder then
+		return 0
+	end
+	local count = 0
+	for _, child in monsterFolder:GetChildren() do
+		if child:IsA("Model")
+			and child:GetAttribute("SummonedByBossKey") == bossKey
+			and not child:GetAttribute("Dead")
+		then
+			count += 1
+		end
+	end
+	return count
+end
+
+local function clearBossMinions(bossKey: string)
+	if not monsterFolder then
+		return
+	end
+	for _, child in monsterFolder:GetChildren() do
+		if child:IsA("Model") and child:GetAttribute("SummonedByBossKey") == bossKey then
+			child:Destroy()
+		end
+	end
+end
+
 local function castSummon(model: Model, def: any, ability: any)
+	local root = model.PrimaryPart
+	if not root or not root.Parent then
+		return
+	end
+	local system = GameConfig.BOSS_SYSTEM or {}
+	local maxAlive = ability.maxAlive or system.maxSummonsPerBoss or 4
+	local availableSlots = math.max(0, maxAlive - countBossMinions(def.key))
+	if availableSlots <= 0 then
+		return
+	end
+	local cooldown = ability.summonCooldown or ability.cooldown or system.summonCooldown or 18
+	local now = os.clock()
+	if now - (summonLastAt[model] or -math.huge) < cooldown then
+		return
+	end
+	local playerRange = ability.playerRange or system.summonPlayerRange or 85
+	playerRange = math.min(playerRange, def.aggroRange or playerRange)
+	local nearbyPlayer = nearestTarget(root.Position, playerRange)
+	if not nearbyPlayer then
+		return -- never summon while every living player is outside the encounter
+	end
+
+	local count = math.min(ability.count or 2, availableSlots)
+	local windup = ability.windup or 1.6
+	local spawnRadius = ability.spawnRadius or 8
+	local indicatorRadius = ability.indicatorRadius or system.summonIndicatorRadius or 2.8
+	local angleOffset = math.random() * math.pi * 2
+	local points: { Vector3 } = {}
+	summonLastAt[model] = now -- reserve the cooldown before the warning begins
 	setPhase(model, def, ability.label or "Calling reinforcements")
-	task.wait(ability.windup or 0.65)
+	for i = 1, count do
+		local angle = angleOffset + ((i - 1) / math.max(1, count)) * math.pi * 2
+		local point = root.Position + Vector3.new(math.cos(angle) * spawnRadius, 0, math.sin(angle) * spawnRadius)
+		point = groundPoint(point)
+		table.insert(points, point)
+		makeTelegraph(point, indicatorRadius, Color3.fromRGB(255, 60, 55), windup)
+	end
+	task.wait(windup)
 	if not model.Parent or model:GetAttribute("Dead") then
 		return
 	end
-	local root = model.PrimaryPart
-	if not root then
-		return
+	local playerStillNearby = nearestTarget(root.Position, playerRange)
+	if not playerStillNearby then
+		return -- the warning completes, but no minions appear after players leave
 	end
-	local count = ability.count or 2
-	for i = 1, count do
-		local angle = (i / count) * math.pi * 2 + math.random()
-		local pos = root.Position + Vector3.new(math.cos(angle) * 7, 0, math.sin(angle) * 7)
-		MonsterService.Spawn(def.zone, pos)
+	for _, point in points do
+		if countBossMinions(def.key) >= maxAlive then
+			break
+		end
+		MonsterService.Spawn(def.zone, point, { spawnRadius = 0, summonerKey = def.key })
 	end
 end
 
@@ -628,7 +688,16 @@ local function castArmor(model: Model, def: any, ability: any)
 	if body and body:IsA("BasePart") then
 		body.Material = Enum.Material.Neon
 	end
-	castSummon(model, def, { label = ability.label, count = ability.count or 3, windup = 0 })
+	castSummon(model, def, {
+		label = ability.label,
+		count = ability.count or 3,
+		windup = ability.summonWindup or 1.6,
+		cooldown = ability.summonCooldown,
+		maxAlive = ability.maxAlive,
+		spawnRadius = ability.spawnRadius,
+		indicatorRadius = ability.indicatorRadius,
+		playerRange = ability.playerRange,
+	})
 	task.wait(ability.duration or 5)
 	if model.Parent then
 		model:SetAttribute("DamageReduction", 0)
@@ -715,7 +784,15 @@ local function runBoss(model: Model, def: any, origin: Vector3)
 				if now >= nextAbility then
 					for index, ability in ipairs(def.abilities or {}) do
 						local abilityId = tostring(index) .. ":" .. tostring(ability.kind)
-						if now - (abilityLast[abilityId] or -math.huge) >= (ability.cooldown or 8) then
+						local ready = now - (abilityLast[abilityId] or -math.huge) >= (ability.cooldown or 8)
+						if ready and ability.kind == "summon" then
+							local system = GameConfig.BOSS_SYSTEM or {}
+							local maxAlive = ability.maxAlive or system.maxSummonsPerBoss or 4
+							local summonCooldown = ability.summonCooldown or ability.cooldown or system.summonCooldown or 18
+							ready = countBossMinions(def.key) < maxAlive
+								and now - (summonLastAt[model] or -math.huge) >= summonCooldown
+						end
+						if ready then
 							table.insert(available, { id = abilityId, ability = ability })
 						end
 					end
@@ -745,6 +822,8 @@ local function runBoss(model: Model, def: any, origin: Vector3)
 			local resetDistance = (Vector3.new(root.Position.X, 0, root.Position.Z) - Vector3.new(origin.X, 0, origin.Z)).Magnitude
 			if resetDistance > 2 or (model:GetAttribute("Health") or 0) < def.hp then
 				setPhase(model, def, "Returning to its arena")
+				clearBossMinions(def.key)
+				summonLastAt[model] = nil
 				local grounded = groundPoint(origin)
 				local height = 1.15 * (def.scale or 2)
 				root.CFrame = CFrame.new(grounded + Vector3.new(0, height, 0))
@@ -761,6 +840,8 @@ local function runBoss(model: Model, def: any, origin: Vector3)
 	if activeByZone[def.zone] == model then
 		activeByZone[def.zone] = nil
 		contributors[model] = nil
+		summonLastAt[model] = nil
+		clearBossMinions(def.key)
 		scheduleRespawn(def.zone)
 	end
 end
@@ -773,6 +854,7 @@ spawnBoss = function(zone: string, position: Vector3, owner: Player?): Model?
 	if not def or not monsterFolder then
 		return nil
 	end
+	clearBossMinions(def.key)
 	local model = buildBoss(def, position)
 	model:SetAttribute("OwnerUserId", if owner then owner.UserId else 0)
 	model:SetAttribute("Phase", "Awakened")
@@ -831,6 +913,8 @@ local function killBoss(model: Model, def: any, finalPlayer: Player?)
 		activeByZone[def.zone] = nil
 	end
 	contributors[model] = nil
+	summonLastAt[model] = nil
+	clearBossMinions(def.key)
 	Remotes.Get("BossState"):FireAllClients({ action = "defeated", key = def.key, name = def.name, zone = def.zone, model = model })
 	Debris:AddItem(model, 0.8)
 	scheduleRespawn(def.zone)
@@ -915,6 +999,8 @@ function BossService.SpawnForStudio(player: Player, zone: string, testHealth: nu
 	local existing = activeByZone[zone]
 	if existing then
 		contributors[existing] = nil
+		summonLastAt[existing] = nil
+		clearBossMinions(existing:GetAttribute("BossKey") or zone)
 		activeByZone[zone] = nil
 		existing:Destroy()
 	end
