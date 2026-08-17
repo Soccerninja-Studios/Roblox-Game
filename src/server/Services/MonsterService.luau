@@ -42,7 +42,7 @@ end
 -- Player HP + death scatter
 -- =========================================================================
 
-function MonsterService.ApplyMaxHP(player: Player)
+function MonsterService.ApplyMaxHP(player: Player, preserveHealth: boolean?)
 	local profile = PlayerDataService and PlayerDataService.Get(player)
 	local char = player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -50,9 +50,17 @@ function MonsterService.ApplyMaxHP(player: Player)
 		return
 	end
 	local reached = profile and profile.quests and profile.quests.reached
-	local maxHP = StatCalculator.GetPlayerMaxHP(reached)
+	local baseHP = StatCalculator.GetPlayerMaxHP(reached)
+	local healthBonus = if profile then PlayerDataService.GetPetBonus(profile, "maxHealth") else 0
+	local maxHP = math.max(1, math.floor(baseHP * (1 + healthBonus) + 0.5))
+	local oldMax = hum.MaxHealth
+	local oldHealth = hum.Health
 	hum.MaxHealth = maxHP
-	hum.Health = maxHP
+	if preserveHealth then
+		hum.Health = math.clamp(oldHealth + math.max(0, maxHP - oldMax), 0, maxHP)
+	else
+		hum.Health = maxHP
+	end
 end
 
 -- A glowing pile the owner runs back to in order to reclaim scattered clippings.

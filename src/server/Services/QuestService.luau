@@ -2,9 +2,9 @@
 -- QuestService: tracks quest progress, hands out rewards, and syncs the quest
 -- board to clients. All 150 quests live in Shared/QuestData. Objective "kinds"
 -- that already have game systems are tracked live; kinds that wait on future
--- systems (combat, pets, villagers, auto-mowers, abilities) stay at 0 progress
--- until those systems call QuestService.Report* -- no quest code needs to change
--- when they ship.
+-- systems (villagers and abilities) stay at 0 progress until those systems call
+-- QuestService.Report*. Pets, combat, and auto-mowers now report live progress --
+-- no quest data or persisted IDs need to change.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -37,6 +37,7 @@ local LIVE_KINDS: { [string]: boolean } = {
 	own_swords = true,
 	defeat_boss = true,
 	boss_repeat = true,
+	recruit_pet = true,
 }
 
 -- Combat kinds are live only where their actual content exists. This keeps the
@@ -72,6 +73,13 @@ local function isQuestLive(quest: any): boolean
 	elseif kind == "buy_sword" then
 		for _, def in ipairs(GameConfig.SWORDS) do
 			if def.zone == quest.zone and def.name == objective.sword then
+				return true
+			end
+		end
+		return false
+	elseif kind == "recruit_pet" then
+		for _, def in ipairs(GameConfig.PETS or {}) do
+			if def.zone == quest.zone and def.name == objective.pet then
 				return true
 			end
 		end
@@ -446,6 +454,29 @@ function QuestService.ReportSwordPurchase(player: Player, _swordName: string)
 			end
 		end
 		return setAtLeast(profile, quest, ownedCount)
+	end)
+end
+
+local function ownsPetNamed(profile: any, petName: string): boolean
+	for _, def in ipairs(GameConfig.PETS or {}) do
+		if def.name == petName then
+			return profile.pets and profile.pets.owned and profile.pets.owned[def.key] ~= nil
+		end
+	end
+	return false
+end
+
+-- Recompute recruit-pet quests from authoritative persistent ownership. This also
+-- repairs a completed objective if a player reconnects before its quest was live.
+function QuestService.ReportPetRecruitment(player: Player, _petName: string?)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	sweep(player, function(quest)
+		return quest.objective.kind == "recruit_pet" and ownsPetNamed(profile, quest.objective.pet)
+	end, function(quest)
+		return setAtLeast(profile, quest, 1)
 	end)
 end
 

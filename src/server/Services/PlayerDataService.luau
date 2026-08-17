@@ -57,6 +57,10 @@ export type Profile = {
 		owned: { [string]: boolean }, -- mower key -> purchased
 		deployed: { [string]: boolean }, -- mower key -> currently out working
 	},
+	pets: {
+		owned: { [string]: { level: number, xp: number, golden: boolean, shards: number } },
+		equipped: { string }, -- ordered, unique pet keys; maximum comes from GameConfig
+	},
 }
 
 -- What we actually store: the profile plus a lightweight session lock.
@@ -66,7 +70,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 7
+local PROFILE_VERSION = 8
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -114,6 +118,7 @@ local function defaultProfile(): Profile
 		swords = { owned = {}, level = {}, equipped = nil },
 		essence = {},
 		bosses = { kills = {}, trophies = {}, crowns = {} },
+		pets = { owned = {}, equipped = {} },
 	}
 end
 
@@ -191,6 +196,21 @@ local function reconcile(profile: Profile): Profile
 	profile.bosses.kills = profile.bosses.kills or {}
 	profile.bosses.trophies = profile.bosses.trophies or {}
 	profile.bosses.crowns = profile.bosses.crowns or {}
+	-- v7 -> v8: complete pet ownership/loadout/level data. Keep the nested repair
+	-- unconditional so partial Studio saves and future wheel/shard fields self-heal.
+	profile.pets = profile.pets or { owned = {}, equipped = {} }
+	profile.pets.owned = profile.pets.owned or {}
+	profile.pets.equipped = profile.pets.equipped or {}
+	for key, data in profile.pets.owned do
+		if type(data) ~= "table" then
+			profile.pets.owned[key] = { level = 1, xp = 0, golden = false, shards = 0 }
+		else
+			data.level = math.max(1, tonumber(data.level) or 1)
+			data.xp = math.max(0, tonumber(data.xp) or 0)
+			data.golden = data.golden == true
+			data.shards = math.max(0, tonumber(data.shards) or 0)
+		end
+	end
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -314,6 +334,48 @@ function PlayerDataService.Get(player: Player): Profile?
 	return profiles[player]
 end
 
+local function petDef(key: string): any?
+	for _, def in ipairs(GameConfig.PETS or {}) do
+		if def.key == key then
+			return def
+		end
+	end
+	return nil
+end
+
+-- Aggregate only equipped, owned, unique pets. All consumers call this on the
+-- server, so clients can never forge a level or stat multiplier.
+function PlayerDataService.GetPetBonuses(profile: Profile): { [string]: number }
+	local totals: { [string]: number } = {}
+	local pets = profile.pets
+	if not pets then
+		return totals
+	end
+	local seen: { [string]: boolean } = {}
+	local maxEquipped = (GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.maxEquipped) or 3
+	for index, key in ipairs(pets.equipped or {}) do
+		if index > maxEquipped then
+			break
+		end
+		local data = pets.owned[key]
+		local def = not seen[key] and data and petDef(key) or nil
+		if def then
+			seen[key] = true
+			local growth = (GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.levelBonusGrowth) or 0.04
+			local levelScale = 1 + math.max(0, (data.level or 1) - 1) * growth
+			local goldenScale = if data.golden then ((GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.goldenBonusMultiplier) or 1.5) else 1
+			for stat, amount in def.bonuses or {} do
+				totals[stat] = (totals[stat] or 0) + amount * levelScale * goldenScale
+			end
+		end
+	end
+	return totals
+end
+
+function PlayerDataService.GetPetBonus(profile: Profile, stat: string): number
+	return PlayerDataService.GetPetBonuses(profile)[stat] or 0
+end
+
 -- Send the client a fresh snapshot of everything it needs to render UI/stats.
 function PlayerDataService.PushState(player: Player)
 	local profile = profiles[player]
@@ -336,6 +398,7 @@ function PlayerDataService.PushState(player: Player)
 		toolTier = profile.toolTier,
 		skills = profile.skills,
 		essence = table.clone(profile.essence or {}),
+		petBonuses = PlayerDataService.GetPetBonuses(profile),
 		bosses = {
 			kills = table.clone(profile.bosses.kills or {}),
 			trophies = table.clone(profile.bosses.trophies or {}),
@@ -365,7 +428,8 @@ end
 function PlayerDataService.GetBagCapacity(profile: Profile): number
 	local def, level = PlayerDataService.GetEquippedBackpack(profile)
 	if def then
-		return def.levels[level].capacity
+		local baseCapacity = def.levels[level].capacity
+		return math.max(1, math.floor(baseCapacity * (1 + PlayerDataService.GetPetBonus(profile, "bagCapacity")) + 0.5))
 	end
 	-- Pre-v4 fallback, only reachable if the equipped key is missing from config.
 	local tier = GameConfig.BAG_TIERS[profile.bagTier] or GameConfig.BAG_TIERS[1]
@@ -414,7 +478,8 @@ function PlayerDataService.Deposit(player: Player): { clippings: number, gold: n
 		return { clippings = 0, gold = 0, diamonds = 0 }
 	end
 	local carried = profile.clippings
-	local goldGained = math.floor(carried * GameConfig.CLIPPING_TO_GOLD)
+	local valueBonus = PlayerDataService.GetPetBonus(profile, "clippingValue")
+	local goldGained = math.floor(carried * GameConfig.CLIPPING_TO_GOLD * (1 + valueBonus))
 	local diamondsGained = 0
 	local rolls = math.floor(carried / GameConfig.DIAMOND_ROLL_PER_CLIPPINGS)
 	for _ = 1, rolls do
