@@ -99,11 +99,12 @@ function CombatRange.IsInSwingBox(char: Model?, worldPos: Vector3): boolean
 	-- Radial specials do not use the ordinary forward box. Mirror the server's
 	-- true 360-degree radius so lock-on and shift-lock feedback stay accurate.
 	local held = char:FindFirstChildOfClass("Tool")
+	local heldDef: any = nil
 	if held and held:GetAttribute("Sword") then
-		local def = StatCalculator.GetSwordDef(held:GetAttribute("SwordKey"))
-		if def and def.special == "whirlwind" then
+		heldDef = StatCalculator.GetSwordDef(held:GetAttribute("SwordKey"))
+		if heldDef and heldDef.special == "whirlwind" then
 			local delta = worldPos - origin
-			return Vector3.new(delta.X, 0, delta.Z).Magnitude <= (def.specialRadius or reach)
+			return Vector3.new(delta.X, 0, delta.Z).Magnitude <= (heldDef.specialRadius or reach)
 		end
 	end
 	local look = rootPart.CFrame.LookVector
@@ -121,7 +122,14 @@ function CombatRange.IsInSwingBox(char: Model?, worldPos: Vector3): boolean
 	end
 	-- Sideways distance from the swing line; must be within the box half-width.
 	local lateral = (flatTo - flatLook * forward).Magnitude
-	return lateral <= LATERAL_HALF
+	local lateralHalf = LATERAL_HALF
+	if heldDef and heldDef.special == "wide_slash" then
+		local multiplier = heldDef.specialWidthMultiplier or 2
+		-- LATERAL_HALF already includes enemy-body padding, so only scale the
+		-- server box's additional half-width rather than multiplying the padding.
+		lateralHalf += 1.25 * math.max(0, multiplier - 1)
+	end
+	return lateral <= lateralHalf
 end
 
 -- True when any alive monster is inside the swing box (turns the shift-lock
