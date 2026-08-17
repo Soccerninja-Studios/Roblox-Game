@@ -444,6 +444,10 @@ local GameConfig = {
 	BOSS_SYSTEM = {
 		respawnSeconds = 60,
 		hudRange = 260,
+		summonCooldown = 18, -- shared safety floor for any boss-created wave
+		summonPlayerRange = 85, -- no minions when every living player is farther away
+		maxSummonsPerBoss = 4, -- per-boss living minion cap unless overridden below
+		summonIndicatorRadius = 2.8, -- red warning circle beneath each incoming minion
 	},
 
 	BOSSES = {
@@ -454,7 +458,7 @@ local GameConfig = {
 			bodyColor = { 116, 178, 72 }, headColor = { 214, 174, 72 }, accentColor = { 250, 218, 92 },
 			goldReward = 400, diamondReward = 4, essenceKey = "MeadowPollen", essenceReward = 25,
 			abilities = {
-				{ kind = "summon", label = "Seedling Call", count = 2, windup = 0.7, cooldown = 10 },
+				{ kind = "summon", label = "Seedling Call", count = 2, windup = 1.6, cooldown = 18, maxAlive = 3, spawnRadius = 8, indicatorRadius = 2.6 },
 				{ kind = "spikes", label = "Dandelion Burst", pattern = "ring", count = 6, ringRadius = 11, radius = 3, height = 6, damage = 1, windup = 1.2, cooldown = 8 },
 				{ kind = "slam", label = "Pollen Slam", radius = 10, height = 3, damage = 1, windup = 1.05, cooldown = 7 },
 			},
@@ -466,7 +470,7 @@ local GameConfig = {
 			bodyColor = { 88, 62, 42 }, headColor = { 116, 156, 70 }, accentColor = { 174, 116, 194 },
 			goldReward = 1800, diamondReward = 9, essenceKey = "WildBurr", essenceReward = 45,
 			abilities = {
-				{ kind = "summon", label = "Hatch the Brood", count = 3, windup = 0.65, cooldown = 9 },
+				{ kind = "summon", label = "Hatch the Brood", count = 2, windup = 1.7, cooldown = 20, maxAlive = 4, spawnRadius = 9, indicatorRadius = 2.8 },
 				{ kind = "spikes", label = "Bramble Trail", pattern = "line", count = 6, spacing = 6, radius = 3.3, height = 7, damage = 2, windup = 1.05, cooldown = 7.5 },
 				{ kind = "charge", label = "Broodmother Charge", width = 8, maxDistance = 38, damage = 3, windup = 0.9, duration = 0.5, cooldown = 8.5 },
 			},
@@ -478,7 +482,7 @@ local GameConfig = {
 			bodyColor = { 54, 90, 82 }, headColor = { 130, 110, 170 }, accentColor = { 174, 126, 214 }, poolColor = { 76, 142, 106 },
 			goldReward = 6500, diamondReward = 18, essenceKey = "MireSpore", essenceReward = 90,
 			abilities = {
-				{ kind = "summon", label = "Mireborn Call", count = 3, windup = 0.7, cooldown = 10 },
+				{ kind = "summon", label = "Mireborn Call", count = 2, windup = 1.8, cooldown = 21, maxAlive = 4, spawnRadius = 9, indicatorRadius = 2.9 },
 				{ kind = "pools", label = "Spore Bloom", count = 3, radius = 5, spread = 10, damage = 2, windup = 1.1, duration = 5, tickRate = 1, cooldown = 8 },
 				{ kind = "slam", label = "Royal Mirewave", radius = 13, height = 4, damage = 5, windup = 1.2, cooldown = 9 },
 			},
@@ -490,7 +494,7 @@ local GameConfig = {
 			bodyColor = { 70, 88, 46 }, headColor = { 94, 140, 64 }, accentColor = { 88, 182, 92 },
 			goldReward = 20000, diamondReward = 38, essenceKey = "ThicketSap", essenceReward = 160,
 			abilities = {
-				{ kind = "summon", label = "Ancient Growth", count = 4, windup = 0.65, cooldown = 10 },
+				{ kind = "summon", label = "Ancient Growth", count = 3, windup = 1.8, cooldown = 23, maxAlive = 5, spawnRadius = 10, indicatorRadius = 3 },
 				{ kind = "spikes", label = "Root Prison", pattern = "ring", count = 8, ringRadius = 12, radius = 3.5, height = 10, damage = 5, windup = 1.05, cooldown = 7 },
 				{ kind = "spikes", label = "Vine Rupture", pattern = "line", count = 7, spacing = 6.5, radius = 3.5, height = 9, damage = 6, windup = 1.0, cooldown = 8.5 },
 			},
@@ -504,7 +508,7 @@ local GameConfig = {
 			abilities = {
 				{ kind = "spikes", label = "Royal Ironline", pattern = "line", count = 8, spacing = 7, radius = 3.8, height = 11, damage = 8, windup = 0.95, cooldown = 7 },
 				{ kind = "slam", label = "King's Decree", radius = 15, height = 5, damage = 12, windup = 1.15, cooldown = 8.5 },
-				{ kind = "armor", label = "Iron Dominion", reduction = 0.55, count = 4, windup = 0.65, duration = 5, cooldown = 12 },
+				{ kind = "armor", label = "Iron Dominion", reduction = 0.55, count = 3, windup = 0.9, summonWindup = 1.8, summonCooldown = 24, maxAlive = 4, spawnRadius = 10, indicatorRadius = 3, duration = 5, cooldown = 22 },
 			},
 		},
 	},
