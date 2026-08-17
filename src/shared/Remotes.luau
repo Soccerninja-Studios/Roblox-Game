@@ -61,6 +61,12 @@ local REMOTE_NAMES = {
 	"BossState", -- server -> client: boss spawned/updated/defeated
 	"BossDefeated", -- server -> contributing client: authoritative reward summary
 	"SwordSpecial", -- server -> client: confirmed special-sword visual
+	-- Pets: recruitment, three-slot loadout, essence feeding, and inventory state.
+	"RequestPets",
+	"PetState",
+	"RecruitPet",
+	"EquipPet",
+	"FeedPet",
 	-- Studio-only boss testing. The server rejects this outside Studio.
 	"DebugSpawnBoss", -- client -> server: request a focused Studio boss spawn
 	"BossDebugResult", -- server -> client: success/error feedback for that request

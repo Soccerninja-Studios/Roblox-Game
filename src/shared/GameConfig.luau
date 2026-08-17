@@ -530,6 +530,38 @@ local GameConfig = {
 		{ key = "weepthornGreatblade", name = "Weepthorn Greatblade", zone = "Ironweed", desc = "Deals massively increased damage below twenty percent health.", special = "execute", specialName = "Execute", specialExecuteThreshold = 0.2, specialExecuteMultiplier = 1.8, goldCost = 0, diamondCost = 45, essenceKey = "IronFilament", essenceCost = 240, attackCooldown = 0.55, reach = 14, scale = 1.48, handleColor = { 42, 48, 52 }, bladeColor = { 158, 210, 216 }, levels = { { damage = 1600, cost = 0 }, { damage = 2100, cost = 400000 }, { damage = 2800, cost = 800000 }, { damage = 3700, cost = 1600000 } } },
 		{ key = "kingsedge", name = "Kingsedge", zone = "All", desc = "Strikes in every direction and ignores temporary boss armor.", special = "whirlwind", specialName = "Whirlwind", goldCost = 0, diamondCost = 200, requiresAllBosses = true, requirementText = "Defeat all five ring bosses", specialRadius = 18, attackCooldown = 0.5, reach = 16, scale = 1.62, handleColor = { 54, 82, 60 }, bladeColor = { 224, 246, 184 }, levels = { { damage = 2800, cost = 0 }, { damage = 3900, cost = 800000 }, { damage = 5300, cost = 1600000 }, { damage = 7000, cost = 3200000 } } },
 	},
+
+	-- Complete pet foundation. Players may equip three companions at once. Feeding
+	-- a pet its ring's monster essence levels its bonuses; future golden variants
+	-- already have a persisted flag and multiplier, so the wheel can build on this
+	-- schema without another migration.
+	PET_SYSTEM = {
+		maxEquipped = 3,
+		maxLevel = 25,
+		feedBase = 8,
+		feedGrowth = 4,
+		levelBonusGrowth = 0.04,
+		goldenBonusMultiplier = 1.5,
+		followResponsiveness = 8,
+	},
+
+	PETS = {
+		{ key = "meadowBunny", name = "Meadow Bunny", zone = "Meadow", rarity = "Common", visual = "bunny", essenceKey = "MeadowPollen", goldCost = 100, diamondCost = 0, essenceCost = 0, bodyColor = { 224, 238, 202 }, accentColor = { 242, 174, 190 }, bonuses = { bagCapacity = 0.08 } },
+		{ key = "honeybee", name = "Honeybee", zone = "Meadow", rarity = "Uncommon", visual = "bee", flying = true, essenceKey = "MeadowPollen", goldCost = 300, diamondCost = 0, essenceCost = 8, bodyColor = { 246, 194, 62 }, accentColor = { 72, 56, 42 }, bonuses = { clippingValue = 0.08 } },
+		{ key = "lamb", name = "Lamb", zone = "Meadow", rarity = "Rare", visual = "lamb", essenceKey = "MeadowPollen", goldCost = 0, diamondCost = 5, essenceCost = 20, bodyColor = { 238, 232, 212 }, accentColor = { 130, 104, 84 }, bonuses = { maxHealth = 0.10, bagCapacity = 0.05 } },
+		{ key = "foxKit", name = "Fox Kit", zone = "Wild", rarity = "Common", visual = "fox", essenceKey = "WildBurr", goldCost = 1200, diamondCost = 0, essenceCost = 20, bodyColor = { 220, 116, 58 }, accentColor = { 246, 218, 176 }, bonuses = { swordDamage = 0.08 } },
+		{ key = "sparrow", name = "Sparrow", zone = "Wild", rarity = "Uncommon", visual = "bird", flying = true, essenceKey = "WildBurr", goldCost = 2500, diamondCost = 0, essenceCost = 35, bodyColor = { 146, 108, 72 }, accentColor = { 226, 196, 148 }, bonuses = { attackSpeed = 0.08 } },
+		{ key = "hedgehog", name = "Hedgehog", zone = "Wild", rarity = "Rare", visual = "hedgehog", essenceKey = "WildBurr", goldCost = 0, diamondCost = 10, essenceCost = 60, bodyColor = { 112, 78, 52 }, accentColor = { 210, 176, 126 }, bonuses = { swordDamage = 0.08, maxHealth = 0.08 } },
+		{ key = "marshFrog", name = "Marsh Frog", zone = "Mossmire", rarity = "Common", visual = "frog", essenceKey = "MireSpore", goldCost = 8000, diamondCost = 0, essenceCost = 50, bodyColor = { 90, 166, 106 }, accentColor = { 180, 226, 132 }, bonuses = { maxHealth = 0.12 } },
+		{ key = "firefly", name = "Firefly", zone = "Mossmire", rarity = "Uncommon", visual = "firefly", flying = true, essenceKey = "MireSpore", goldCost = 14000, diamondCost = 0, essenceCost = 80, bodyColor = { 54, 70, 62 }, accentColor = { 218, 246, 102 }, bonuses = { clippingValue = 0.12 } },
+		{ key = "newt", name = "Newt", zone = "Mossmire", rarity = "Rare", visual = "newt", essenceKey = "MireSpore", goldCost = 0, diamondCost = 18, essenceCost = 120, bodyColor = { 164, 100, 188 }, accentColor = { 116, 214, 170 }, bonuses = { maxHealth = 0.10, cutPower = 0.10 } },
+		{ key = "badger", name = "Badger", zone = "Thicket", rarity = "Common", visual = "badger", essenceKey = "ThicketSap", goldCost = 35000, diamondCost = 0, essenceCost = 100, bodyColor = { 74, 70, 66 }, accentColor = { 224, 220, 200 }, bonuses = { cutPower = 0.14 } },
+		{ key = "owl", name = "Owl", zone = "Thicket", rarity = "Uncommon", visual = "owl", flying = true, essenceKey = "ThicketSap", goldCost = 60000, diamondCost = 0, essenceCost = 160, bodyColor = { 126, 92, 62 }, accentColor = { 226, 188, 92 }, bonuses = { attackSpeed = 0.12 } },
+		{ key = "boar", name = "Boar", zone = "Thicket", rarity = "Rare", visual = "boar", essenceKey = "ThicketSap", goldCost = 0, diamondCost = 30, essenceCost = 220, bodyColor = { 112, 76, 62 }, accentColor = { 230, 206, 160 }, bonuses = { bagCapacity = 0.14, swordDamage = 0.10 } },
+		{ key = "ironBeetle", name = "Iron Beetle", zone = "Ironweed", rarity = "Common", visual = "beetle", essenceKey = "IronFilament", goldCost = 120000, diamondCost = 0, essenceCost = 180, bodyColor = { 82, 116, 124 }, accentColor = { 158, 214, 220 }, bonuses = { bagCapacity = 0.18 } },
+		{ key = "phoenixChick", name = "Phoenix Chick", zone = "Ironweed", rarity = "Uncommon", visual = "phoenix", flying = true, essenceKey = "IronFilament", goldCost = 200000, diamondCost = 0, essenceCost = 280, bodyColor = { 224, 92, 54 }, accentColor = { 250, 210, 82 }, bonuses = { swordDamage = 0.16 } },
+		{ key = "dragonling", name = "Dragonling", zone = "Ironweed", rarity = "Rare", visual = "dragon", flying = true, essenceKey = "IronFilament", goldCost = 0, diamondCost = 60, essenceCost = 400, bodyColor = { 74, 112, 124 }, accentColor = { 150, 224, 206 }, bonuses = { swordDamage = 0.12, maxHealth = 0.12, cutPower = 0.12 } },
+	},
 }
 
 return GameConfig
