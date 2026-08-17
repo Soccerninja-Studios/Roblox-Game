@@ -113,30 +113,90 @@ local function playHitAnim()
 end
 
 
--- Confirmed Kingsedge visual. Damage has already been resolved on the server; the
--- expanding ring is presentation only and cannot be spoofed into dealing damage.
-local function playSwordSpecial(kind: string, worldPos: Vector3, radius: number)
-	if kind ~= "whirlwind" then
-		return
-	end
-	local ring = Instance.new("Part")
-	ring.Name = "KingsedgeWhirlwind"
-	ring.Shape = Enum.PartType.Cylinder
-	ring.Size = Vector3.new(0.2, 2, 2)
-	ring.CFrame = CFrame.new(worldPos - Vector3.new(0, 2.5, 0)) * CFrame.Angles(0, 0, math.rad(90))
-	ring.Color = Color3.fromRGB(225, 248, 182)
-	ring.Material = Enum.Material.Neon
-	ring.Transparency = 0.18
-	ring.Anchored = true
-	ring.CanCollide = false
-	ring.CanQuery = false
-	ring.CanTouch = false
-	ring.Parent = Workspace
-	TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = Vector3.new(0.2, radius * 2, radius * 2),
+-- Every special is confirmed by the server before its visual is shown. These
+-- parts are presentation-only; all damage, healing, guards, and status effects
+-- have already been resolved authoritatively.
+local function effectPart(name: string, shape: Enum.PartType, color: Color3, size: Vector3, cframe: CFrame): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Shape = shape
+	part.Size = size
+	part.CFrame = cframe
+	part.Color = color
+	part.Material = Enum.Material.Neon
+	part.Transparency = 0.18
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Parent = Workspace
+	return part
+end
+
+local function expandingRing(name: string, worldPos: Vector3, radius: number, color: Color3, duration: number)
+	local ring = effectPart(
+		name,
+		Enum.PartType.Cylinder,
+		color,
+		Vector3.new(0.18, 2, 2),
+		CFrame.new(worldPos - Vector3.new(0, 2.4, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	)
+	TweenService:Create(ring, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.new(0.18, radius * 2, radius * 2),
 		Transparency = 1,
 	}):Play()
-	Debris:AddItem(ring, 0.4)
+	Debris:AddItem(ring, duration + 0.05)
+end
+
+local function burstPieces(name: string, worldPos: Vector3, radius: number, color: Color3, count: number)
+	for index = 1, count do
+		local angle = ((index - 1) / count) * math.pi * 2
+		local piece = effectPart(name, Enum.PartType.Ball, color, Vector3.new(0.55, 0.2, 0.8), CFrame.new(worldPos))
+		local destination = worldPos + Vector3.new(math.cos(angle) * radius, 1.5 + math.sin(angle * 2), math.sin(angle) * radius)
+		TweenService:Create(piece, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			CFrame = CFrame.new(destination) * CFrame.Angles(angle, angle * 0.5, angle),
+			Transparency = 1,
+		}):Play()
+		Debris:AddItem(piece, 0.45)
+	end
+end
+
+local function playSwordSpecial(kind: string, worldPos: Vector3, radius: number)
+	if kind == "whirlwind" then
+		expandingRing("KingsedgeWhirlwind", worldPos, radius, Color3.fromRGB(225, 248, 182), 0.35)
+	elseif kind == "wide_slash" then
+		expandingRing("WideSlash", worldPos, radius, Color3.fromRGB(188, 232, 170), 0.24)
+	elseif kind == "petal_burst" then
+		burstPieces("PetalBurst", worldPos, radius, Color3.fromRGB(255, 150, 205), 12)
+		expandingRing("PetalBurstRing", worldPos, radius, Color3.fromRGB(255, 190, 225), 0.38)
+	elseif kind == "bleed" then
+		expandingRing("Bleed", worldPos, radius, Color3.fromRGB(220, 55, 62), 0.28)
+	elseif kind == "cleave" then
+		expandingRing("Cleave", worldPos, radius, Color3.fromRGB(230, 194, 112), 0.3)
+	elseif kind == "poison" then
+		expandingRing("Poison", worldPos, radius, Color3.fromRGB(136, 210, 102), 0.45)
+	elseif kind == "lifesteal" then
+		local orb = effectPart("Lifesteal", Enum.PartType.Ball, Color3.fromRGB(94, 230, 158), Vector3.new(1.2, 1.2, 1.2), CFrame.new(worldPos))
+		TweenService:Create(orb, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = Vector3.new(4.5, 4.5, 4.5),
+			CFrame = CFrame.new(worldPos + Vector3.new(0, 2.5, 0)),
+			Transparency = 1,
+		}):Play()
+		Debris:AddItem(orb, 0.5)
+	elseif kind == "parry" then
+		local shield = effectPart("ParryGuard", Enum.PartType.Ball, Color3.fromRGB(120, 220, 255), Vector3.new(3, 3, 3), CFrame.new(worldPos))
+		shield.Material = Enum.Material.ForceField
+		TweenService:Create(shield, TweenInfo.new(0.32), { Size = Vector3.new(radius * 2, radius * 2, radius * 2), Transparency = 1 }):Play()
+		Debris:AddItem(shield, 0.36)
+	elseif kind == "thorns" then
+		burstPieces("Thorns", worldPos, radius, Color3.fromRGB(86, 200, 96), 10)
+	elseif kind == "armor_break" then
+		burstPieces("ArmorBreak", worldPos, radius, Color3.fromRGB(110, 206, 225), 9)
+		expandingRing("ArmorBreakRing", worldPos, radius, Color3.fromRGB(170, 235, 245), 0.32)
+	elseif kind == "execute" then
+		expandingRing("Execute", worldPos, radius, Color3.fromRGB(190, 35, 50), 0.42)
+		burstPieces("ExecuteShards", worldPos, radius * 0.7, Color3.fromRGB(90, 18, 30), 8)
+	end
 end
 
 local function trySwing()
@@ -186,6 +246,7 @@ local function configSnapshot(): any
 			name = def.name,
 			zone = def.zone,
 			desc = def.desc,
+			specialName = def.specialName,
 			goldCost = def.goldCost or 0,
 			diamondCost = def.diamondCost or 0,
 			essenceKey = def.essenceKey,
@@ -275,7 +336,9 @@ local function buildCard(sword: any, order: number, currency: any)
 	desc.Position = UDim2.fromOffset(28, 32)
 	desc.Size = UDim2.new(1, -180, 0, 18)
 	desc.Font = Enum.Font.GothamMedium
-	desc.Text = sword.desc or ""
+	desc.Text = if sword.specialName
+		then "✦ " .. tostring(sword.specialName) .. " — " .. tostring(sword.desc or "")
+		else sword.desc or ""
 	desc.TextColor3 = SUBTLE
 	desc.TextSize = 12
 	desc.TextXAlignment = Enum.TextXAlignment.Left
