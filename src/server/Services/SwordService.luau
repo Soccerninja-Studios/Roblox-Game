@@ -20,6 +20,7 @@ local QuestService
 local CutsceneService
 
 local lastSwing: { [Player]: number } = {}
+local lastSpecial: { [Player]: { [string]: number } } = {}
 
 -- Base (pre-scale) blade dimensions, shared by the visible sword mesh AND the
 -- swing hitbox so the two can never drift apart.
@@ -218,6 +219,73 @@ function SwordService.GiveSword(player: Player)
 	tool.Parent = player:FindFirstChildOfClass("Backpack") or player.Character
 end
 
+local function specialReady(player: Player, key: string, cooldown: number, now: number): boolean
+	local state = lastSpecial[player]
+	if not state then
+		state = {}
+		lastSpecial[player] = state
+	end
+	if now - (state[key] or -math.huge) < cooldown then
+		return false
+	end
+	state[key] = now
+	return true
+end
+
+local function frontTargets(rootPart: BasePart, def: any, reach: number, widthMultiplier: number?, lengthMultiplier: number?): { Model }
+	local scale = def.scale or 1
+	local bladeLen = SWORD_BLADE_SIZE.Y * scale * HITBOX_SCALE
+	local bladeThick = SWORD_BLADE_SIZE.Z * scale * HITBOX_SCALE
+	local forward = math.max(bladeLen, reach) * (lengthMultiplier or 1)
+	local width = math.max(bladeThick, 2.5) * (widthMultiplier or 1)
+	local hitboxSize = Vector3.new(width, math.max(bladeLen, 4), forward)
+	local hitboxCFrame = rootPart.CFrame * CFrame.new(0, -0.5, -forward * 0.5)
+	return MonsterService.GetMonstersInHitbox(hitboxCFrame, hitboxSize)
+end
+
+local function strikeTargets(player: Player, targets: { Model }, baseDamage: number, def: any, trueDamage: boolean?): (number, boolean)
+	local totalDealt = 0
+	local executed = false
+	for _, target in targets do
+		if target.Parent and not target:GetAttribute("Dead") then
+			local damage = baseDamage
+			if def.special == "execute" then
+				local health = target:GetAttribute("Health") or 0
+				local maxHealth = target:GetAttribute("MaxHealth") or math.max(1, health)
+				if maxHealth > 0 and health / maxHealth <= (def.specialExecuteThreshold or 0.2) then
+					damage *= def.specialExecuteMultiplier or 1.8
+					executed = true
+				end
+			end
+			totalDealt += MonsterService.DamageModel(player, target, damage, trueDamage == true)
+		end
+	end
+	return totalDealt, executed
+end
+
+local function targetPosition(targets: { Model }, fallback: Vector3): Vector3
+	local first = targets[1]
+	if first and first.PrimaryPart then
+		return first.PrimaryPart.Position
+	end
+	return fallback
+end
+
+local function fireSpecial(player: Player, kind: string, position: Vector3, radius: number)
+	Remotes.Get("SwordSpecial"):FireClient(player, kind, position, radius)
+end
+
+local function healPlayer(player: Player, amount: number): number
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 or amount <= 0 then
+		return 0
+	end
+	local before = humanoid.Health
+	humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + amount)
+	return humanoid.Health - before
+end
+
 -- Client asked us to resolve a swing. Validate the held tool + cooldown, then let
 -- MonsterService damage everything in reach in front of the player.
 local function onSwordSwing(player: Player)
@@ -227,7 +295,8 @@ local function onSwordSwing(player: Player)
 	end
 	local char = player.Character
 	local root = char and char:FindFirstChild("HumanoidRootPart")
-	if not char or not root then
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	if not char or not root or not root:IsA("BasePart") or not humanoid or humanoid.Health <= 0 then
 		return
 	end
 
@@ -237,7 +306,7 @@ local function onSwordSwing(player: Player)
 	end
 	local key = held:GetAttribute("SwordKey")
 	local def = swordDef(key)
-	if not def then
+	if not def or not MonsterService then
 		return
 	end
 
@@ -251,24 +320,101 @@ local function onSwordSwing(player: Player)
 	local level = (profile.swords.level and profile.swords.level[key]) or 1
 	local damage = StatCalculator.GetSwordDamage(key, level, profile.skills)
 	local reach = StatCalculator.GetSwordReach(key)
-	if MonsterService then
-		local rootPart = root :: BasePart
-		if def.special == "whirlwind" then
-			-- Kingsedge is the all-boss reward: a complete 360-degree sweep whose
-			-- true damage bypasses temporary boss armor.
-			local radius = def.specialRadius or reach
-			MonsterService.DamageMonstersInRadius(player, rootPart.Position, radius, damage, true)
-			Remotes.Get("SwordSpecial"):FireClient(player, "whirlwind", rootPart.Position, radius)
-		else
-			-- Normal swords use a generous oriented volume in front of the player.
-			local scale = def.scale or 1
-			local bladeLen = SWORD_BLADE_SIZE.Y * scale * HITBOX_SCALE
-			local bladeThick = SWORD_BLADE_SIZE.Z * scale * HITBOX_SCALE
-			local forward = math.max(bladeLen, reach)
-			local hitboxSize = Vector3.new(math.max(bladeThick, 2.5), math.max(bladeLen, 4), forward)
-			local hitboxCFrame = rootPart.CFrame * CFrame.new(0, -0.5, -forward * 0.5)
-			MonsterService.DamageMonstersInHitbox(player, hitboxCFrame, hitboxSize, damage)
+	local rootPart = root :: BasePart
+	local special = def.special
+
+	if special == "whirlwind" then
+		local radius = def.specialRadius or reach
+		local targets = MonsterService.GetMonstersInRadius(rootPart.Position, radius)
+		strikeTargets(player, targets, damage, def, true)
+		fireSpecial(player, "whirlwind", rootPart.Position, radius)
+		return
+	end
+
+	local widthMultiplier = if special == "wide_slash" then (def.specialWidthMultiplier or 2) else 1
+	local targets = frontTargets(rootPart, def, reach, widthMultiplier, 1)
+	local totalDealt, executed = strikeTargets(player, targets, damage, def, false)
+
+	if special == "wide_slash" then
+		fireSpecial(player, special, rootPart.Position, reach)
+	elseif special == "petal_burst" then
+		local radius = def.specialRadius or 8
+		local burstTargets = MonsterService.GetMonstersInRadius(rootPart.Position, radius)
+		if #burstTargets > 0 and specialReady(player, special, def.specialCooldown or 4, now) then
+			strikeTargets(player, burstTargets, damage * (def.specialDamageScale or 0.45), def, false)
+			fireSpecial(player, special, rootPart.Position, radius)
 		end
+	elseif special == "bleed" or special == "poison" then
+		if #targets > 0 then
+			local effectName = if special == "bleed" then "Bleed" else "Poison"
+			local dotDamage = math.max(1, damage * (def.specialDotScale or 0.15))
+			for _, target in targets do
+				MonsterService.ApplyDamageOverTime(
+					player,
+					target,
+					effectName,
+					dotDamage,
+					def.specialTicks or 3,
+					def.specialTickRate or 0.7
+				)
+			end
+			fireSpecial(player, special, targetPosition(targets, rootPart.Position), 5)
+		end
+	elseif special == "cleave" then
+		local cleaveTargets = frontTargets(
+			rootPart,
+			def,
+			reach,
+			def.specialWidthMultiplier or 2,
+			def.specialLengthMultiplier or 1.15
+		)
+		if #cleaveTargets > 0 and specialReady(player, special, def.specialCooldown or 2.2, now) then
+			strikeTargets(player, cleaveTargets, damage * (def.specialDamageScale or 0.55), def, false)
+			fireSpecial(player, special, rootPart.Position, reach * (def.specialLengthMultiplier or 1.15))
+		end
+	elseif special == "lifesteal" then
+		local heal = math.min(def.specialMaxHeal or 4, totalDealt * (def.specialHealFraction or 0.15))
+		if healPlayer(player, heal) > 0 then
+			fireSpecial(player, special, rootPart.Position, 5)
+		end
+	elseif special == "parry" then
+		if specialReady(player, special, def.specialCooldown or 2.5, now) then
+			MonsterService.SetPlayerGuard(
+				player,
+				"parry",
+				def.specialGuardDuration or 0.5,
+				damage,
+				def.specialReflectScale or 0.55,
+				1
+			)
+			fireSpecial(player, special, rootPart.Position, 5)
+		end
+	elseif special == "thorns" then
+		if specialReady(player, special, def.specialCooldown or 6, now) then
+			MonsterService.SetPlayerGuard(
+				player,
+				"thorns",
+				def.specialGuardDuration or 3,
+				damage,
+				def.specialReflectScale or 0.3,
+				def.specialDamageReduction or 0.25
+			)
+			fireSpecial(player, special, rootPart.Position, 6)
+		end
+	elseif special == "armor_break" then
+		if #targets > 0 and specialReady(player, special, def.specialCooldown or 8, now) then
+			for _, target in targets do
+				MonsterService.ApplyArmorBreak(
+					target,
+					def.specialDuration or 6,
+					def.specialReductionMultiplier or 0.4,
+					def.specialDamageMultiplier or 1.2
+				)
+			end
+			fireSpecial(player, special, targetPosition(targets, rootPart.Position), 6)
+		end
+	elseif special == "execute" and executed then
+		fireSpecial(player, special, targetPosition(targets, rootPart.Position), 7)
 	end
 end
 
@@ -287,6 +433,7 @@ local function buildState(player: Player): any
 				name = def.name,
 				zone = def.zone,
 				desc = def.desc,
+				specialName = def.specialName,
 				goldCost = def.goldCost or 0,
 				diamondCost = def.diamondCost or 0,
 				essenceKey = def.essenceKey,
@@ -460,6 +607,7 @@ function SwordService.Start()
 	Players.PlayerAdded:Connect(hook)
 	Players.PlayerRemoving:Connect(function(plr)
 		lastSwing[plr] = nil
+		lastSpecial[plr] = nil
 	end)
 	print("[SwordService] ready.")
 end

@@ -32,6 +32,7 @@ local defByKey: { [string]: any } = {}
 local aliveByZone: { [string]: number } = {}
 local dryCount: { [Player]: number } = {}
 local lastHurt: { [Player]: number } = {}
+local guardStates: { [Player]: any } = {}
 
 local function c3(rgb: { number }): Color3
 	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
@@ -138,6 +139,7 @@ local function spawnScatterPile(player: Player, pos: Vector3, amount: number)
 end
 
 local function onDied(player: Player, character: Model)
+	guardStates[player] = nil
 	local profile = PlayerDataService and PlayerDataService.Get(player)
 	if not profile then
 		return
@@ -344,96 +346,192 @@ local function killMonster(model: Model, byPlayer: Player?)
 	Debris:AddItem(model, 0.05)
 end
 
-local function applyDamage(model: Model, damage: number, byPlayer: Player?)
+local function applyDamage(model: Model, damage: number, byPlayer: Player?): number
 	local hp = model:GetAttribute("Health") or 0
-	if hp <= 0 then
-		return
+	if hp <= 0 or model:GetAttribute("Dead") then
+		return 0
 	end
-	local newHp = math.max(0, hp - damage)
+	local finalDamage = math.max(0, damage)
+	if (model:GetAttribute("ArmorBreakUntil") or 0) > os.clock() then
+		finalDamage *= model:GetAttribute("ArmorBreakDamageMultiplier") or 1.2
+	end
+	finalDamage = math.max(1, math.floor(finalDamage + 0.5))
+	local dealt = math.min(hp, finalDamage)
+	local newHp = math.max(0, hp - finalDamage)
 	model:SetAttribute("Health", newHp)
 	updateNameplate(model)
 	local pp = model.PrimaryPart
 	if byPlayer and pp then
-		Remotes.Get("MonsterHit"):FireClient(byPlayer, pp.Position + Vector3.new(0, 2.5, 0), damage, newHp <= 0)
+		Remotes.Get("MonsterHit"):FireClient(byPlayer, pp.Position + Vector3.new(0, 2.5, 0), dealt, newHp <= 0)
 	end
 	if newHp <= 0 then
 		killMonster(model, byPlayer)
 	end
+	return dealt
 end
 
--- Swing hitbox resolver. Given an oriented box (the swing volume) in front of the
--- swinger, damage every living monster whose body overlaps it. No aiming or
--- targeting: if the box touches the monster, it takes damage.
---
--- This is a manual oriented-box test rather than Workspace:GetPartBoundsInBox on
--- purpose: monster parts run with CanQuery = false, so a spatial query would skip
--- them entirely. We treat each monster as a small box around its root, which keeps
--- hit detection working regardless of the CanQuery settings other systems rely on.
-function MonsterService.DamageMonstersInHitbox(player: Player, hitboxCFrame: CFrame, hitboxSize: Vector3, damage: number)
+-- Shared model-damage router used by ordinary swings, specials, damage-over-time,
+-- reflection, and Kingsedge. Bosses remain authoritative inside BossService.
+function MonsterService.DamageModel(player: Player, model: Model, damage: number, trueDamage: boolean?): number
+	if not model or not model.Parent or model:GetAttribute("Dead") then
+		return 0
+	end
+	if model:GetAttribute("BossKey") and BossService then
+		local before = model:GetAttribute("Health") or 0
+		BossService.DamageBoss(model, damage, player, trueDamage == true)
+		local after = model:GetAttribute("Health") or 0
+		return math.max(0, before - after)
+	end
+	return applyDamage(model, damage, player)
+end
+
+function MonsterService.GetMonstersInHitbox(hitboxCFrame: CFrame, hitboxSize: Vector3): { Model }
+	local found: { Model } = {}
 	if not monsterFolder then
-		return
+		return found
 	end
 	local half = hitboxSize * 0.5
 	for _, model in monsterFolder:GetChildren() do
 		if model:IsA("Model") and model.PrimaryPart and not model:GetAttribute("Dead") then
 			local pp = model.PrimaryPart :: BasePart
-			-- Monster position expressed in the hitbox's local space.
 			local rel = hitboxCFrame:PointToObjectSpace(pp.Position)
-			-- Pad the box by the monster's own half-extents so a graze along the edge
-			-- still counts as the blade touching it.
 			local mhalf = pp.Size * 0.5
 			if math.abs(rel.X) <= half.X + mhalf.X
 				and math.abs(rel.Y) <= half.Y + mhalf.Y
 				and math.abs(rel.Z) <= half.Z + mhalf.Z
 			then
-				if model:GetAttribute("BossKey") and BossService then
-					BossService.DamageBoss(model, damage, player, false)
-				else
-					applyDamage(model, damage, player)
-				end
+				table.insert(found, model)
 			end
 		end
 	end
+	return found
 end
 
+function MonsterService.GetMonstersInRadius(center: Vector3, radius: number): { Model }
+	local found: { Model } = {}
+	if not monsterFolder then
+		return found
+	end
+	for _, model in monsterFolder:GetChildren() do
+		if model:IsA("Model") and model.PrimaryPart and not model:GetAttribute("Dead") then
+			local distance = (model.PrimaryPart.Position - center).Magnitude
+			if distance <= radius + model.PrimaryPart.Size.Magnitude * 0.35 then
+				table.insert(found, model)
+			end
+		end
+	end
+	return found
+end
 
--- Radial resolver used by complete 360-degree sword specials. The same server
--- validation and boss routing as the normal oriented swing applies.
+function MonsterService.DamageMonstersInHitbox(player: Player, hitboxCFrame: CFrame, hitboxSize: Vector3, damage: number): { any }
+	local results = {}
+	for _, model in MonsterService.GetMonstersInHitbox(hitboxCFrame, hitboxSize) do
+		table.insert(results, { model = model, damage = MonsterService.DamageModel(player, model, damage, false) })
+	end
+	return results
+end
+
 function MonsterService.DamageMonstersInRadius(
 	player: Player,
 	center: Vector3,
 	radius: number,
 	damage: number,
 	trueDamage: boolean?
+): { any }
+	local results = {}
+	for _, model in MonsterService.GetMonstersInRadius(center, radius) do
+		table.insert(results, { model = model, damage = MonsterService.DamageModel(player, model, damage, trueDamage) })
+	end
+	return results
+end
+
+-- Refreshing the same effect replaces its older task instead of stacking an
+-- unbounded number of bleed/poison loops. Every tick still routes through the
+-- authoritative damage and reward paths above.
+function MonsterService.ApplyDamageOverTime(
+	player: Player,
+	model: Model,
+	effectName: string,
+	damagePerTick: number,
+	ticks: number,
+	tickRate: number
 )
-	if not monsterFolder then
+	if not model or not model.Parent or model:GetAttribute("Dead") then
 		return
 	end
-	for _, model in monsterFolder:GetChildren() do
-		if model:IsA("Model") and model.PrimaryPart and not model:GetAttribute("Dead") then
-			local distance = (model.PrimaryPart.Position - center).Magnitude
-			if distance <= radius + model.PrimaryPart.Size.Magnitude * 0.35 then
-				if model:GetAttribute("BossKey") and BossService then
-					BossService.DamageBoss(model, damage, player, trueDamage == true)
-				else
-					applyDamage(model, damage, player)
-				end
+	local tokenAttribute = "Status" .. effectName .. "Token"
+	local token = (model:GetAttribute(tokenAttribute) or 0) + 1
+	model:SetAttribute(tokenAttribute, token)
+	model:SetAttribute(effectName .. "Until", os.clock() + ticks * tickRate)
+	task.spawn(function()
+		for _ = 1, ticks do
+			task.wait(tickRate)
+			if not model.Parent or model:GetAttribute("Dead") or model:GetAttribute(tokenAttribute) ~= token then
+				return
 			end
+			MonsterService.DamageModel(player, model, damagePerTick, false)
 		end
+	end)
+end
+
+function MonsterService.ApplyArmorBreak(model: Model, duration: number, reductionMultiplier: number, damageMultiplier: number)
+	if not model or not model.Parent or model:GetAttribute("Dead") then
+		return
 	end
+	model:SetAttribute("ArmorBreakUntil", math.max(model:GetAttribute("ArmorBreakUntil") or 0, os.clock() + duration))
+	model:SetAttribute("ArmorBreakReductionMultiplier", math.clamp(reductionMultiplier, 0, 1))
+	model:SetAttribute("ArmorBreakDamageMultiplier", math.max(1, damageMultiplier))
+end
+
+function MonsterService.SetPlayerGuard(player: Player, kind: string, duration: number, power: number, reflectScale: number, damageReduction: number?)
+	guardStates[player] = {
+		kind = kind,
+		expiresAt = os.clock() + duration,
+		power = math.max(0, power),
+		reflectScale = math.max(0, reflectScale),
+		damageReduction = math.clamp(damageReduction or 0, 0, 0.9),
+	}
 end
 
 -- Shared authoritative damage path for common monsters and boss hazards. Keeping
 -- lastHurt here prevents out-of-combat regeneration from running during boss hits.
-function MonsterService.DamagePlayer(player: Player, damage: number): boolean
+function MonsterService.DamagePlayer(player: Player, damage: number, sourceModel: Model?): boolean
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if not humanoid or humanoid.Health <= 0 or damage <= 0 then
 		return false
 	end
-	humanoid:TakeDamage(damage)
+	local state = guardStates[player]
+	if state and os.clock() > state.expiresAt then
+		guardStates[player] = nil
+		state = nil
+	end
+	if state and state.kind == "parry" then
+		guardStates[player] = nil -- a parry consumes the guard on the first blocked hit
+		if sourceModel and sourceModel.Parent then
+			MonsterService.DamageModel(player, sourceModel, state.power * state.reflectScale, false)
+		end
+		if root and root:IsA("BasePart") then
+			Remotes.Get("SwordSpecial"):FireClient(player, "parry", root.Position, 5)
+		end
+		return true
+	end
+
+	local finalDamage = damage
+	if state and state.kind == "thorns" then
+		finalDamage *= (1 - state.damageReduction)
+		if sourceModel and sourceModel.Parent then
+			MonsterService.DamageModel(player, sourceModel, state.power * state.reflectScale, false)
+		end
+		if root and root:IsA("BasePart") then
+			Remotes.Get("SwordSpecial"):FireClient(player, "thorns", root.Position, 6)
+		end
+	end
+	finalDamage = math.max(0.1, finalDamage)
+	humanoid:TakeDamage(finalDamage)
 	lastHurt[player] = os.clock()
-	Remotes.Get("PlayerHurt"):FireClient(player, damage)
+	Remotes.Get("PlayerHurt"):FireClient(player, finalDamage)
 	return true
 end
 
@@ -493,7 +591,7 @@ local function runMonster(model: Model, def, origin: Vector3)
 						local plr = Players:GetPlayerFromCharacter(target)
 						local hum = target:FindFirstChildOfClass("Humanoid")
 						if plr then
-							MonsterService.DamagePlayer(plr, def.damage or 1)
+							MonsterService.DamagePlayer(plr, def.damage or 1, model)
 						elseif hum and hum.Health > 0 then
 							hum:TakeDamage(def.damage or 1)
 						end
@@ -664,6 +762,7 @@ function MonsterService.Start()
 	Players.PlayerRemoving:Connect(function(plr)
 		dryCount[plr] = nil
 		lastHurt[plr] = nil
+		guardStates[plr] = nil
 	end)
 
 	-- Gentle out-of-combat regen so a 3-HP Meadow start isn't a death sentence.

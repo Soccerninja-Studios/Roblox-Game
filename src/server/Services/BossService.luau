@@ -381,7 +381,7 @@ local function makeLane(startPos: Vector3, endPos: Vector3, width: number, color
 	return marker
 end
 
-local function damagePlayersAtPoints(points: { Vector3 }, radius: number, damage: number)
+local function damagePlayersAtPoints(points: { Vector3 }, radius: number, damage: number, source: Model?)
 	for _, player in Players:GetPlayers() do
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -391,7 +391,7 @@ local function damagePlayersAtPoints(points: { Vector3 }, radius: number, damage
 				local delta = root.Position - point
 				local flatDistance = Vector3.new(delta.X, 0, delta.Z).Magnitude
 				if flatDistance <= radius and math.abs(delta.Y) <= 12 then
-					MonsterService.DamagePlayer(player, damage)
+					MonsterService.DamagePlayer(player, damage, source)
 					break
 				end
 			end
@@ -523,8 +523,99 @@ local function castSlam(model: Model, def: any, ability: any)
 	if not model.Parent or model:GetAttribute("Dead") then
 		return
 	end
-	damagePlayersAtPoints({ center }, radius, ability.damage or def.damage)
+	damagePlayersAtPoints({ center }, radius, ability.damage or def.damage, model)
 	raiseSpike(center, radius, ability.height or 3, c3(def.accentColor))
+end
+
+-- Raise one hollow square ridge. Four separate sides make a true ring instead of
+-- the old solid cube, and each side samples the actual ground beneath it.
+local function raiseSquareShockwaveRing(center: Vector3, radius: number, width: number, height: number, color: Color3, riseTime: number)
+	local sides = {
+		{ offset = Vector3.new(0, 0, -radius), size = Vector3.new(radius * 2 + width, height, width) },
+		{ offset = Vector3.new(0, 0, radius), size = Vector3.new(radius * 2 + width, height, width) },
+		{ offset = Vector3.new(-radius, 0, 0), size = Vector3.new(width, height, math.max(width, radius * 2 - width)) },
+		{ offset = Vector3.new(radius, 0, 0), size = Vector3.new(width, height, math.max(width, radius * 2 - width)) },
+	}
+	for _, side in sides do
+		local ground = groundPoint(center + side.offset)
+		local ridge = Instance.new("Part")
+		ridge.Name = "MirequakeSquareRing"
+		ridge.Size = Vector3.new(side.size.X, 0.12, side.size.Z)
+		ridge.CFrame = CFrame.new(ground + Vector3.new(0, 0.06, 0))
+		ridge.Color = color
+		ridge.Material = Enum.Material.Neon
+		ridge.Transparency = 0.22
+		ridge.Anchored = true
+		ridge.CanCollide = false
+		ridge.CanQuery = false
+		ridge.CanTouch = false
+		ridge.Parent = Workspace
+		TweenService:Create(ridge, TweenInfo.new(riseTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = side.size,
+			CFrame = CFrame.new(ground + Vector3.new(0, height * 0.5, 0)),
+		}):Play()
+		task.delay(riseTime + 0.3, function()
+			if ridge.Parent then
+				TweenService:Create(ridge, TweenInfo.new(0.35), {
+					Transparency = 1,
+					CFrame = ridge.CFrame + Vector3.new(0, 0.8, 0),
+				}):Play()
+			end
+		end)
+		Debris:AddItem(ridge, riseTime + 0.75)
+	end
+end
+
+local function damagePlayersAtSquareRing(center: Vector3, radius: number, width: number, damage: number, source: Model)
+	for _, player in Players:GetPlayers() do
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if root and root:IsA("BasePart") and humanoid and humanoid.Health > 0 then
+			local offset = root.Position - center
+			local squareDistance = math.max(math.abs(offset.X), math.abs(offset.Z))
+			if math.abs(squareDistance - radius) <= width * 0.65 and math.abs(offset.Y) <= 12 then
+				MonsterService.DamagePlayer(player, damage, source)
+			end
+		end
+	end
+end
+
+local function castShockwave(model: Model, def: any, ability: any)
+	local root = model.PrimaryPart
+	if not root then
+		return
+	end
+	setPhase(model, def, ability.label or "Shaking the mire")
+	local center = groundPoint(root.Position)
+	local startRadius = ability.startRadius or 6
+	local ringCount = ability.ringCount or 5
+	local spacing = ability.ringSpacing or 4
+	local maxRadius = ability.maxRadius or (startRadius + (ringCount - 1) * spacing)
+	local width = ability.ringWidth or 2.2
+	local height = ability.height or 2.4
+	local windup = ability.windup or 1.3
+	local riseTime = ability.riseTime or 0.3
+	local stepDelay = ability.stepDelay or 0.28
+	local color = c3(def.poolColor or def.accentColor)
+
+	-- One large warning disc establishes the complete danger area; the square
+	-- ridges then rise and deal damage one-by-one from the center outward.
+	makeTelegraph(center, maxRadius, color, windup)
+	task.wait(windup)
+	if not model.Parent or model:GetAttribute("Dead") then
+		return
+	end
+	for index = 1, ringCount do
+		if not model.Parent or model:GetAttribute("Dead") then
+			return
+		end
+		local radius = math.min(maxRadius, startRadius + (index - 1) * spacing)
+		raiseSquareShockwaveRing(center, radius, width, height, color, riseTime)
+		task.wait(riseTime)
+		damagePlayersAtSquareRing(center, radius, width, ability.damage or def.damage, model)
+		task.wait(stepDelay)
+	end
 end
 
 local function spikePoints(model: Model, ability: any): { Vector3 }
@@ -565,7 +656,7 @@ local function castSpikes(model: Model, def: any, ability: any)
 	if not model.Parent or model:GetAttribute("Dead") then
 		return
 	end
-	damagePlayersAtPoints(points, radius, ability.damage or def.damage)
+	damagePlayersAtPoints(points, radius, ability.damage or def.damage, model)
 	for _, point in points do
 		raiseSpike(point, radius, ability.height or 8, c3(def.accentColor))
 	end
@@ -616,7 +707,7 @@ local function castPools(model: Model, def: any, ability: any)
 		local elapsed = 0
 		local tickRate = ability.tickRate or 1
 		while elapsed < duration and model.Parent and not model:GetAttribute("Dead") do
-			damagePlayersAtPoints(points, radius, ability.damage or 1)
+			damagePlayersAtPoints(points, radius, ability.damage or 1, model)
 			task.wait(tickRate)
 			elapsed += tickRate
 		end
@@ -666,7 +757,7 @@ local function castCharge(model: Model, def: any, ability: any)
 					local flat = Vector3.new(playerRoot.Position.X - pos.X, 0, playerRoot.Position.Z - pos.Z)
 					if flat.Magnitude <= (ability.width or 8) * 0.65 then
 						hit[player] = true
-						MonsterService.DamagePlayer(player, ability.damage or def.damage)
+						MonsterService.DamagePlayer(player, ability.damage or def.damage, model)
 					end
 				end
 			end
@@ -717,6 +808,8 @@ local function castAbility(model: Model, def: any, ability: any)
 			castSummon(model, def, ability)
 		elseif ability.kind == "slam" then
 			castSlam(model, def, ability)
+		elseif ability.kind == "shockwave" then
+			castShockwave(model, def, ability)
 		elseif ability.kind == "spikes" then
 			castSpikes(model, def, ability)
 		elseif ability.kind == "pools" then
@@ -805,7 +898,7 @@ local function runBoss(model: Model, def: any, origin: Vector3)
 				elseif distance <= (def.attackRange or 7) then
 					if now - lastBasic >= (def.attackCooldown or 1.3) then
 						lastBasic = now
-						MonsterService.DamagePlayer(player, def.damage or 1)
+						MonsterService.DamagePlayer(player, def.damage or 1, model)
 					end
 				else
 					local target = targetRoot.Position
@@ -829,6 +922,8 @@ local function runBoss(model: Model, def: any, origin: Vector3)
 				root.CFrame = CFrame.new(grounded + Vector3.new(0, height, 0))
 				model:SetAttribute("Health", def.hp)
 				model:SetAttribute("DamageReduction", 0)
+				model:SetAttribute("ArmorBreakUntil", nil)
+				model:SetAttribute("ArmorBreakReductionMultiplier", nil)
 				contributors[model] = {}
 				updateNameplate(model)
 				setPhase(model, def, "Waiting for a challenger")
@@ -936,6 +1031,9 @@ function BossService.DamageBoss(model: Model, rawDamage: number, player: Player,
 	local damage = math.max(0, tonumber(rawDamage) or 0)
 	if not trueDamage then
 		local reduction = math.clamp(model:GetAttribute("DamageReduction") or 0, 0, 0.9)
+		if (model:GetAttribute("ArmorBreakUntil") or 0) > os.clock() then
+			reduction *= model:GetAttribute("ArmorBreakReductionMultiplier") or 0.4
+		end
 		damage *= (1 - reduction)
 	end
 	damage = math.max(1, math.floor(damage + 0.5))
