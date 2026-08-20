@@ -542,7 +542,40 @@ local GameConfig = {
 		feedGrowth = 4,
 		levelBonusGrowth = 0.04,
 		goldenBonusMultiplier = 1.5,
+		maxRank = 5,
+		rankBonusGrowth = 0.15,
+		rankCosts = { 25, 60, 120, 220 }, -- rank 1->2 through rank 4->5
 		followResponsiveness = 8,
+	},
+
+	-- Equal-sized, equal-probability wheel slots: one of twelve is Golden (8.33%).
+	-- Pity guarantees that slot by the twentieth unsuccessful spin. Gold and essence
+	-- scale with the highest ring reached so the wheel remains useful throughout.
+	PET_REWARDS = {
+		freeSpinCooldown = 86400,
+		paidSpinDiamonds = 5,
+		wheelPitySpins = 20,
+		wheelLockSeconds = 2.6,
+		duplicateGoldenShards = 50,
+		crateDiamonds = 4,
+		crateRarePity = 8,
+		crateLockSeconds = 1.25,
+		goldScaleByRing = { 1, 5, 25, 100, 400 },
+		essenceByRing = { 8, 12, 20, 35, 60 },
+		wheelSlots = {
+			{ kind = "gold", label = "Gold Pouch", amount = 250 },
+			{ kind = "shards", label = "8 Pet Shards", amount = 8 },
+			{ kind = "essence", label = "Ring Essence" },
+			{ kind = "gold", label = "Gold Cache", amount = 750 },
+			{ kind = "shards", label = "15 Pet Shards", amount = 15 },
+			{ kind = "diamonds", label = "2 Diamonds", amount = 2 },
+			{ kind = "gold", label = "Gold Pouch", amount = 250 },
+			{ kind = "shards", label = "8 Pet Shards", amount = 8 },
+			{ kind = "essence", label = "Ring Essence" },
+			{ kind = "shards", label = "30 Pet Shards", amount = 30 },
+			{ kind = "gold", label = "Royal Gold Cache", amount = 1500 },
+			{ kind = "golden", label = "Golden Pet" },
+		},
 	},
 
 	PETS = {

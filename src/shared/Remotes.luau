@@ -67,6 +67,12 @@ local REMOTE_NAMES = {
 	"RecruitPet",
 	"EquipPet",
 	"FeedPet",
+	-- Golden wheel, pet-shard crate, and shard-rank progression.
+	"RequestPetRewards",
+	"PetRewardState",
+	"SpinPetWheel",
+	"OpenPetCrate",
+	"UpgradePetRank",
 	-- Studio-only boss testing. The server rejects this outside Studio.
 	"DebugSpawnBoss", -- client -> server: request a focused Studio boss spawn
 	"BossDebugResult", -- server -> client: success/error feedback for that request
