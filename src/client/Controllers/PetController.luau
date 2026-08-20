@@ -22,6 +22,7 @@ local INK = Color3.fromRGB(45, 55, 42)
 local SUBTLE = Color3.fromRGB(92, 102, 83)
 local WHITE = Color3.fromRGB(255, 255, 248)
 local GOLD = Color3.fromRGB(235, 190, 62)
+local PURPLE = Color3.fromRGB(143, 92, 188)
 local LOCKED = Color3.fromRGB(128, 133, 124)
 
 local latest: any = nil
@@ -138,6 +139,9 @@ local function fallbackState(): any
 			owned = false, equipped = false, unlocked = false, pending = true,
 			level = 1, maxLevel = GameConfig.PET_SYSTEM.maxLevel or 25,
 			xp = 0, nextFeed = GameConfig.PET_SYSTEM.feedBase or 8,
+			golden = false, shards = 0, rank = 1,
+			maxRank = GameConfig.PET_SYSTEM.maxRank or 5,
+			nextRankCost = GameConfig.PET_SYSTEM.rankCosts and GameConfig.PET_SYSTEM.rankCosts[1] or 25,
 			goldCost = def.goldCost or 0, diamondCost = def.diamondCost or 0,
 			essenceKey = def.essenceKey,
 			essenceName = if def.essenceKey and GameConfig.ESSENCE[def.essenceKey] then GameConfig.ESSENCE[def.essenceKey].name else "Essence",
@@ -212,7 +216,7 @@ local function buildPetCard(host: Instance, pet: any, state: any, order: number)
 	local bonus = Instance.new("TextLabel")
 	bonus.BackgroundTransparency = 1
 	bonus.Position = UDim2.fromOffset(23, 55)
-	bonus.Size = UDim2.new(1, -46, 0, 36)
+	bonus.Size = UDim2.new(1, -170, 0, 36)
 	bonus.Font = Enum.Font.GothamMedium
 	bonus.Text = bonusText(pet.bonuses)
 	bonus.TextColor3 = GREEN_DARK
@@ -231,9 +235,10 @@ local function buildPetCard(host: Instance, pet: any, state: any, order: number)
 	if pet.pending then
 		progress.Text = "Syncing collection\u{2026}"
 	elseif pet.owned then
+		local rankText = "Rank " .. tostring(pet.rank or 1) .. " / " .. tostring(pet.maxRank or 5)
 		progress.Text = if pet.nextFeed
-			then "Level " .. tostring(pet.level) .. " / " .. tostring(pet.maxLevel) .. "   \u{2022}   Feed " .. tostring(pet.xp) .. " / " .. tostring(pet.nextFeed)
-			else "Level " .. tostring(pet.level) .. " / " .. tostring(pet.maxLevel) .. "   \u{2022}   MAX"
+			then "Level " .. tostring(pet.level) .. " / " .. tostring(pet.maxLevel) .. "   \u{2022}   " .. rankText .. "   \u{2022}   Feed " .. tostring(pet.xp) .. " / " .. tostring(pet.nextFeed)
+			else "Level " .. tostring(pet.level) .. " / " .. tostring(pet.maxLevel) .. "   \u{2022}   " .. rankText .. "   \u{2022}   MAX"
 	else
 		progress.Text = if pet.unlocked then priceText(pet) else "Reach " .. tostring(pet.zone) .. " to unlock"
 	end
@@ -267,6 +272,24 @@ local function buildPetCard(host: Instance, pet: any, state: any, order: number)
 		main.Activated:Connect(function()
 			Remotes.Get("RecruitPet"):FireServer(pet.key)
 		end)
+	end
+
+	if pet.owned and not pet.pending then
+		local rank = actionButton(card, "", UDim2.new(1, -132, 0, 52), UDim2.fromOffset(120, 32), PURPLE)
+		rank.TextSize = 10
+		if pet.nextRankCost then
+			local affordable = (pet.shards or 0) >= pet.nextRankCost
+			rank.Text = "Rank Up  " .. tostring(pet.nextRankCost) .. " shards"
+			if not affordable then
+				disabled(rank)
+			end
+			rank.Activated:Connect(function()
+				Remotes.Get("UpgradePetRank"):FireServer(pet.key)
+			end)
+		else
+			rank.Text = "Rank MAX  \u{2B50}"
+			disabled(rank)
+		end
 	end
 
 	if pet.owned and pet.nextFeed and not pet.pending then
