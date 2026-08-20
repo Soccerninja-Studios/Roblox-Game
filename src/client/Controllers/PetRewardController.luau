@@ -238,6 +238,7 @@ local function buildGui()
 	gui.Parent = playerGui
 
 	local open = button(gui, "\u{2728} REWARDS", UDim2.new(1, -130, 0.5, 122), UDim2.fromOffset(112, 44), PURPLE)
+	open.Name = "RewardsButton"
 	open.AnchorPoint = Vector2.new(0, 0.5)
 	open.Activated:Connect(function()
 		setOpen(not (panel and panel.Visible))
@@ -490,6 +491,9 @@ local function ensureWired()
 	end
 	wired = true
 	Remotes.Get("PetRewardState").OnClientEvent:Connect(applyState)
+	Remotes.Get("OpenPhysicalPetWheel").OnClientEvent:Connect(function()
+		setOpen(true)
+	end)
 end
 
 function PetRewardController.Init()
