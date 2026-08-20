@@ -302,6 +302,12 @@ local GameConfig = {
 	GARDENER_POSITION = Vector3.new(-479.75, -0.16, -1037),
 	GARDENER_ZONE_RADIUS = 14,
 
+	-- Full-size physical Golden Pet Wheel, beside the Shop/Gardener side of the
+	-- house. WheelWorldService grounds this point and builds the interaction prompt.
+	PET_WHEEL_POSITION = Vector3.new(-515, -0.16, -995),
+	PET_WHEEL_INTERACTION_RADIUS = 16,
+	PET_WHEEL_DIAMETER = 15,
+
 	-- Quest Giver ("Sprigman The Questgiver"): hands out the zone quest board. Placed
 	-- at the front-CENTER of the house, between the shop and the gardener, on the
 	-- ground (Y = -0.16). Walk near and press the prompt to open the quest board.
@@ -545,7 +551,10 @@ local GameConfig = {
 		maxRank = 5,
 		rankBonusGrowth = 0.15,
 		rankCosts = { 25, 60, 120, 220 }, -- rank 1->2 through rank 4->5
-		followResponsiveness = 8,
+		followResponsiveness = 24,
+		followUpdateHz = 30,
+		followPredictionSeconds = 0.08,
+		followSnapDistance = 12,
 	},
 
 	-- Equal-sized, equal-probability wheel slots: one of twelve is Golden (8.33%).
@@ -576,6 +585,16 @@ local GameConfig = {
 			{ kind = "gold", label = "Royal Gold Cache", amount = 1500 },
 			{ kind = "golden", label = "Golden Pet" },
 		},
+	},
+
+	-- One rescued neighbor per ring. Each unlocks an immediate permanent side
+	-- perk, matching the five persisted rescue_neighbor quests.
+	VILLAGERS = {
+		{ key = "farmerFields", name = "Farmer Fields", zone = "Meadow", feature = "Field Wisdom", desc = "+8% clipping value from every deposit.", bonus = { clippingValue = 0.08 }, bodyColor = { 112, 166, 78 }, accentColor = { 238, 205, 104 } },
+		{ key = "rangerRowan", name = "Ranger Rowan", zone = "Wild", feature = "Ranger Tempo", desc = "+8% sword attack speed.", bonus = { attackSpeed = 0.08 }, bodyColor = { 82, 126, 72 }, accentColor = { 194, 132, 72 } },
+		{ key = "herbalistHazel", name = "Herbalist Hazel", zone = "Mossmire", feature = "Mire Remedy", desc = "+12% maximum health.", bonus = { maxHealth = 0.12 }, bodyColor = { 104, 86, 138 }, accentColor = { 126, 204, 146 } },
+		{ key = "woodcutterWren", name = "Woodcutter Wren", zone = "Thicket", feature = "Woodcraft", desc = "+12% backpack capacity.", bonus = { bagCapacity = 0.12 }, bodyColor = { 106, 74, 48 }, accentColor = { 116, 184, 92 } },
+		{ key = "blacksmithBrand", name = "Blacksmith Brand", zone = "Ironweed", feature = "Masterwork", desc = "+12% sword damage.", bonus = { swordDamage = 0.12 }, bodyColor = { 76, 86, 94 }, accentColor = { 156, 212, 218 } },
 	},
 
 	PETS = {

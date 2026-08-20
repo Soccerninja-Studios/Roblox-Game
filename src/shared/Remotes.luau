@@ -73,6 +73,11 @@ local REMOTE_NAMES = {
 	"SpinPetWheel",
 	"OpenPetCrate",
 	"UpgradePetRank",
+	"OpenPhysicalPetWheel", -- physical world prompt -> client wheel interface
+	-- Rescued neighbors and their permanent side-feature perks.
+	"RequestVillagers",
+	"VillagerState",
+	"OpenVillagerMenu",
 	-- Studio-only boss testing. The server rejects this outside Studio.
 	"DebugSpawnBoss", -- client -> server: request a focused Studio boss spawn
 	"BossDebugResult", -- server -> client: success/error feedback for that request
