@@ -25,9 +25,9 @@ local lastAction: { [Player]: number } = {}
 local lastRequest: { [Player]: number } = {}
 
 local SLOT_OFFSETS = {
-	Vector3.new(-3.4, 0, 3.2),
-	Vector3.new(3.4, 0, 3.2),
-	Vector3.new(0, 0, 4.8),
+	Vector3.new(-2.35, 0, 2.35),
+	Vector3.new(2.35, 0, 2.35),
+	Vector3.new(0, 0, 3.25),
 }
 
 local STAT_LABELS = {
@@ -611,10 +611,11 @@ function PetService.Start()
 	local followAccumulator = 0
 	RunService.Heartbeat:Connect(function(dt)
 		followAccumulator += dt
-		if followAccumulator < 0.05 then
-			return -- cap replicated follower movement at 20 Hz
+		local interval = 1 / (GameConfig.PET_SYSTEM.followUpdateHz or 30)
+		if followAccumulator < interval then
+			return -- quicker, smaller follower corrections at a capped update rate
 		end
-		local step = math.min(followAccumulator, 0.15)
+		local step = math.min(followAccumulator, 0.1)
 		followAccumulator = 0
 		local responsiveness = GameConfig.PET_SYSTEM.followResponsiveness or 8
 		local alpha = 1 - math.exp(-responsiveness * step)
@@ -636,8 +637,16 @@ function PetService.Start()
 				-- stay near the player's feet; flying pets hover near waist height.
 				local baseHeight = if entry.def.flying then 0.65 else -1.65
 				local bob = math.sin(now * 3 + entry.slot * 1.7) * (if entry.def.flying then 0.35 else 0.12)
-				local target = (root :: BasePart).CFrame * CFrame.new(offset.X, baseHeight + bob, offset.Z)
-				model:PivotTo(model:GetPivot():Lerp(target, alpha))
+				local rootPart = root :: BasePart
+				local prediction = Vector3.new(rootPart.AssemblyLinearVelocity.X, 0, rootPart.AssemblyLinearVelocity.Z)
+					* (GameConfig.PET_SYSTEM.followPredictionSeconds or 0.08)
+				local target = (rootPart.CFrame * CFrame.new(offset.X, baseHeight + bob, offset.Z)) + prediction
+				local current = model:GetPivot()
+				if (current.Position - target.Position).Magnitude > (GameConfig.PET_SYSTEM.followSnapDistance or 12) then
+					model:PivotTo(target)
+				else
+					model:PivotTo(current:Lerp(target, alpha))
+				end
 			end
 		end
 	end)

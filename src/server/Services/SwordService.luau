@@ -312,7 +312,7 @@ local function onSwordSwing(player: Player)
 
 	local now = os.clock()
 	local cd = StatCalculator.GetSwordCooldown(key, profile.skills)
-	cd /= (1 + PlayerDataService.GetPetBonus(profile, "attackSpeed"))
+	cd /= (1 + PlayerDataService.GetPetBonus(profile, "attackSpeed") + PlayerDataService.GetVillagerBonus(profile, "attackSpeed"))
 	if now - (lastSwing[player] or 0) < cd * 0.85 then
 		return
 	end
@@ -320,7 +320,7 @@ local function onSwordSwing(player: Player)
 
 	local level = (profile.swords.level and profile.swords.level[key]) or 1
 	local damage = StatCalculator.GetSwordDamage(key, level, profile.skills)
-	damage *= (1 + PlayerDataService.GetPetBonus(profile, "swordDamage"))
+	damage *= (1 + PlayerDataService.GetPetBonus(profile, "swordDamage") + PlayerDataService.GetVillagerBonus(profile, "swordDamage"))
 	local reach = StatCalculator.GetSwordReach(key)
 	local rootPart = root :: BasePart
 	local special = def.special

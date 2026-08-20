@@ -14,6 +14,7 @@ local PetRewardService = {}
 local PlayerDataService: any
 local PetService: any
 local QuestService: any
+local WheelWorldService: any
 local rng = Random.new()
 
 local defByKey: { [string]: any } = {}
@@ -284,6 +285,9 @@ local function onSpin(player: Player)
 	rewards.totalSpins += 1
 	busyUntil[player] = now + (GameConfig.PET_REWARDS.wheelLockSeconds or 2.6)
 	local result = applyWheelSlot(player, profile, slotIndex)
+	if WheelWorldService and typeof(WheelWorldService.SpinForResult) == "function" then
+		WheelWorldService.SpinForResult(slotIndex)
+	end
 	result.action = "wheel"
 	result.id = resultId(player, "wheel", rewards.totalSpins)
 	result.usedFreeSpin = usingFree
@@ -401,6 +405,7 @@ function PetRewardService.Init(services: any)
 	PlayerDataService = services.PlayerDataService
 	PetService = services.PetService
 	QuestService = services.QuestService
+	WheelWorldService = services.WheelWorldService
 	for _, def in ipairs(GameConfig.PETS or {}) do
 		defByKey[def.key] = def
 	end

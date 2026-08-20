@@ -38,6 +38,7 @@ local LIVE_KINDS: { [string]: boolean } = {
 	defeat_boss = true,
 	boss_repeat = true,
 	recruit_pet = true,
+	rescue_neighbor = true,
 }
 
 -- Combat kinds are live only where their actual content exists. This keeps the
@@ -73,6 +74,13 @@ local function isQuestLive(quest: any): boolean
 	elseif kind == "buy_sword" then
 		for _, def in ipairs(GameConfig.SWORDS) do
 			if def.zone == quest.zone and def.name == objective.sword then
+				return true
+			end
+		end
+		return false
+	elseif kind == "rescue_neighbor" then
+		for _, def in ipairs(GameConfig.VILLAGERS or {}) do
+			if def.zone == quest.zone and def.name == objective.neighbor then
 				return true
 			end
 		end
@@ -454,6 +462,18 @@ function QuestService.ReportSwordPurchase(player: Player, _swordName: string)
 			end
 		end
 		return setAtLeast(profile, quest, ownedCount)
+	end)
+end
+
+function QuestService.ReportVillagerRescue(player: Player, neighborName: string)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	sweep(player, function(quest)
+		return quest.objective.kind == "rescue_neighbor" and quest.objective.neighbor == neighborName
+	end, function(quest)
+		return setAtLeast(profile, quest, 1)
 	end)
 end
 

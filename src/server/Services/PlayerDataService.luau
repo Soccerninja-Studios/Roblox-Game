@@ -68,6 +68,10 @@ export type Profile = {
 		totalSpins: number,
 		totalCrates: number,
 	},
+	villagers: {
+		rescued: { [string]: boolean },
+		features: { [string]: boolean },
+	},
 }
 
 -- What we actually store: the profile plus a lightweight session lock.
@@ -77,7 +81,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 9
+local PROFILE_VERSION = 10
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -127,6 +131,7 @@ local function defaultProfile(): Profile
 		bosses = { kills = {}, trophies = {}, crowns = {} },
 		pets = { owned = {}, equipped = {} },
 		petRewards = { lastFreeSpin = 0, wheelPity = 0, cratePity = 0, totalSpins = 0, totalCrates = 0 },
+		villagers = { rescued = {}, features = {} },
 	}
 end
 
@@ -228,6 +233,15 @@ local function reconcile(profile: Profile): Profile
 	profile.petRewards.cratePity = math.max(0, math.floor(tonumber(profile.petRewards.cratePity) or 0))
 	profile.petRewards.totalSpins = math.max(0, math.floor(tonumber(profile.petRewards.totalSpins) or 0))
 	profile.petRewards.totalCrates = math.max(0, math.floor(tonumber(profile.petRewards.totalCrates) or 0))
+	-- v9 -> v10: rescued neighbors and unlocked permanent side features.
+	profile.villagers = profile.villagers or { rescued = {}, features = {} }
+	profile.villagers.rescued = profile.villagers.rescued or {}
+	profile.villagers.features = profile.villagers.features or {}
+	for _, def in ipairs(GameConfig.VILLAGERS or {}) do
+		if profile.villagers.rescued[def.key] then
+			profile.villagers.features[def.feature] = true
+		end
+	end
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -394,6 +408,26 @@ function PlayerDataService.GetPetBonus(profile: Profile, stat: string): number
 	return PlayerDataService.GetPetBonuses(profile)[stat] or 0
 end
 
+function PlayerDataService.GetVillagerBonuses(profile: Profile): { [string]: number }
+	local totals: { [string]: number } = {}
+	local rescued = profile.villagers and profile.villagers.rescued
+	if not rescued then
+		return totals
+	end
+	for _, def in ipairs(GameConfig.VILLAGERS or {}) do
+		if rescued[def.key] then
+			for stat, amount in def.bonus or {} do
+				totals[stat] = (totals[stat] or 0) + amount
+			end
+		end
+	end
+	return totals
+end
+
+function PlayerDataService.GetVillagerBonus(profile: Profile, stat: string): number
+	return PlayerDataService.GetVillagerBonuses(profile)[stat] or 0
+end
+
 -- Send the client a fresh snapshot of everything it needs to render UI/stats.
 function PlayerDataService.PushState(player: Player)
 	local profile = profiles[player]
@@ -417,6 +451,7 @@ function PlayerDataService.PushState(player: Player)
 		skills = profile.skills,
 		essence = table.clone(profile.essence or {}),
 		petBonuses = PlayerDataService.GetPetBonuses(profile),
+		villagerBonuses = PlayerDataService.GetVillagerBonuses(profile),
 		bosses = {
 			kills = table.clone(profile.bosses.kills or {}),
 			trophies = table.clone(profile.bosses.trophies or {}),
@@ -447,7 +482,7 @@ function PlayerDataService.GetBagCapacity(profile: Profile): number
 	local def, level = PlayerDataService.GetEquippedBackpack(profile)
 	if def then
 		local baseCapacity = def.levels[level].capacity
-		return math.max(1, math.floor(baseCapacity * (1 + PlayerDataService.GetPetBonus(profile, "bagCapacity")) + 0.5))
+		return math.max(1, math.floor(baseCapacity * (1 + PlayerDataService.GetPetBonus(profile, "bagCapacity") + PlayerDataService.GetVillagerBonus(profile, "bagCapacity")) + 0.5))
 	end
 	-- Pre-v4 fallback, only reachable if the equipped key is missing from config.
 	local tier = GameConfig.BAG_TIERS[profile.bagTier] or GameConfig.BAG_TIERS[1]
@@ -496,7 +531,7 @@ function PlayerDataService.Deposit(player: Player): { clippings: number, gold: n
 		return { clippings = 0, gold = 0, diamonds = 0 }
 	end
 	local carried = profile.clippings
-	local valueBonus = PlayerDataService.GetPetBonus(profile, "clippingValue")
+	local valueBonus = PlayerDataService.GetPetBonus(profile, "clippingValue") + PlayerDataService.GetVillagerBonus(profile, "clippingValue")
 	local goldGained = math.floor(carried * GameConfig.CLIPPING_TO_GOLD * (1 + valueBonus))
 	local diamondsGained = 0
 	local rolls = math.floor(carried / GameConfig.DIAMOND_ROLL_PER_CLIPPINGS)

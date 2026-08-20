@@ -51,7 +51,7 @@ function MonsterService.ApplyMaxHP(player: Player, preserveHealth: boolean?)
 	end
 	local reached = profile and profile.quests and profile.quests.reached
 	local baseHP = StatCalculator.GetPlayerMaxHP(reached)
-	local healthBonus = if profile then PlayerDataService.GetPetBonus(profile, "maxHealth") else 0
+	local healthBonus = if profile then PlayerDataService.GetPetBonus(profile, "maxHealth") + PlayerDataService.GetVillagerBonus(profile, "maxHealth") else 0
 	local maxHP = math.max(1, math.floor(baseHP * (1 + healthBonus) + 0.5))
 	local oldMax = hum.MaxHealth
 	local oldHealth = hum.Health
