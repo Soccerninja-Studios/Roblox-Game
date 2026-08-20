@@ -72,8 +72,9 @@ local function scaledBonuses(def: any, data: any): { [string]: number }
 	local cfg = GameConfig.PET_SYSTEM
 	local levelScale = 1 + math.max(0, (data.level or 1) - 1) * (cfg.levelBonusGrowth or 0.04)
 	local goldenScale = if data.golden then (cfg.goldenBonusMultiplier or 1.5) else 1
+	local rankScale = 1 + math.max(0, (data.rank or 1) - 1) * (cfg.rankBonusGrowth or 0.15)
 	for stat, value in def.bonuses or {} do
-		result[stat] = value * levelScale * goldenScale
+		result[stat] = value * levelScale * goldenScale * rankScale
 	end
 	return result
 end
@@ -102,6 +103,7 @@ local function cleanLoadout(profile: any)
 		data.xp = math.max(0, math.floor(tonumber(data.xp) or 0))
 		data.golden = data.golden == true
 		data.shards = math.max(0, math.floor(tonumber(data.shards) or 0))
+		data.rank = math.clamp(math.floor(tonumber(data.rank) or 1), 1, GameConfig.PET_SYSTEM.maxRank or 5)
 		if data.level >= maxLevel then
 			data.xp = 0
 		else
@@ -148,6 +150,9 @@ local function buildState(player: Player, message: string?): any
 			nextFeed = if data and level < maxLevel then feedNeeded(level) else nil,
 			golden = data and data.golden == true or false,
 			shards = if data then data.shards or 0 else 0,
+			rank = if data then data.rank or 1 else 1,
+			maxRank = GameConfig.PET_SYSTEM.maxRank or 5,
+			nextRankCost = if data and (data.rank or 1) < (GameConfig.PET_SYSTEM.maxRank or 5) then GameConfig.PET_SYSTEM.rankCosts[data.rank or 1] else nil,
 			goldCost = def.goldCost or 0,
 			diamondCost = def.diamondCost or 0,
 			essenceKey = def.essenceKey,
@@ -217,6 +222,7 @@ local function buildPetModel(player: Player, def: any, data: any, slot: number):
 	model:SetAttribute("PetKey", def.key)
 	model:SetAttribute("PetSlot", slot)
 	model:SetAttribute("PetLevel", data.level)
+	model:SetAttribute("PetRank", data.rank or 1)
 	model:SetAttribute("Golden", data.golden == true)
 
 	local bodyColor = c3(def.bodyColor)
@@ -328,7 +334,7 @@ local function buildPetModel(player: Player, def: any, data: any, slot: number):
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
 	label.Font = Enum.Font.FredokaOne
-	label.Text = (data.golden and "Golden " or "") .. def.name .. "  Lv." .. tostring(data.level)
+	label.Text = (data.golden and "Golden " or "") .. def.name .. "  Lv." .. tostring(data.level) .. "  R" .. tostring(data.rank or 1)
 	label.TextColor3 = if data.golden then Color3.fromRGB(255, 226, 92) else Color3.fromRGB(246, 250, 238)
 	label.TextStrokeColor3 = Color3.fromRGB(28, 42, 31)
 	label.TextStrokeTransparency = 0.2
@@ -393,6 +399,14 @@ local function finishAction(player: Player, message: string)
 	PetService.PushState(player, message)
 end
 
+function PetService.RefreshPlayer(player: Player, message: string?)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return
+	end
+	finishAction(player, message or "Pet collection updated.")
+end
+
 local function onRecruit(player: Player, rawKey: unknown)
 	if not allowAction(player) then
 		return
@@ -415,7 +429,7 @@ local function onRecruit(player: Player, rawKey: unknown)
 		PetService.PushState(player, "You do not have enough currency for " .. def.name .. ".")
 		return
 	end
-	pets.owned[def.key] = { level = 1, xp = 0, golden = false, shards = 0 }
+	pets.owned[def.key] = { level = 1, xp = 0, golden = false, shards = 0, rank = 1 }
 	if #pets.equipped < (GameConfig.PET_SYSTEM.maxEquipped or 3) then
 		table.insert(pets.equipped, def.key)
 	end

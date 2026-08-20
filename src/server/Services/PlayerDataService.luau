@@ -58,8 +58,15 @@ export type Profile = {
 		deployed: { [string]: boolean }, -- mower key -> currently out working
 	},
 	pets: {
-		owned: { [string]: { level: number, xp: number, golden: boolean, shards: number } },
+		owned: { [string]: { level: number, xp: number, golden: boolean, shards: number, rank: number } },
 		equipped: { string }, -- ordered, unique pet keys; maximum comes from GameConfig
+	},
+	petRewards: {
+		lastFreeSpin: number,
+		wheelPity: number,
+		cratePity: number,
+		totalSpins: number,
+		totalCrates: number,
 	},
 }
 
@@ -70,7 +77,7 @@ type StoredData = {
 	lockTime: number?,
 }
 
-local PROFILE_VERSION = 8
+local PROFILE_VERSION = 9
 local STORE_NAME = "PlayerData_v1" -- bump this name if you ever need a clean wipe
 local KEY_PREFIX = "player_"
 local AUTOSAVE_INTERVAL = 120 -- seconds between background autosaves
@@ -119,6 +126,7 @@ local function defaultProfile(): Profile
 		essence = {},
 		bosses = { kills = {}, trophies = {}, crowns = {} },
 		pets = { owned = {}, equipped = {} },
+		petRewards = { lastFreeSpin = 0, wheelPity = 0, cratePity = 0, totalSpins = 0, totalCrates = 0 },
 	}
 end
 
@@ -203,14 +211,23 @@ local function reconcile(profile: Profile): Profile
 	profile.pets.equipped = profile.pets.equipped or {}
 	for key, data in profile.pets.owned do
 		if type(data) ~= "table" then
-			profile.pets.owned[key] = { level = 1, xp = 0, golden = false, shards = 0 }
+			profile.pets.owned[key] = { level = 1, xp = 0, golden = false, shards = 0, rank = 1 }
 		else
 			data.level = math.max(1, tonumber(data.level) or 1)
 			data.xp = math.max(0, tonumber(data.xp) or 0)
 			data.golden = data.golden == true
 			data.shards = math.max(0, tonumber(data.shards) or 0)
+			data.rank = math.clamp(math.floor(tonumber(data.rank) or 1), 1, (GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.maxRank) or 5)
 		end
 	end
+	-- v8 -> v9: persistent daily wheel, both pity counters, lifetime opens,
+	-- and shard ranks. Nested repair is unconditional for partial Studio saves.
+	profile.petRewards = profile.petRewards or {}
+	profile.petRewards.lastFreeSpin = math.max(0, tonumber(profile.petRewards.lastFreeSpin) or 0)
+	profile.petRewards.wheelPity = math.max(0, math.floor(tonumber(profile.petRewards.wheelPity) or 0))
+	profile.petRewards.cratePity = math.max(0, math.floor(tonumber(profile.petRewards.cratePity) or 0))
+	profile.petRewards.totalSpins = math.max(0, math.floor(tonumber(profile.petRewards.totalSpins) or 0))
+	profile.petRewards.totalCrates = math.max(0, math.floor(tonumber(profile.petRewards.totalCrates) or 0))
 	profile.version = PROFILE_VERSION
 	return profile
 end
@@ -364,8 +381,9 @@ function PlayerDataService.GetPetBonuses(profile: Profile): { [string]: number }
 			local growth = (GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.levelBonusGrowth) or 0.04
 			local levelScale = 1 + math.max(0, (data.level or 1) - 1) * growth
 			local goldenScale = if data.golden then ((GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.goldenBonusMultiplier) or 1.5) else 1
+			local rankScale = 1 + math.max(0, (data.rank or 1) - 1) * ((GameConfig.PET_SYSTEM and GameConfig.PET_SYSTEM.rankBonusGrowth) or 0.15)
 			for stat, amount in def.bonuses or {} do
-				totals[stat] = (totals[stat] or 0) + amount * levelScale * goldenScale
+				totals[stat] = (totals[stat] or 0) + amount * levelScale * goldenScale * rankScale
 			end
 		end
 	end
